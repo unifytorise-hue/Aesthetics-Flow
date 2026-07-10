@@ -530,14 +530,14 @@ function seedData(){
         nextAction:{label:'Follow-up due', date:isoOffset(12)},
         treatments:[{name:'Lip Filler', date:isoOffset(-2), area:['Frown Lines'], product:'Juvederm', batch:'JV-2291', notes:'No complications.', price:3200, practitioner:'Dr James', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-2)}],
         photoConsent:{consented:true, marketingConsent:false, consentDate:isoOffset(-2)},
-        photoSets:[], documents:[]},
+        photoSets:[], documents:[], portalPassword:generatePortalPassword()},
       {id:'c2', name:'Jane Brown', phone:'+00 000 000 2222', email:'jane@email.com', clientSince:2024, status:'active', locationId:'loc1', capturedBy:'s2', captureDate:isoOffset(-30),
         skinType:'Oily', concerns:['Acne'], medicalNotes:'',
         lastTreatment:{name:'Chemical Peel', date:isoOffset(-8), practitioner:'Dr James'},
         nextAction:{label:'Review', date:isoOffset(20)},
         treatments:[{name:'Chemical Peel', date:isoOffset(-8), area:[], product:'Salicylic 20%', batch:'CP-1042', notes:'', price:1450, practitioner:'Dr James', soldBy:'s2', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-8)}],
         photoConsent:null,
-        photoSets:[], documents:[]},
+        photoSets:[], documents:[], portalPassword:generatePortalPassword()},
       {id:'c3', name:'Lisa White', phone:'+00 000 000 3333', email:'lisa@email.com', clientSince:2026, status:'new', locationId:'loc2', capturedBy:'s3', captureDate:isoOffset(-1),
         skinType:'Dry', concerns:['Pigmentation'], medicalNotes:'',
         lastTreatment:{name:'Consultation', date:isoOffset(-1), practitioner:'Dr Sarah'},
@@ -547,7 +547,7 @@ function seedData(){
           {name:'Consultation', date:isoOffset(-1), area:[], product:'', batch:'', notes:'Initial skin assessment.', price:0, practitioner:'Dr Sarah', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-1)}
         ],
         photoConsent:null,
-        photoSets:[], documents:[]},
+        photoSets:[], documents:[], portalPassword:generatePortalPassword()},
     ],
     appointments:[
       {id:'a1', clientName:'Maria Smith', date:todayISO(), time:'09:00', service:'Botox Review', practitioner:'Dr James', locationId:'loc1'},
@@ -583,9 +583,24 @@ function seedData(){
   };
 }
 
+// window.storage is provided by the sandboxed preview this app was originally
+// built in. Outside that sandbox (e.g. hosted on GitHub Pages) it doesn't
+// exist, so we fall back to localStorage with the same get/set(key, shared)
+// shape — "shared" has no meaning for localStorage, it's just a key prefix.
+const hasHostStorage = typeof window.storage !== 'undefined' && typeof window.storage.get === 'function' && typeof window.storage.set === 'function';
+async function storageGet(key, shared){
+  if(hasHostStorage) return window.storage.get(key, shared);
+  const raw = localStorage.getItem('af_' + key);
+  return raw ? { value: raw } : null;
+}
+async function storageSet(key, value, shared){
+  if(hasHostStorage) return window.storage.set(key, value, shared);
+  localStorage.setItem('af_' + key, value);
+}
+
 async function loadState(){
   try{
-    const r = await window.storage.get('crm-data', false);
+    const r = await storageGet('crm-data', false);
     if(r && r.value){
       const parsed = JSON.parse(r.value);
       if(!parsed.clinic) parsed.clinic = {name:'AestheticFlow Clinic', practitionerName:'Dr Sarah', currency:'$'};
@@ -625,6 +640,7 @@ async function loadState(){
         if(!Array.isArray(c.photoSets)) c.photoSets = [];
         if(!Array.isArray(c.documents)) c.documents = [];
         if(c.photoConsent===undefined) c.photoConsent = null;
+        if(!c.portalPassword) c.portalPassword = generatePortalPassword();
       });
       if(Array.isArray(parsed.appointments)) parsed.appointments.forEach(a=>{
         if(!a.date) a.date = todayISO();
@@ -652,7 +668,7 @@ async function loadState(){
   }catch(e){ return seedData(); }
 }
 async function saveState(){
-  try{ await window.storage.set('crm-data', JSON.stringify(state), false); }
+  try{ await storageSet('crm-data', JSON.stringify(state), false); }
   catch(e){
     console.error('Save failed', e);
     showToast('⚠ Changes made, but saving failed — try again shortly');
@@ -2362,14 +2378,14 @@ let teamChatLoading = false;
 
 async function loadTeamChat(){
   try{
-    const r = await window.storage.get('team-chat-messages', true);
+    const r = await storageGet('team-chat-messages', true);
     teamChatMessages = (r && r.value) ? JSON.parse(r.value) : [];
   }catch(e){
     teamChatMessages = [];
   }
 }
 async function saveTeamChat(){
-  try{ await window.storage.set('team-chat-messages', JSON.stringify(teamChatMessages), true); }
+  try{ await storageSet('team-chat-messages', JSON.stringify(teamChatMessages), true); }
   catch(e){ showToast('⚠ Message may not have saved — storage error'); }
 }
 
@@ -2539,24 +2555,40 @@ function openClientModal(client){
     </select></div>
     <p class="empty-state" style="margin-top:6px;">Whoever brought this client in — this is permanent once saved and drives origination commission.</p></div>` : `
     <div class="detail-row"><span class="detail-label">Account Originator</span><span class="detail-value">${esc((state.staff.find(s=>s.id===client.capturedBy)||{}).name || '—')} (permanent, set ${fmtDate(client.captureDate)})</span></div>`}
+    ${isEdit ? `
+    <div class="field-group">
+      <label>Client Portal Password</label>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input id="mPortalPassword" type="text" readonly value="${esc(client.portalPassword||'')}" style="flex:1; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:'JetBrains Mono', monospace; font-size:13px; background:var(--panel2); color:var(--bone);">
+        <button class="btn btn-secondary btn-sm" id="regenPortalPasswordBtn" type="button">Regenerate</button>
+      </div>
+      <p class="empty-state" style="margin-top:6px;">Share this with ${esc(client.name)} along with their email — both are required to sign in to the client portal.</p>
+    </div>` : ''}
     <div class="modal-actions">
       <button class="btn btn-secondary" id="cancelModal">Cancel</button>
       <button class="btn btn-primary" id="saveClientBtn">${isEdit?'Save Changes':'Save'}</button>
     </div>`);
+  let workingPortalPassword = isEdit ? client.portalPassword : null;
+  const regenBtn = document.getElementById('regenPortalPasswordBtn');
+  if(regenBtn) regenBtn.addEventListener('click', ()=>{
+    workingPortalPassword = generatePortalPassword();
+    document.getElementById('mPortalPassword').value = workingPortalPassword;
+  });
   document.getElementById('saveClientBtn').addEventListener('click', async ()=>{
     const name = document.getElementById('mName').value.trim();
     if(!name) return;
     const phone = document.getElementById('mPhone').value;
     const email = document.getElementById('mEmail').value;
     if(isEdit){
-      client.name = name; client.phone = phone; client.email = email;
+      client.name = name; client.phone = phone; client.email = email; client.portalPassword = workingPortalPassword;
     } else {
       const capturedBy = document.getElementById('mCapturedBy').value;
       state.clients.push({
         id:'c'+Date.now(), name, phone, email, clientSince:new Date().getFullYear(), status:'new',
         skinType:'Normal', concerns:[], medicalNotes:'',
         lastTreatment:{name:'—', date:'—', practitioner:'—'}, nextAction:{label:'Book first visit', date:'—'}, treatments:[],
-        photoConsent:null, photoSets:[], documents:[], capturedBy, captureDate:todayISO(), locationId:state.currentLocationId
+        photoConsent:null, photoSets:[], documents:[], capturedBy, captureDate:todayISO(), locationId:state.currentLocationId,
+        portalPassword:generatePortalPassword()
       });
     }
     await saveState();
@@ -3036,6 +3068,35 @@ async function runContentIdeasGeneration(){
   }
 }
 
+// Every AI feature in this app (content ideas, captions, campaign copy, the
+// assistant chat) calls Anthropic's Messages API the same way, so the actual
+// fetch/parse/error-handling lives here once. This only succeeds when the
+// app is running somewhere that can reach api.anthropic.com with the right
+// auth attached (e.g. proxied by a sandboxed preview host) — on a plain
+// static host this fetch will fail (no key, and the API doesn't allow
+// unauthenticated cross-origin browser calls), so callers should always
+// wrap this in a try/catch and show a clear fallback message.
+async function callAnthropicAPI(messages, {system, max_tokens=500} = {}){
+  let response;
+  try{
+    response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens,
+        ...(system ? {system} : {}),
+        messages
+      })
+    });
+  }catch(networkErr){
+    throw new Error('AI features aren\'t reachable from this environment — this app calls Anthropic\'s API directly from the browser, which only works when hosted behind a backend that can proxy the request.');
+  }
+  if(!response.ok) throw new Error('API request failed: ' + response.status);
+  const data = await response.json();
+  return data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+}
+
 async function generateContentIdeas(){
   const treatments = allTreatments();
   const treatmentTotals = {};
@@ -3053,18 +3114,7 @@ Clients currently at risk of lapsing: ${atRisk.length}
 
 Suggest exactly 5 specific, concrete social media content ideas for this clinic based on this real data (e.g. if a treatment is popular, suggest content about it; if bookings dipped, suggest a re-engagement angle; if clients are at risk, suggest retention content). Each idea should be one line, specific enough to act on immediately, and should not include markdown formatting or numbering — just plain sentences, one per line, and nothing else.`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 400,
-      messages: [{ role: "user", content: prompt }]
-    })
-  });
-  if(!response.ok) throw new Error('API request failed: ' + response.status);
-  const data = await response.json();
-  const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+  const text = await callAnthropicAPI([{ role: "user", content: prompt }], { max_tokens: 400 });
   return text.split('\n').map(l=>l.replace(/^[-\d.)\s]+/, '').trim()).filter(Boolean);
 }
 
@@ -3072,18 +3122,7 @@ async function generateSocialCaption(contentType, treatmentContext, platforms){
   const platformNote = platforms.length ? ` Intended for: ${platforms.join(', ')}.` : '';
   const prompt = `Write a short social media caption for a ${contentType} promoting "${treatmentContext}" for ${state.clinic.name}, a medical aesthetics clinic.${platformNote} Keep it warm, professional, and compliant with typical medical-advertising norms (no exaggerated claims, no "guaranteed results" language). Then on a new line, give 6-10 relevant hashtags separated by spaces. Format your response as exactly two lines: the caption, then the hashtags line starting with #.`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 300,
-      messages: [{ role: "user", content: prompt }]
-    })
-  });
-  if(!response.ok) throw new Error('API request failed: ' + response.status);
-  const data = await response.json();
-  const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+  const text = await callAnthropicAPI([{ role: "user", content: prompt }], { max_tokens: 300 });
   const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
   const hashtagLineIdx = lines.findIndex(l=>l.startsWith('#'));
   if(hashtagLineIdx === -1){
@@ -3772,18 +3811,7 @@ async function generateCampaignCopy(campaignName, type, audience){
   const lengthNote = type==='SMS' ? 'Keep it under 300 characters, no subject line needed.' : 'Keep it to 3-4 short paragraphs with a clear call to action.';
   const prompt = `Write ${type} marketing copy for a campaign called "${campaignName}" at ${state.clinic.name}, a medical aesthetics clinic. The audience is ${audienceLabel}. ${lengthNote} Be warm and professional, avoid exaggerated claims or "guaranteed results" language (medical advertising norms). ${type==='Email' ? 'Respond as exactly two parts: first line is the subject, then a blank line, then the email body.' : 'Respond with just the SMS body text, nothing else.'}`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 500,
-      messages: [{ role: "user", content: prompt }]
-    })
-  });
-  if(!response.ok) throw new Error('API request failed: ' + response.status);
-  const data = await response.json();
-  const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+  const text = await callAnthropicAPI([{ role: "user", content: prompt }], { max_tokens: 500 });
   if(type==='SMS') return { subject:'', body:text };
   const parts = text.split('\n\n');
   return { subject: parts[0].replace(/^subject:\s*/i,'').trim(), body: parts.slice(1).join('\n\n').trim() || text };
@@ -3817,6 +3845,15 @@ function generateApiKey(){
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let key = 'af_live_';
   for(let i=0;i<32;i++) key += chars[Math.floor(Math.random()*chars.length)];
+  return key;
+}
+
+// Excludes visually ambiguous characters (0/O, 1/I/L) since staff read this
+// aloud or write it down for clients.
+function generatePortalPassword(){
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let key = '';
+  for(let i=0;i<8;i++) key += chars[Math.floor(Math.random()*chars.length)];
   return key;
 }
 
@@ -3878,19 +3915,7 @@ When it's natural and helpful, you may end your reply by asking if the person wa
 
 async function callClaude(userText){
   const history = state.aiChat.filter(m=>m.text).map(m=>({ role: m.from==='user' ? 'user' : 'assistant', content: m.text }));
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      system: buildAIContext(),
-      messages: [...history, { role: "user", content: userText }]
-    })
-  });
-  if(!response.ok) throw new Error('API request failed: ' + response.status);
-  const data = await response.json();
-  const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+  const text = await callAnthropicAPI([...history, { role: "user", content: userText }], { system: buildAIContext(), max_tokens: 1000 });
   if(!text) throw new Error('Empty response');
   return text;
 }
@@ -4020,16 +4045,20 @@ function renderPortalLogin(){
           <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h11.9c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.1-3.8 6.5-9.4 6.5-16.7z"/><path fill="#34A853" d="M24 46c6 0 11-2 14.6-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.6-3.9-12.4-9.1H4.3v5.7C7.9 41 15.3 46 24 46z"/><path fill="#FBBC05" d="M11.6 28.2c-.5-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.3C2.8 17.1 2 20.5 2 24s.8 6.9 2.3 9.9z"/><path fill="#EA4335" d="M24 10.8c3.3 0 6.2 1.1 8.5 3.3l6.3-6.3C35 4.3 30 2 24 2 15.3 2 7.9 7 4.3 14.1l7.3 5.7c1.8-5.2 6.6-9 12.4-9z"/></svg>
           Continue with Google
         </button>
-        <p class="portal-note" id="portalGoogleNote" style="display:none;">Real Google sign-in needs a backend OAuth setup (client ID, secret, redirect URI) — this button is a UI preview in this prototype. Use email sign-in with a client's email on file instead (e.g. maria@email.com).</p>
+        <p class="portal-note" id="portalGoogleNote" style="display:none;">Real Google sign-in needs a backend OAuth setup (client ID, secret, redirect URI) — this button is a UI preview in this prototype. Use email + portal password instead — your clinic gives you both.</p>
         <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="backToStaffLink">← Back to staff sign-in</span></div>
       </div>
     </div>`;
 
   document.getElementById('portalSignInBtn').addEventListener('click', ()=>{
     const email = document.getElementById('portalEmail').value.trim().toLowerCase();
-    if(!email){ showToast('Enter your email'); return; }
+    const password = document.getElementById('portalPassword').value;
+    if(!email || !password){ showToast('Enter your email and password'); return; }
     const client = state.clients.find(c=>c.email && c.email.toLowerCase()===email);
-    if(!client){ showToast('No account found with that email — contact your clinic'); return; }
+    // Deliberately the same message whether the email doesn't exist or the
+    // password is wrong — confirming a valid email exists would let someone
+    // enumerate real clients.
+    if(!client || client.portalPassword !== password){ showToast('Incorrect email or password — contact your clinic'); return; }
     portalClient = client;
     renderPortalDashboard();
   });
