@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AestheticFlow — CRM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -583,92 +584,195 @@ function seedData(){
   };
 }
 
-// window.storage is provided by the sandboxed preview this app was originally
-// built in. Outside that sandbox (e.g. hosted on GitHub Pages) it doesn't
-// exist, so we fall back to localStorage with the same get/set(key, shared)
-// shape — "shared" has no meaning for localStorage, it's just a key prefix.
-const hasHostStorage = typeof window.storage !== 'undefined' && typeof window.storage.get === 'function' && typeof window.storage.set === 'function';
-async function storageGet(key, shared){
-  if(hasHostStorage) return window.storage.get(key, shared);
-  const raw = localStorage.getItem('af_' + key);
-  return raw ? { value: raw } : null;
+// Backend: Supabase Postgres, shared by everyone using this CRM instance.
+// The anon key below is meant to be public (that's how Supabase client auth
+// works) — access control belongs to Row Level Security policies, not key
+// secrecy. RLS is not yet configured on these tables (tracked as a followup);
+// until it is, anyone with this page open can read/write everything.
+const SUPABASE_URL = 'https://zatgwmdinqzrwxxdmxoe.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_9JnxNNmtbRTAbREvni3BpQ_HkG_lE_-';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function rowsByKey(rows, key){
+  const map = {};
+  (rows||[]).forEach(r=>{ (map[r[key]] = map[r[key]] || []).push(r); });
+  return map;
 }
-async function storageSet(key, value, shared){
-  if(hasHostStorage) return window.storage.set(key, value, shared);
-  localStorage.setItem('af_' + key, value);
+function mapTreatment(t){
+  return { id:t.id, name:t.name, date:t.date, area:t.area||[], product:t.product||'', batch:t.batch||'',
+    notes:t.notes||'', price:Number(t.price)||0, practitioner:t.practitioner, soldBy:t.sold_by,
+    isNewProcedure:!!t.is_new_procedure, verified:!!t.verified, verifiedBy:t.verified_by, verifiedDate:t.verified_date };
+}
+function mapPhotoSet(p){ return { id:p.id, date:p.date, caption:p.caption||'', beforeUrl:p.before_url, afterUrl:p.after_url }; }
+function mapDocument(d){ return { id:d.id, filename:d.filename, fileType:d.file_type, uploadedDate:d.uploaded_date, dataUrl:d.data_url }; }
+function mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient){
+  return {
+    id:c.id, name:c.name, phone:c.phone, email:c.email, clientSince:c.client_since, status:c.status,
+    locationId:c.location_id, capturedBy:c.captured_by, captureDate:c.capture_date,
+    skinType:c.skin_type, concerns:c.concerns||[], medicalNotes:c.medical_notes||'',
+    lastTreatment:{ name:c.last_treatment_name||'—', date:c.last_treatment_date||'—', practitioner:c.last_treatment_practitioner||'—' },
+    nextAction:{ label:c.next_action_label||'Book first visit', date:c.next_action_date||'—' },
+    treatments:(treatmentsByClient[c.id]||[]).map(mapTreatment),
+    photoConsent:c.photo_consent,
+    photoSets:(photoSetsByClient[c.id]||[]).map(mapPhotoSet),
+    documents:(documentsByClient[c.id]||[]).map(mapDocument),
+    portalPassword:c.portal_password || generatePortalPassword()
+  };
+}
+function mapInvoice(inv, lineItemsByInvoice){
+  return { id:inv.id, invoiceNumber:inv.invoice_number, clientId:inv.client_id, clientName:inv.client_name,
+    type:inv.type, status:inv.status, notes:inv.notes||'',
+    lineItems:(lineItemsByInvoice[inv.id]||[]).map(li=>({ id:li.id, description:li.description, productId:li.product_id, quantity:Number(li.quantity), unitPrice:Number(li.unit_price) })),
+    createdDate:inv.created_date, dueDate:inv.due_date, stockDeducted:!!inv.stock_deducted };
 }
 
 async function loadState(){
   try{
-    const r = await storageGet('crm-data', false);
-    if(r && r.value){
-      const parsed = JSON.parse(r.value);
-      if(!parsed.clinic) parsed.clinic = {name:'AestheticFlow Clinic', practitionerName:'Dr Sarah', currency:'$'};
-      if(!parsed.apiKey) parsed.apiKey = seedData().apiKey;
-      if(typeof parsed.contentCredits !== 'number') parsed.contentCredits = 20;
-      if(!Array.isArray(parsed.creditTransactions)) parsed.creditTransactions = [];
-      if(!Array.isArray(parsed.socialPosts)) parsed.socialPosts = [];
-      if(!Array.isArray(parsed.locations) || !parsed.locations.length) parsed.locations = seedData().locations;
-      if(!parsed.currentLocationId || !parsed.locations.find(l=>l.id===parsed.currentLocationId)) parsed.currentLocationId = parsed.locations[0].id;
-      if(!Array.isArray(parsed.staff) || !parsed.staff.length) parsed.staff = seedData().staff;
-      parsed.staff.forEach(s=>{
-        if(s.locationId===undefined) s.locationId = null;
-        if(typeof s.commissionRate !== 'number') s.commissionRate = 0;
-        if(typeof s.salesTarget !== 'number') s.salesTarget = 0;
-        if(typeof s.targetBonusPercent !== 'number') s.targetBonusPercent = 0;
-        if(s.licenseExpiry===undefined) s.licenseExpiry = null;
-      });
-      if(Array.isArray(parsed.clients)) parsed.clients.forEach(c=>{
-        if(!c.locationId) c.locationId = parsed.locations[0].id;
-        if(c.capturedBy===undefined) c.capturedBy = null;
-        if(!c.captureDate) c.captureDate = c.clientSince ? `${c.clientSince}-01-01` : todayISO();
-        (c.treatments||[]).forEach(t=>{
-          if(t.verified===undefined) t.verified = true; // legacy treatments predate this model — treated as settled, not retroactively blocked
-          if(t.soldBy===undefined) t.soldBy = null;
-          if(t.isNewProcedure===undefined) t.isNewProcedure = false;
-        });
-      });
-      if(Array.isArray(parsed.leads)) parsed.leads.forEach(l=>{ if(l.ownerId===undefined) l.ownerId = null; });
-      if(typeof parsed.clinic.originationCommissionRate !== 'number') parsed.clinic.originationCommissionRate = 8;
-      if(typeof parsed.clinic.depreciationPeriodYears !== 'number') parsed.clinic.depreciationPeriodYears = 2;
-      if(typeof parsed.clinic.orgSalesTarget !== 'number') parsed.clinic.orgSalesTarget = 8000;
-      if(typeof parsed.clinic.orgBonusPercent !== 'number') parsed.clinic.orgBonusPercent = 5;
-      if(Array.isArray(parsed.appointments)) parsed.appointments.forEach(a=>{ if(!a.locationId) a.locationId = parsed.locations[0].id; });
-      if(!parsed.currentStaffId || !parsed.staff.find(s=>s.id===parsed.currentStaffId)) parsed.currentStaffId = parsed.staff[0].id;
-      if(Array.isArray(parsed.clients)) parsed.clients.forEach(c=>{
-        if(!Array.isArray(c.treatments)) c.treatments = [];
-        if(!Array.isArray(c.photoSets)) c.photoSets = [];
-        if(!Array.isArray(c.documents)) c.documents = [];
-        if(c.photoConsent===undefined) c.photoConsent = null;
-        if(!c.portalPassword) c.portalPassword = generatePortalPassword();
-      });
-      if(Array.isArray(parsed.appointments)) parsed.appointments.forEach(a=>{
-        if(!a.date) a.date = todayISO();
-        if(!a.practitioner) a.practitioner = 'Dr James';
-      });
-      if(!Array.isArray(parsed.aiChat)) parsed.aiChat = seedData().aiChat;
-      if(!Array.isArray(parsed.invoices)) parsed.invoices = [];
-      if(Array.isArray(parsed.campaigns)) parsed.campaigns.forEach(k=>{
-        if(!k.type) k.type = 'Email';
-        if(k.subject===undefined) k.subject = '';
-        if(k.body===undefined) k.body = '';
-        if(!k.audience) k.audience = 'all';
-      });
-      if(typeof parsed.nextInvoiceSeq !== 'number') parsed.nextInvoiceSeq = 1;
-      parsed.invoices.forEach(inv=>{
-        if(!inv.invoiceNumber){
-          inv.invoiceNumber = `${inv.type==='Quote'?'QUO':'INV'}-${String(parsed.nextInvoiceSeq).padStart(4,'0')}`;
-          parsed.nextInvoiceSeq++;
-        }
-      });
-      if(Array.isArray(parsed.inventory)) parsed.inventory.forEach(i=>{ if(typeof i.price !== 'number') i.price = 0; });
-      return parsed;
+    const [
+      clinicRes, locationsRes, staffRes, clientsRes, treatmentsRes, photoSetsRes, documentsRes,
+      appointmentsRes, leadsRes, inventoryRes, invoicesRes, lineItemsRes, campaignsRes,
+      socialPostsRes, creditTxRes, aiChatRes
+    ] = await Promise.all([
+      sb.from('clinic_settings').select('*').maybeSingle(),
+      sb.from('locations').select('*'),
+      sb.from('staff').select('*'),
+      sb.from('clients').select('*'),
+      sb.from('treatments').select('*'),
+      sb.from('photo_sets').select('*'),
+      sb.from('documents').select('*'),
+      sb.from('appointments').select('*'),
+      sb.from('leads').select('*'),
+      sb.from('inventory').select('*'),
+      sb.from('invoices').select('*'),
+      sb.from('invoice_line_items').select('*'),
+      sb.from('campaigns').select('*'),
+      sb.from('social_posts').select('*'),
+      sb.from('credit_transactions').select('*'),
+      sb.from('ai_chat_messages').select('*').order('id', {ascending:true})
+    ]);
+
+    // First run against a fresh database: seed it once so everyone sharing
+    // this CRM sees the same starting data from here on.
+    if(!locationsRes.data || !locationsRes.data.length){
+      const seed = seedData();
+      await persistStateToSupabase(seed);
+      return seed;
     }
+
+    const treatmentsByClient = rowsByKey(treatmentsRes.data, 'client_id');
+    const photoSetsByClient = rowsByKey(photoSetsRes.data, 'client_id');
+    const documentsByClient = rowsByKey(documentsRes.data, 'client_id');
+    const lineItemsByInvoice = rowsByKey(lineItemsRes.data, 'invoice_id');
+    const clinicRow = clinicRes.data || {};
+
+    return {
+      clinic:{
+        name: clinicRow.name || 'AestheticFlow Clinic',
+        practitionerName: clinicRow.practitioner_name || 'Dr Sarah',
+        currency: clinicRow.currency || '$',
+        originationCommissionRate: Number(clinicRow.origination_commission_rate ?? 8),
+        depreciationPeriodYears: Number(clinicRow.depreciation_period_years ?? 2),
+        orgSalesTarget: Number(clinicRow.org_sales_target ?? 8000),
+        orgBonusPercent: Number(clinicRow.org_bonus_percent ?? 5)
+      },
+      contentCredits: Number(clinicRow.content_credits ?? 20),
+      creditTransactions:(creditTxRes.data||[]).map(t=>({ id:t.id, type:t.type, amount:Number(t.amount), reason:t.reason, date:t.date })),
+      socialPosts:(socialPostsRes.data||[]).map(p=>({ id:p.id, contentType:p.content_type, mediaUrl:p.media_url, mediaFilename:p.media_filename, treatmentContext:p.treatment_context, caption:p.caption||'', hashtags:p.hashtags||'', platforms:p.platforms||[] })),
+      apiKey: clinicRow.api_key || generateApiKey(),
+      locations:(locationsRes.data||[]).map(l=>({ id:l.id, name:l.name, address:l.address, phone:l.phone })),
+      currentLocationId: clinicRow.current_location_id || locationsRes.data[0].id,
+      staff:(staffRes.data||[]).map(s=>({ id:s.id, name:s.name, role:s.role, locationId:s.location_id, commissionRate:Number(s.commission_rate)||0, licenseExpiry:s.license_expiry, salesTarget:Number(s.sales_target)||0, targetBonusPercent:Number(s.target_bonus_percent)||0 })),
+      currentStaffId: clinicRow.current_staff_id || (staffRes.data[0] && staffRes.data[0].id),
+      clients:(clientsRes.data||[]).map(c=>mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient)),
+      appointments:(appointmentsRes.data||[]).map(a=>({ id:a.id, clientName:a.client_name, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, locationId:a.location_id })),
+      leads:(leadsRes.data||[]).map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, ownerId:l.owner_id, convertedClientId:l.converted_client_id })),
+      inventory:(inventoryRes.data||[]).map(i=>({ id:i.id, name:i.name, stock:i.stock, expiresIn:i.expires_in, price:Number(i.price)||0 })),
+      invoices:(invoicesRes.data||[]).map(inv=>mapInvoice(inv, lineItemsByInvoice)),
+      nextInvoiceSeq: clinicRow.next_invoice_seq || 1,
+      campaigns:(campaignsRes.data||[]).map(k=>({ id:k.id, name:k.name, type:k.type, subject:k.subject||'', body:k.body||'', audience:k.audience||'all', clients:k.clients_count||0, status:k.status })),
+      aiChat:(aiChatRes.data||[]).map(m=>({ from:m.from_role, text:m.text, suggestCampaign:m.suggest_campaign, suggestInvoiceFor:m.suggest_invoice_for, suggestInvoiceType:m.suggest_invoice_type }))
+    };
+  }catch(e){
+    console.error('Supabase load failed, falling back to local demo data', e);
+    showToast('⚠ Could not reach the database — showing local demo data (changes won\'t be shared)');
     return seedData();
-  }catch(e){ return seedData(); }
+  }
 }
+
+// Whole-state overwrite: deletes children-first then inserts parents-first
+// to respect foreign keys. Simplest correct approach at this app's scale
+// (a single small clinic) — not safe against two staff saving at the exact
+// same instant, same limitation the old single-JSON-blob storage already had.
+async function persistStateToSupabase(s){
+  await sb.from('ai_chat_messages').delete().gte('id', 0);
+  await sb.from('invoice_line_items').delete().neq('id','');
+  await sb.from('invoices').delete().neq('id','');
+  await sb.from('treatments').delete().neq('id','');
+  await sb.from('photo_sets').delete().neq('id','');
+  await sb.from('documents').delete().neq('id','');
+  await sb.from('leads').delete().neq('id','');
+  await sb.from('clients').delete().neq('id','');
+  await sb.from('appointments').delete().neq('id','');
+  await sb.from('campaigns').delete().neq('id','');
+  await sb.from('social_posts').delete().neq('id','');
+  await sb.from('credit_transactions').delete().neq('id','');
+  await sb.from('inventory').delete().neq('id','');
+  await sb.from('staff').delete().neq('id','');
+  await sb.from('locations').delete().neq('id','');
+
+  if(s.locations.length) await sb.from('locations').insert(s.locations.map(l=>({ id:l.id, name:l.name, address:l.address, phone:l.phone })));
+  if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent })));
+  if(s.inventory.length) await sb.from('inventory').insert(s.inventory.map(i=>({ id:i.id, name:i.name, stock:i.stock, expires_in:i.expiresIn||null, price:i.price||0 })));
+  if(s.clients.length) await sb.from('clients').insert(s.clients.map(c=>({
+    id:c.id, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status,
+    location_id:c.locationId, captured_by:c.capturedBy, capture_date:c.captureDate||null,
+    skin_type:c.skinType, concerns:c.concerns||[], medical_notes:c.medicalNotes||'',
+    last_treatment_name:(c.lastTreatment&&c.lastTreatment.name)||'—', last_treatment_date:(c.lastTreatment&&c.lastTreatment.date)||'—', last_treatment_practitioner:(c.lastTreatment&&c.lastTreatment.practitioner)||'—',
+    next_action_label:(c.nextAction&&c.nextAction.label)||'Book first visit', next_action_date:(c.nextAction&&c.nextAction.date)||'—',
+    photo_consent:c.photoConsent||null, portal_password:c.portalPassword||null
+  })));
+
+  const allTreatments = [], allPhotoSets = [], allDocuments = [];
+  s.clients.forEach(c=>{
+    (c.treatments||[]).forEach(t=>{
+      allTreatments.push({
+        id: t.id || ('t'+Date.now()+Math.random().toString(36).slice(2,8)),
+        client_id:c.id, name:t.name, date:t.date, area:t.area||[], product:t.product||'', batch:t.batch||'',
+        notes:t.notes||'', price:t.price||0, practitioner:t.practitioner, sold_by:t.soldBy||null,
+        is_new_procedure:!!t.isNewProcedure, verified:!!t.verified, verified_by:t.verifiedBy||null, verified_date:t.verifiedDate||null
+      });
+    });
+    (c.photoSets||[]).forEach(p=>{ allPhotoSets.push({ id:p.id, client_id:c.id, date:p.date, caption:p.caption||'', before_url:p.beforeUrl||null, after_url:p.afterUrl||null }); });
+    (c.documents||[]).forEach(d=>{ allDocuments.push({ id:d.id, client_id:c.id, filename:d.filename, file_type:d.fileType, uploaded_date:d.uploadedDate||null, data_url:d.dataUrl||null }); });
+  });
+  if(allTreatments.length) await sb.from('treatments').insert(allTreatments);
+  if(allPhotoSets.length) await sb.from('photo_sets').insert(allPhotoSets);
+  if(allDocuments.length) await sb.from('documents').insert(allDocuments);
+
+  if(s.appointments.length) await sb.from('appointments').insert(s.appointments.map(a=>({ id:a.id, client_name:a.clientName, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, location_id:a.locationId||null })));
+  if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null })));
+
+  if(s.invoices.length) await sb.from('invoices').insert(s.invoices.map(inv=>({ id:inv.id, invoice_number:inv.invoiceNumber, client_id:inv.clientId||null, client_name:inv.clientName, type:inv.type, status:inv.status, notes:inv.notes||'', created_date:inv.createdDate||null, due_date:inv.dueDate||null, stock_deducted:!!inv.stockDeducted })));
+  const allLineItems = [];
+  s.invoices.forEach(inv=>{ (inv.lineItems||[]).forEach(li=>{ allLineItems.push({ id:li.id, invoice_id:inv.id, description:li.description, product_id:li.productId||null, quantity:li.quantity, unit_price:li.unitPrice }); }); });
+  if(allLineItems.length) await sb.from('invoice_line_items').insert(allLineItems);
+
+  if(s.campaigns.length) await sb.from('campaigns').insert(s.campaigns.map(k=>({ id:k.id, name:k.name, type:k.type, subject:k.subject||'', body:k.body||'', audience:k.audience||'all', clients_count:k.clients||0, status:k.status })));
+  if(s.socialPosts.length) await sb.from('social_posts').insert(s.socialPosts.map(p=>({ id:p.id, content_type:p.contentType, media_url:p.mediaUrl||null, media_filename:p.mediaFilename||null, treatment_context:p.treatmentContext||null, caption:p.caption||'', hashtags:p.hashtags||'', platforms:p.platforms||[] })));
+  if(s.creditTransactions.length) await sb.from('credit_transactions').insert(s.creditTransactions.map(t=>({ id:t.id, type:t.type, amount:t.amount, reason:t.reason||null, date:t.date||null })));
+  if(s.aiChat.length) await sb.from('ai_chat_messages').insert(s.aiChat.map(m=>({ from_role:m.from, text:m.text, suggest_campaign:!!m.suggestCampaign, suggest_invoice_for:m.suggestInvoiceFor||null, suggest_invoice_type:m.suggestInvoiceType||null })));
+
+  await sb.from('clinic_settings').upsert({
+    id:true, name:s.clinic.name, practitioner_name:s.clinic.practitionerName, currency:s.clinic.currency,
+    origination_commission_rate:s.clinic.originationCommissionRate, depreciation_period_years:s.clinic.depreciationPeriodYears,
+    org_sales_target:s.clinic.orgSalesTarget, org_bonus_percent:s.clinic.orgBonusPercent,
+    api_key:s.apiKey, content_credits:s.contentCredits, current_location_id:s.currentLocationId||null,
+    current_staff_id:s.currentStaffId||null, next_invoice_seq:s.nextInvoiceSeq
+  });
+}
+
 async function saveState(){
-  try{ await storageSet('crm-data', JSON.stringify(state), false); }
+  try{ await persistStateToSupabase(state); }
   catch(e){
     console.error('Save failed', e);
     showToast('⚠ Changes made, but saving failed — try again shortly');
@@ -2378,14 +2482,20 @@ let teamChatLoading = false;
 
 async function loadTeamChat(){
   try{
-    const r = await storageGet('team-chat-messages', true);
-    teamChatMessages = (r && r.value) ? JSON.parse(r.value) : [];
+    const { data, error } = await sb.from('team_chat_messages').select('*').order('id', {ascending:true});
+    if(error) throw error;
+    teamChatMessages = (data||[]).map(m=>{
+      const d = new Date(m.created_at);
+      return { id:'tc'+m.id, staffId:m.staff_id, staffName:m.staff_name, text:m.text, date:d.toISOString().slice(0,10), time:d.toTimeString().slice(0,5) };
+    });
   }catch(e){
     teamChatMessages = [];
   }
 }
-async function saveTeamChat(){
-  try{ await storageSet('team-chat-messages', JSON.stringify(teamChatMessages), true); }
+// Appends just the new message rather than rewriting the whole table, so
+// concurrent senders can't clobber each other's messages.
+async function saveTeamChat(message){
+  try{ await sb.from('team_chat_messages').insert({ staff_id:message.staffId, staff_name:message.staffName, text:message.text }); }
   catch(e){ showToast('⚠ Message may not have saved — storage error'); }
 }
 
@@ -2431,13 +2541,14 @@ function bindTeamChatEvents(){
     if(!text) return;
     const me = state.staff.find(s=>s.id===state.currentStaffId);
     const now = new Date();
-    teamChatMessages.push({
+    const newMsg = {
       id:'tc'+Date.now(), staffId:state.currentStaffId, staffName: me ? me.name : 'Unknown',
       text, date: todayISO(), time: now.toTimeString().slice(0,5)
-    });
+    };
+    teamChatMessages.push(newMsg);
     input.value='';
     render();
-    await saveTeamChat();
+    await saveTeamChat(newMsg);
   };
   sendBtn.addEventListener('click', send);
   document.getElementById('teamChatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
@@ -2736,12 +2847,12 @@ function bindClientDetailEvents(){
 }
 
 /* ---- Photos ---- */
-// Resizes/re-encodes an uploaded image client-side before storing it. This
-// prototype stores photos as base64 inside the same JSON blob as everything
-// else (window.storage has a 5MB-per-key limit), so compression isn't
-// optional here — a few uncompressed phone photos would blow that budget
-// fast. Real production storage would use S3 (see the Document model in the
-// Phase 2 Prisma schema) and skip this entirely.
+// Resizes/re-encodes an uploaded image client-side before storing it. Photos
+// are still stored as base64 text in Postgres rather than real object
+// storage, so compression keeps row sizes sane — a few uncompressed phone
+// photos would otherwise bloat every full-state read. Real production
+// storage would move this to Supabase Storage (or S3) and store a URL
+// instead of the base64 blob.
 function compressImage(file, maxWidth=700, quality=0.7){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
