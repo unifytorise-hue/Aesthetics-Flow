@@ -374,7 +374,9 @@
 </head>
 <body>
 
-  <div id="staffApp" style="display:flex; width:100%;">
+  <div id="authScreen" style="display:none;"></div>
+
+  <div id="staffApp" style="display:none; width:100%;">
     <div class="mobile-topbar">
       <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
@@ -518,10 +520,10 @@ function seedData(){
     ],
     currentLocationId:'loc1',
     staff:[
-      {id:'s1', name:'Dr Sarah', role:'Owner', locationId:null, commissionRate:0, licenseExpiry:isoOffset(200), salesTarget:0, targetBonusPercent:0},
-      {id:'s2', name:'Dr James', role:'Doctor', locationId:'loc1', commissionRate:20, licenseExpiry:isoOffset(25), salesTarget:3000, targetBonusPercent:10},
-      {id:'s3', name:'Amy Ndlovu', role:'Receptionist', locationId:'loc1', commissionRate:0, licenseExpiry:null, salesTarget:2500, targetBonusPercent:15},
-      {id:'s4', name:'Dr Naledi', role:'Doctor', locationId:'loc2', commissionRate:20, licenseExpiry:isoOffset(400), salesTarget:3000, targetBonusPercent:10},
+      {id:'s1', name:'Dr Sarah', role:'Owner', locationId:null, commissionRate:0, licenseExpiry:isoOffset(200), salesTarget:0, targetBonusPercent:0, email:'', authUserId:null},
+      {id:'s2', name:'Dr James', role:'Doctor', locationId:'loc1', commissionRate:20, licenseExpiry:isoOffset(25), salesTarget:3000, targetBonusPercent:10, email:'', authUserId:null},
+      {id:'s3', name:'Amy Ndlovu', role:'Receptionist', locationId:'loc1', commissionRate:0, licenseExpiry:null, salesTarget:2500, targetBonusPercent:15, email:'', authUserId:null},
+      {id:'s4', name:'Dr Naledi', role:'Doctor', locationId:'loc2', commissionRate:20, licenseExpiry:isoOffset(400), salesTarget:3000, targetBonusPercent:10, email:'', authUserId:null},
     ],
     currentStaffId:'s1',
     clients:[
@@ -531,14 +533,14 @@ function seedData(){
         nextAction:{label:'Follow-up due', date:isoOffset(12)},
         treatments:[{name:'Lip Filler', date:isoOffset(-2), area:['Frown Lines'], product:'Juvederm', batch:'JV-2291', notes:'No complications.', price:3200, practitioner:'Dr James', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-2)}],
         photoConsent:{consented:true, marketingConsent:false, consentDate:isoOffset(-2)},
-        photoSets:[], documents:[], portalPassword:generatePortalPassword()},
+        photoSets:[], documents:[], authUserId:null},
       {id:'c2', name:'Jane Brown', phone:'+00 000 000 2222', email:'jane@email.com', clientSince:2024, status:'active', locationId:'loc1', capturedBy:'s2', captureDate:isoOffset(-30),
         skinType:'Oily', concerns:['Acne'], medicalNotes:'',
         lastTreatment:{name:'Chemical Peel', date:isoOffset(-8), practitioner:'Dr James'},
         nextAction:{label:'Review', date:isoOffset(20)},
         treatments:[{name:'Chemical Peel', date:isoOffset(-8), area:[], product:'Salicylic 20%', batch:'CP-1042', notes:'', price:1450, practitioner:'Dr James', soldBy:'s2', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-8)}],
         photoConsent:null,
-        photoSets:[], documents:[], portalPassword:generatePortalPassword()},
+        photoSets:[], documents:[], authUserId:null},
       {id:'c3', name:'Lisa White', phone:'+00 000 000 3333', email:'lisa@email.com', clientSince:2026, status:'new', locationId:'loc2', capturedBy:'s3', captureDate:isoOffset(-1),
         skinType:'Dry', concerns:['Pigmentation'], medicalNotes:'',
         lastTreatment:{name:'Consultation', date:isoOffset(-1), practitioner:'Dr Sarah'},
@@ -548,15 +550,15 @@ function seedData(){
           {name:'Consultation', date:isoOffset(-1), area:[], product:'', batch:'', notes:'Initial skin assessment.', price:0, practitioner:'Dr Sarah', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-1)}
         ],
         photoConsent:null,
-        photoSets:[], documents:[], portalPassword:generatePortalPassword()},
+        photoSets:[], documents:[], authUserId:null},
     ],
     appointments:[
-      {id:'a1', clientName:'Maria Smith', date:todayISO(), time:'09:00', service:'Botox Review', practitioner:'Dr James', locationId:'loc1'},
-      {id:'a2', clientName:'Jessica Brown', date:todayISO(), time:'11:00', service:'Consultation', practitioner:'Dr Sarah', locationId:'loc1'},
-      {id:'a3', clientName:'Amy Green', date:todayISO(), time:'14:00', service:'Laser Treatment', practitioner:'Dr James', locationId:'loc1'},
-      {id:'a4', clientName:'Lisa White', date:isoOffset(1), time:'09:30', service:'First Treatment', practitioner:'Dr Naledi', locationId:'loc2'},
-      {id:'a5', clientName:'Jane Brown', date:isoOffset(1), time:'11:30', service:'Peel Review', practitioner:'Dr James', locationId:'loc1'},
-      {id:'a6', clientName:'Sarah Khan', date:isoOffset(2), time:'15:00', service:'Laser', practitioner:'Dr Naledi', locationId:'loc2'},
+      {id:'a1', clientId:'c1', clientName:'Maria Smith', date:todayISO(), time:'09:00', service:'Botox Review', practitioner:'Dr James', locationId:'loc1'},
+      {id:'a2', clientId:null, clientName:'Jessica Brown', date:todayISO(), time:'11:00', service:'Consultation', practitioner:'Dr Sarah', locationId:'loc1'},
+      {id:'a3', clientId:null, clientName:'Amy Green', date:todayISO(), time:'14:00', service:'Laser Treatment', practitioner:'Dr James', locationId:'loc1'},
+      {id:'a4', clientId:'c3', clientName:'Lisa White', date:isoOffset(1), time:'09:30', service:'First Treatment', practitioner:'Dr Naledi', locationId:'loc2'},
+      {id:'a5', clientId:'c2', clientName:'Jane Brown', date:isoOffset(1), time:'11:30', service:'Peel Review', practitioner:'Dr James', locationId:'loc1'},
+      {id:'a6', clientId:null, clientName:'Sarah Khan', date:isoOffset(2), time:'15:00', service:'Laser', practitioner:'Dr Naledi', locationId:'loc2'},
     ],
     leads:[
       {id:'l1', name:'Maria', source:'Instagram', stage:'New Leads', ownerId:'s3'},
@@ -616,7 +618,7 @@ function mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient){
     photoConsent:c.photo_consent,
     photoSets:(photoSetsByClient[c.id]||[]).map(mapPhotoSet),
     documents:(documentsByClient[c.id]||[]).map(mapDocument),
-    portalPassword:c.portal_password || generatePortalPassword()
+    authUserId:c.auth_user_id
   };
 }
 function mapInvoice(inv, lineItemsByInvoice){
@@ -681,10 +683,10 @@ async function loadState(){
       apiKey: clinicRow.api_key || generateApiKey(),
       locations:(locationsRes.data||[]).map(l=>({ id:l.id, name:l.name, address:l.address, phone:l.phone })),
       currentLocationId: clinicRow.current_location_id || locationsRes.data[0].id,
-      staff:(staffRes.data||[]).map(s=>({ id:s.id, name:s.name, role:s.role, locationId:s.location_id, commissionRate:Number(s.commission_rate)||0, licenseExpiry:s.license_expiry, salesTarget:Number(s.sales_target)||0, targetBonusPercent:Number(s.target_bonus_percent)||0 })),
+      staff:(staffRes.data||[]).map(s=>({ id:s.id, name:s.name, role:s.role, locationId:s.location_id, commissionRate:Number(s.commission_rate)||0, licenseExpiry:s.license_expiry, salesTarget:Number(s.sales_target)||0, targetBonusPercent:Number(s.target_bonus_percent)||0, email:s.email||'', authUserId:s.auth_user_id })),
       currentStaffId: clinicRow.current_staff_id || (staffRes.data[0] && staffRes.data[0].id),
       clients:(clientsRes.data||[]).map(c=>mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient)),
-      appointments:(appointmentsRes.data||[]).map(a=>({ id:a.id, clientName:a.client_name, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, locationId:a.location_id })),
+      appointments:(appointmentsRes.data||[]).map(a=>({ id:a.id, clientId:a.client_id, clientName:a.client_name, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, locationId:a.location_id })),
       leads:(leadsRes.data||[]).map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, ownerId:l.owner_id, convertedClientId:l.converted_client_id })),
       inventory:(inventoryRes.data||[]).map(i=>({ id:i.id, name:i.name, stock:i.stock, expiresIn:i.expires_in, price:Number(i.price)||0 })),
       invoices:(invoicesRes.data||[]).map(inv=>mapInvoice(inv, lineItemsByInvoice)),
@@ -721,7 +723,7 @@ async function persistStateToSupabase(s){
   await sb.from('locations').delete().neq('id','');
 
   if(s.locations.length) await sb.from('locations').insert(s.locations.map(l=>({ id:l.id, name:l.name, address:l.address, phone:l.phone })));
-  if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent })));
+  if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent, email:st.email||null, auth_user_id:st.authUserId||null })));
   if(s.inventory.length) await sb.from('inventory').insert(s.inventory.map(i=>({ id:i.id, name:i.name, stock:i.stock, expires_in:i.expiresIn||null, price:i.price||0 })));
   if(s.clients.length) await sb.from('clients').insert(s.clients.map(c=>({
     id:c.id, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status,
@@ -729,7 +731,7 @@ async function persistStateToSupabase(s){
     skin_type:c.skinType, concerns:c.concerns||[], medical_notes:c.medicalNotes||'',
     last_treatment_name:(c.lastTreatment&&c.lastTreatment.name)||'—', last_treatment_date:(c.lastTreatment&&c.lastTreatment.date)||'—', last_treatment_practitioner:(c.lastTreatment&&c.lastTreatment.practitioner)||'—',
     next_action_label:(c.nextAction&&c.nextAction.label)||'Book first visit', next_action_date:(c.nextAction&&c.nextAction.date)||'—',
-    photo_consent:c.photoConsent||null, portal_password:c.portalPassword||null
+    photo_consent:c.photoConsent||null, auth_user_id:c.authUserId||null
   })));
 
   const allTreatments = [], allPhotoSets = [], allDocuments = [];
@@ -749,7 +751,7 @@ async function persistStateToSupabase(s){
   if(allPhotoSets.length) await sb.from('photo_sets').insert(allPhotoSets);
   if(allDocuments.length) await sb.from('documents').insert(allDocuments);
 
-  if(s.appointments.length) await sb.from('appointments').insert(s.appointments.map(a=>({ id:a.id, client_name:a.clientName, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, location_id:a.locationId||null })));
+  if(s.appointments.length) await sb.from('appointments').insert(s.appointments.map(a=>({ id:a.id, client_id:a.clientId||null, client_name:a.clientName, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, location_id:a.locationId||null })));
   if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null })));
 
   if(s.invoices.length) await sb.from('invoices').insert(s.invoices.map(inv=>({ id:inv.id, invoice_number:inv.invoiceNumber, client_id:inv.clientId||null, client_name:inv.clientName, type:inv.type, status:inv.status, notes:inv.notes||'', created_date:inv.createdDate||null, due_date:inv.dueDate||null, stock_deducted:!!inv.stockDeducted })));
@@ -2377,9 +2379,12 @@ function renderSettings(){
             const loc = state.locations.find(l=>l.id===s.locationId);
             const daysLeft = s.licenseExpiry ? Math.ceil((new Date(s.licenseExpiry+'T00:00:00') - new Date()) / 86400000) : null;
             const licenseWarning = daysLeft!==null && daysLeft<=30 ? ` <span style="color:var(--danger); font-size:11px;">⚠ ${daysLeft<0?'license expired':`license expires in ${daysLeft}d`}</span>` : '';
+            const inviteStatus = !s.email ? `<span class="muted" style="margin-left:6px;">· no email on file</span>`
+              : s.authUserId ? `<span style="margin-left:6px; color:var(--sage); font-size:11px;">· ${esc(s.email)} (active)</span>`
+              : `<span class="muted" style="margin-left:6px;">· ${esc(s.email)} (invited, not signed up yet)</span>`;
             return `
             <div class="role-row" style="justify-content:space-between;">
-              <div><strong>${esc(s.name)}</strong> <span class="muted" style="margin-left:6px;">${esc(s.role)}</span> <span class="muted" style="margin-left:6px;">· ${loc ? esc(loc.name) : 'All locations'}</span>${licenseWarning}</div>
+              <div><strong>${esc(s.name)}</strong> <span class="muted" style="margin-left:6px;">${esc(s.role)}</span> <span class="muted" style="margin-left:6px;">· ${loc ? esc(loc.name) : 'All locations'}</span>${inviteStatus}${licenseWarning}</div>
               <div class="row-actions">
                 <button class="icon-btn" data-edit-staff="${s.id}" title="Edit">${ICONS.edit}</button>
                 ${state.staff.length>1 ? `<button class="icon-btn danger" data-del-staff="${s.id}" title="Remove">${ICONS.trash}</button>` : ''}
@@ -2451,14 +2456,10 @@ function renderSettings(){
   return `
     <div class="topbar">
       <div class="page-title">Settings</div>
-      <div class="eyebrow">Signed in as ${esc(role)}</div>
-    </div>
-    <div class="card" style="margin-bottom:24px;">
-      <div class="card-title">Viewing As</div>
-      <p class="muted" style="font-size:13px; margin-bottom:14px;">This CRM doesn't have real logins yet — use this to preview what each role can see and do.</p>
-      <div class="field-line" style="max-width:320px;"><select id="viewingAsSelect">
-        ${state.staff.map(s=>`<option value="${s.id}" ${s.id===state.currentStaffId?'selected':''}>${esc(s.name)} — ${esc(s.role)}</option>`).join('')}
-      </select></div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div class="eyebrow">Signed in as ${esc(role)}</div>
+        <button class="btn btn-secondary btn-sm" id="staffSignOutBtn">Sign Out</button>
+      </div>
     </div>
     <div class="grid2b">
       ${clinicProfileCard}
@@ -2667,31 +2668,18 @@ function openClientModal(client){
     <p class="empty-state" style="margin-top:6px;">Whoever brought this client in — this is permanent once saved and drives origination commission.</p></div>` : `
     <div class="detail-row"><span class="detail-label">Account Originator</span><span class="detail-value">${esc((state.staff.find(s=>s.id===client.capturedBy)||{}).name || '—')} (permanent, set ${fmtDate(client.captureDate)})</span></div>`}
     ${isEdit ? `
-    <div class="field-group">
-      <label>Client Portal Password</label>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <input id="mPortalPassword" type="text" readonly value="${esc(client.portalPassword||'')}" style="flex:1; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:'JetBrains Mono', monospace; font-size:13px; background:var(--panel2); color:var(--bone);">
-        <button class="btn btn-secondary btn-sm" id="regenPortalPasswordBtn" type="button">Regenerate</button>
-      </div>
-      <p class="empty-state" style="margin-top:6px;">Share this with ${esc(client.name)} along with their email — both are required to sign in to the client portal.</p>
-    </div>` : ''}
+    <p class="empty-state" style="margin-top:6px;">${client.authUserId ? 'This client has a client portal account.' : `Once saved, ${esc(client.name)} can sign up for the client portal using this email address.`}</p>` : ''}
     <div class="modal-actions">
       <button class="btn btn-secondary" id="cancelModal">Cancel</button>
       <button class="btn btn-primary" id="saveClientBtn">${isEdit?'Save Changes':'Save'}</button>
     </div>`);
-  let workingPortalPassword = isEdit ? client.portalPassword : null;
-  const regenBtn = document.getElementById('regenPortalPasswordBtn');
-  if(regenBtn) regenBtn.addEventListener('click', ()=>{
-    workingPortalPassword = generatePortalPassword();
-    document.getElementById('mPortalPassword').value = workingPortalPassword;
-  });
   document.getElementById('saveClientBtn').addEventListener('click', async ()=>{
     const name = document.getElementById('mName').value.trim();
     if(!name) return;
     const phone = document.getElementById('mPhone').value;
     const email = document.getElementById('mEmail').value;
     if(isEdit){
-      client.name = name; client.phone = phone; client.email = email; client.portalPassword = workingPortalPassword;
+      client.name = name; client.phone = phone; client.email = email;
     } else {
       const capturedBy = document.getElementById('mCapturedBy').value;
       state.clients.push({
@@ -2699,7 +2687,7 @@ function openClientModal(client){
         skinType:'Normal', concerns:[], medicalNotes:'',
         lastTreatment:{name:'—', date:'—', practitioner:'—'}, nextAction:{label:'Book first visit', date:'—'}, treatments:[],
         photoConsent:null, photoSets:[], documents:[], capturedBy, captureDate:todayISO(), locationId:state.currentLocationId,
-        portalPassword:generatePortalPassword()
+        authUserId:null
       });
     }
     await saveState();
@@ -3333,7 +3321,7 @@ function promptFollowUpBooking(client, practitioner){
   document.getElementById('cancelModal').addEventListener('click', ()=>promptReviewRequest(client));
   document.getElementById('confirmBookFollowUp').addEventListener('click', async ()=>{
     state.appointments.push({
-      id:'a'+Date.now(), clientName:client.name, date:client.nextAction.date, time:'10:00',
+      id:'a'+Date.now(), clientId:client.id, clientName:client.name, date:client.nextAction.date, time:'10:00',
       service:'Follow-up', practitioner: practitioner || 'Dr James', locationId: state.currentLocationId
     });
     await saveState();
@@ -3417,8 +3405,10 @@ function bindCalendarEvents(){
     document.getElementById('saveAppt').addEventListener('click', async ()=>{
       const service = document.getElementById('apService').value.trim();
       if(!service) return;
+      const clientName = document.getElementById('apClient').value||'—';
+      const matchedClient = state.clients.find(c=>c.name.trim().toLowerCase()===clientName.trim().toLowerCase());
       state.appointments.push({
-        id:'a'+Date.now(), clientName:document.getElementById('apClient').value||'—',
+        id:'a'+Date.now(), clientId: matchedClient ? matchedClient.id : null, clientName,
         date:document.getElementById('apDate').value||todayISO(),
         time:document.getElementById('apTime').value||'—',
         service, practitioner:document.getElementById('apPractitioner').value,
@@ -3649,11 +3639,11 @@ function bindSettingsEvents(){
     });
   }
 
-  document.getElementById('viewingAsSelect').addEventListener('change', async (e)=>{
-    state.currentStaffId = e.target.value;
-    await saveState();
-    render();
-    showToast('Now viewing as ' + currentRole());
+  const staffSignOutBtn = document.getElementById('staffSignOutBtn');
+  if(staffSignOutBtn) staffSignOutBtn.addEventListener('click', async ()=>{
+    await sb.auth.signOut();
+    state = null;
+    renderStaffAuth('signin');
   });
 
   document.querySelectorAll('[data-edit-staff]').forEach(btn=>{
@@ -3730,6 +3720,8 @@ function openStaffModal(staff){
   openModal(`
     <div class="modal-title">${isEdit?'Edit Staff Member':'Add Staff Member'}</div>
     <div class="field-group"><label>Name</label><div class="field-line"><input id="stName" type="text" value="${isEdit?esc(staff.name):''}" placeholder="Full name"></div></div>
+    <div class="field-group"><label>Email</label><div class="field-line"><input id="stEmail" type="email" value="${isEdit?esc(staff.email||''):''}" placeholder="name@clinic.com" ${isEdit && staff.authUserId ? 'disabled' : ''}></div></div>
+    <p class="empty-state" style="margin-top:-6px;">${isEdit && staff.authUserId ? 'Already signed up — email is locked.' : 'They\'ll sign up at the staff sign-in screen using this exact email.'}</p>
     <div class="field-group"><label>Role</label><div class="field-line"><select id="stRole">
       ${ROLE_ORDER.map(r=>`<option ${isEdit && staff.role===r?'selected':''}>${r}</option>`).join('')}
     </select></div></div>
@@ -3748,17 +3740,18 @@ function openStaffModal(staff){
   document.getElementById('saveStaffBtn').addEventListener('click', async ()=>{
     const name = document.getElementById('stName').value.trim();
     if(!name) return;
+    const email = document.getElementById('stEmail').value.trim().toLowerCase();
     const role = document.getElementById('stRole').value;
     const locationId = document.getElementById('stLocation').value || null;
     const commissionRate = Number(document.getElementById('stCommission').value) || 0;
     const licenseExpiry = document.getElementById('stLicenseExpiry').value || null;
     const salesTarget = Number(document.getElementById('stSalesTarget').value) || 0;
     const targetBonusPercent = Number(document.getElementById('stTargetBonus').value) || 0;
-    if(isEdit){ staff.name=name; staff.role=role; staff.locationId=locationId; staff.commissionRate=commissionRate; staff.licenseExpiry=licenseExpiry; staff.salesTarget=salesTarget; staff.targetBonusPercent=targetBonusPercent; }
-    else state.staff.push({id:'s'+Date.now(), name, role, locationId, commissionRate, licenseExpiry, salesTarget, targetBonusPercent});
+    if(isEdit){ staff.name=name; if(!staff.authUserId) staff.email=email; staff.role=role; staff.locationId=locationId; staff.commissionRate=commissionRate; staff.licenseExpiry=licenseExpiry; staff.salesTarget=salesTarget; staff.targetBonusPercent=targetBonusPercent; }
+    else state.staff.push({id:'s'+Date.now(), name, email, authUserId:null, role, locationId, commissionRate, licenseExpiry, salesTarget, targetBonusPercent});
     await saveState();
     closeModal(); render();
-    showToast(isEdit ? 'Staff member updated' : 'Staff member added');
+    showToast(isEdit ? 'Staff member updated' : 'Staff member added — they can now sign up at the staff sign-in screen');
   });
 }
 
@@ -3959,15 +3952,6 @@ function generateApiKey(){
   return key;
 }
 
-// Excludes visually ambiguous characters (0/O, 1/I/L) since staff read this
-// aloud or write it down for clients.
-function generatePortalPassword(){
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  let key = '';
-  for(let i=0;i<8;i++) key += chars[Math.floor(Math.random()*chars.length)];
-  return key;
-}
-
 /* ---- AI Assistant ---- */
 function buildAIContext(){
   const followUps = state.clients
@@ -4123,68 +4107,239 @@ document.getElementById('sidebarOverlay').addEventListener('click', ()=>{
   document.getElementById('sidebarOverlay').classList.remove('open');
 });
 
-/* ---------------- Client Portal (shares the same live `state` as the staff app) ---------------- */
-let portalClient = null;
+/* ---------------- Auth (real Supabase Auth for both staff and the client portal) ---------------- */
+// Resolving "who is this authenticated user" happens server-side via the
+// is_staff() / my_client_id() Postgres functions, which check auth.uid()
+// against staff.auth_user_id / clients.auth_user_id under RLS — the client
+// never gets to declare its own role.
+async function handleSession(session){
+  if(!session){ renderStaffAuth('signin'); return; }
+  const email = session.user.email;
+  try{
+    // Idempotent: links a pre-provisioned staff/client row to this login the
+    // first time its email matches; harmless no-op on every later sign-in.
+    await sb.rpc('claim_staff_account', { p_email: email });
+    await sb.rpc('claim_client_account', { p_email: email });
+  }catch(e){ console.error('Account linking failed', e); }
 
-function showClientPortal(){
-  document.getElementById('staffApp').style.display = 'none';
-  document.getElementById('clientPortalApp').style.display = 'block';
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-  renderPortalLogin();
+  const { data: staffFlag } = await sb.rpc('is_staff');
+  if(staffFlag){ await enterStaffApp(session); return; }
+
+  const { data: myClientId } = await sb.rpc('my_client_id');
+  if(myClientId){ await enterClientPortal(myClientId); return; }
+
+  renderPendingScreen(email);
 }
 
-function showStaffApp(){
+async function enterStaffApp(session){
+  document.getElementById('authScreen').style.display = 'none';
   document.getElementById('clientPortalApp').style.display = 'none';
   document.getElementById('staffApp').style.display = 'flex';
-  portalClient = null;
+  document.getElementById('mainContent').innerHTML = '<div class="muted">Loading…</div>';
+  state = await loadState();
+  const me = state.staff.find(s=>s.authUserId === session.user.id);
+  state.currentStaffId = me ? me.id : (state.staff[0] && state.staff[0].id);
+  render();
 }
 
-function renderPortalLogin(){
+function renderPendingScreen(email){
+  document.getElementById('staffApp').style.display = 'none';
+  document.getElementById('clientPortalApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'block';
+  document.getElementById('authScreen').innerHTML = `
+    <div class="portal-center-wrap">
+      <div class="portal-login-card">
+        <div class="brand" style="text-align:center; margin-bottom:32px;">
+          <div class="brand-mark">Aesthetic<em>Flow</em></div>
+          <div class="eyebrow" style="margin-top:8px;">Account Pending</div>
+        </div>
+        <p class="portal-note" style="margin-top:0;">We couldn't find a staff or client record for <strong>${esc(email)}</strong>. Ask an Owner or Admin to add your email in Settings (staff) or on your client record, then retry.</p>
+        <button class="btn btn-primary" id="retryClaimBtn" style="width:100%; justify-content:center; margin-top:8px;">Retry</button>
+        <button class="btn btn-secondary" id="pendingSignOutBtn" style="width:100%; justify-content:center; margin-top:10px;">Sign Out</button>
+      </div>
+    </div>`;
+  document.getElementById('retryClaimBtn').addEventListener('click', async ()=>{
+    const { data:{ session } } = await sb.auth.getSession();
+    await handleSession(session);
+  });
+  document.getElementById('pendingSignOutBtn').addEventListener('click', async ()=>{
+    await sb.auth.signOut();
+    renderStaffAuth('signin');
+  });
+}
+
+/* ---- Staff sign-in / sign-up ---- */
+function renderStaffAuth(mode, opts){
+  document.getElementById('staffApp').style.display = 'none';
+  document.getElementById('clientPortalApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'block';
+
+  if(mode === 'check-email'){
+    document.getElementById('authScreen').innerHTML = `
+      <div class="portal-center-wrap">
+        <div class="portal-login-card">
+          <div class="brand" style="text-align:center; margin-bottom:32px;">
+            <div class="brand-mark">Aesthetic<em>Flow</em></div>
+            <div class="eyebrow" style="margin-top:8px;">Staff Sign-In</div>
+          </div>
+          <p class="portal-note" style="margin-top:0;">Check <strong>${esc(opts.email)}</strong> to confirm your account, then come back and sign in.</p>
+          <button class="btn btn-primary" id="backToSignIn" style="width:100%; justify-content:center; margin-top:8px;">Back to Sign In</button>
+        </div>
+      </div>`;
+    document.getElementById('backToSignIn').addEventListener('click', ()=>renderStaffAuth('signin'));
+    return;
+  }
+
+  const isSignup = mode === 'signup';
+  document.getElementById('authScreen').innerHTML = `
+    <div class="portal-center-wrap">
+      <div class="portal-login-card">
+        <div class="brand" style="text-align:center; margin-bottom:32px;">
+          <div class="brand-mark">Aesthetic<em>Flow</em></div>
+          <div class="eyebrow" style="margin-top:8px;">${isSignup?'Staff Sign Up':'Staff Sign-In'}</div>
+        </div>
+        <div class="field-group"><label>Email</label><div class="field-line"><input id="authEmail" type="email" placeholder="you@clinic.com"></div></div>
+        <div class="field-group"><label>Password</label><div class="field-line"><input id="authPassword" type="password" placeholder="••••••••"></div></div>
+        <button class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?'Sign Up':'Sign In'}</button>
+        ${isSignup ? `<p class="portal-note">Your email must already be added by an Owner or Admin in Settings before you can sign up.</p>` : ''}
+        <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="toggleAuthModeLink">${isSignup?'Already have an account? Sign in':'New staff member? Sign up'}</span></div>
+        <div class="portal-divider">or</div>
+        <div class="empty-state" style="text-align:center;"><span style="cursor:pointer; color:var(--sage);" id="goToPortalFromStaff">Client Portal →</span></div>
+      </div>
+    </div>`;
+
+  document.getElementById('toggleAuthModeLink').addEventListener('click', ()=>renderStaffAuth(isSignup?'signin':'signup'));
+  document.getElementById('goToPortalFromStaff').addEventListener('click', ()=>renderPortalAuth('signin'));
+  document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('authEmail').value.trim().toLowerCase();
+    const password = document.getElementById('authPassword').value;
+    if(!email || !password){ showToast('Enter your email and password'); return; }
+    const btn = document.getElementById('authSubmitBtn'); btn.disabled = true;
+    try{
+      if(isSignup){
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if(error) throw error;
+        if(!data.session){ renderStaffAuth('check-email', {email}); return; }
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if(error) throw error;
+      }
+      const { data:{ session } } = await sb.auth.getSession();
+      await handleSession(session);
+    }catch(e){
+      showToast(e.message || 'Sign in failed');
+    }finally{
+      btn.disabled = false;
+    }
+  });
+}
+
+/* ---- Client Portal ---- */
+let portalData = null;
+
+async function loadClientPortalData(clientId){
+  const [clientRes, treatmentsRes, invoicesRes, apptRes] = await Promise.all([
+    sb.from('clients').select('*').eq('id', clientId).maybeSingle(),
+    sb.from('treatments').select('*').eq('client_id', clientId),
+    sb.from('invoices').select('*, invoice_line_items(*)').eq('client_id', clientId),
+    sb.from('appointments').select('*').eq('client_id', clientId)
+  ]);
+  const c = clientRes.data;
+  return {
+    client: c ? { id:c.id, name:c.name, email:c.email } : null,
+    treatments: (treatmentsRes.data||[]).map(mapTreatment),
+    invoices: (invoicesRes.data||[]).map(inv=>mapInvoice(inv, {[inv.id]: inv.invoice_line_items||[]})),
+    appointments: (apptRes.data||[]).map(a=>({ id:a.id, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner }))
+  };
+}
+
+async function enterClientPortal(clientId){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('staffApp').style.display = 'none';
+  document.getElementById('clientPortalApp').style.display = 'block';
+  document.getElementById('clientPortalApp').innerHTML = '<div class="portal-center-wrap"><p class="muted">Loading…</p></div>';
+  portalData = await loadClientPortalData(clientId);
+  renderPortalDashboard();
+}
+
+function renderPortalAuth(mode, opts){
+  document.getElementById('staffApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('clientPortalApp').style.display = 'block';
+
+  if(mode === 'check-email'){
+    document.getElementById('clientPortalApp').innerHTML = `
+      <div class="portal-center-wrap">
+        <div class="portal-login-card">
+          <div class="brand" style="text-align:center; margin-bottom:32px;">
+            <div class="brand-mark">Aesthetic<em>Flow</em></div>
+            <div class="eyebrow" style="margin-top:8px;">Client Portal</div>
+          </div>
+          <p class="portal-note" style="margin-top:0;">Check <strong>${esc(opts.email)}</strong> to confirm your account, then come back and sign in.</p>
+          <button class="btn btn-primary" id="backToPortalSignIn" style="width:100%; justify-content:center; margin-top:8px;">Back to Sign In</button>
+        </div>
+      </div>`;
+    document.getElementById('backToPortalSignIn').addEventListener('click', ()=>renderPortalAuth('signin'));
+    return;
+  }
+
+  const isSignup = mode === 'signup';
   document.getElementById('clientPortalApp').innerHTML = `
     <div class="portal-center-wrap">
       <div class="portal-login-card">
         <div class="brand" style="text-align:center; margin-bottom:32px;">
           <div class="brand-mark">Aesthetic<em>Flow</em></div>
-          <div class="eyebrow" style="margin-top:8px;">Client Portal</div>
+          <div class="eyebrow" style="margin-top:8px;">${isSignup?'Create Portal Account':'Client Portal'}</div>
         </div>
-        <div class="field-group"><label>Email</label><div class="field-line"><input id="portalEmail" type="email" placeholder="you@email.com"></div></div>
-        <div class="field-group"><label>Password</label><div class="field-line"><input id="portalPassword" type="password" placeholder="••••••••"></div></div>
-        <button class="btn btn-primary" id="portalSignInBtn" style="width:100%; justify-content:center; margin-top:8px;">Sign In</button>
-        <div class="portal-divider">or</div>
-        <button class="btn-google" id="portalGoogleBtn">
-          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h11.9c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.1-3.8 6.5-9.4 6.5-16.7z"/><path fill="#34A853" d="M24 46c6 0 11-2 14.6-5.3l-7.1-5.5c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.6-3.9-12.4-9.1H4.3v5.7C7.9 41 15.3 46 24 46z"/><path fill="#FBBC05" d="M11.6 28.2c-.5-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H4.3C2.8 17.1 2 20.5 2 24s.8 6.9 2.3 9.9z"/><path fill="#EA4335" d="M24 10.8c3.3 0 6.2 1.1 8.5 3.3l6.3-6.3C35 4.3 30 2 24 2 15.3 2 7.9 7 4.3 14.1l7.3 5.7c1.8-5.2 6.6-9 12.4-9z"/></svg>
-          Continue with Google
-        </button>
-        <p class="portal-note" id="portalGoogleNote" style="display:none;">Real Google sign-in needs a backend OAuth setup (client ID, secret, redirect URI) — this button is a UI preview in this prototype. Use email + portal password instead — your clinic gives you both.</p>
-        <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="backToStaffLink">← Back to staff sign-in</span></div>
+        <div class="field-group"><label>Email</label><div class="field-line"><input id="portalAuthEmail" type="email" placeholder="you@email.com"></div></div>
+        <div class="field-group"><label>Password</label><div class="field-line"><input id="portalAuthPassword" type="password" placeholder="••••••••"></div></div>
+        <button class="btn btn-primary" id="portalAuthSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?'Sign Up':'Sign In'}</button>
+        ${isSignup ? `<p class="portal-note">Use the email your clinic has on file for you.</p>` : ''}
+        <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="togglePortalAuthMode">${isSignup?'Already have an account? Sign in':'First time here? Sign up'}</span></div>
+        <div class="empty-state" style="text-align:center; margin-top:10px;"><span style="cursor:pointer; color:var(--sage);" id="backToStaffLink">← Back to staff sign-in</span></div>
       </div>
     </div>`;
 
-  document.getElementById('portalSignInBtn').addEventListener('click', ()=>{
-    const email = document.getElementById('portalEmail').value.trim().toLowerCase();
-    const password = document.getElementById('portalPassword').value;
+  document.getElementById('togglePortalAuthMode').addEventListener('click', ()=>renderPortalAuth(isSignup?'signin':'signup'));
+  document.getElementById('backToStaffLink').addEventListener('click', async ()=>{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session && state){
+      document.getElementById('clientPortalApp').style.display = 'none';
+      document.getElementById('staffApp').style.display = 'flex';
+    } else {
+      renderStaffAuth('signin');
+    }
+  });
+  document.getElementById('portalAuthSubmitBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('portalAuthEmail').value.trim().toLowerCase();
+    const password = document.getElementById('portalAuthPassword').value;
     if(!email || !password){ showToast('Enter your email and password'); return; }
-    const client = state.clients.find(c=>c.email && c.email.toLowerCase()===email);
-    // Deliberately the same message whether the email doesn't exist or the
-    // password is wrong — confirming a valid email exists would let someone
-    // enumerate real clients.
-    if(!client || client.portalPassword !== password){ showToast('Incorrect email or password — contact your clinic'); return; }
-    portalClient = client;
-    renderPortalDashboard();
+    const btn = document.getElementById('portalAuthSubmitBtn'); btn.disabled = true;
+    try{
+      if(isSignup){
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if(error) throw error;
+        if(!data.session){ renderPortalAuth('check-email', {email}); return; }
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if(error) throw error;
+      }
+      const { data:{ session } } = await sb.auth.getSession();
+      await handleSession(session);
+    }catch(e){
+      showToast(e.message || 'Incorrect email or password — contact your clinic');
+    }finally{
+      btn.disabled = false;
+    }
   });
-  document.getElementById('portalGoogleBtn').addEventListener('click', ()=>{
-    document.getElementById('portalGoogleNote').style.display = 'block';
-  });
-  document.getElementById('backToStaffLink').addEventListener('click', showStaffApp);
 }
 
 function renderPortalDashboard(){
-  const c = portalClient;
+  const c = portalData.client;
   const today = todayISO();
-  const appts = state.appointments.filter(a=>a.clientName===c.name && a.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
-  const treatments = c.treatments || [];
-  const invoices = state.invoices.filter(i=>i.clientId===c.id).sort((a,b)=>b.createdDate.localeCompare(a.createdDate));
+  const appts = (portalData.appointments||[]).filter(a=>a.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+  const treatments = (portalData.treatments||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const invoices = (portalData.invoices||[]).slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||''));
 
   document.getElementById('clientPortalApp').innerHTML = `
     <div class="portal-wrap">
@@ -4218,7 +4373,11 @@ function renderPortalDashboard(){
       </div>
     </div>`;
 
-  document.getElementById('portalSignOutBtn').addEventListener('click', renderPortalLogin);
+  document.getElementById('portalSignOutBtn').addEventListener('click', async ()=>{
+    await sb.auth.signOut();
+    portalData = null;
+    renderPortalAuth('signin');
+  });
 }
 
 /* ---------------- Init ---------------- */
@@ -4232,10 +4391,13 @@ window.addEventListener('unhandledrejection', (e)=>{
 });
 
 (async function init(){
-  document.getElementById('mainContent').innerHTML = '<div class="muted">Loading…</div>';
-  state = await loadState();
-  render();
-  document.getElementById('goToPortalLink').addEventListener('click', showClientPortal);
+  document.getElementById('goToPortalLink').addEventListener('click', ()=>{
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+    renderPortalAuth('signin');
+  });
+  const { data:{ session } } = await sb.auth.getSession();
+  await handleSession(session);
 })();
 </script>
 </body>
