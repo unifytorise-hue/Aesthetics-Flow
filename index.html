@@ -402,6 +402,7 @@
     </aside>
 
     <main class="main" id="main">
+      <div id="billingBanner"></div>
       <div id="mainContent"></div>
       <footer class="site-footer">Powered by <strong>Medical &amp; Aesthetics Online</strong></footer>
     </main>
@@ -2619,10 +2620,36 @@ function renderChatBubble(m, idx){
 }
 
 /* ---------------- Main render + events ---------------- */
+function renderBillingBanner(){
+  const el = document.getElementById('billingBanner');
+  if(!currentPerms().canManageStaff){ el.innerHTML = ''; return; }
+  const status = state.clinic.subscriptionStatus;
+  const daysLeft = state.clinic.trialEndsAt ? Math.ceil((new Date(state.clinic.trialEndsAt) - new Date()) / 86400000) : null;
+
+  let text = null, tone = 'warn';
+  if(status === 'past_due'){ text = 'Your last payment failed — update billing to avoid interruption.'; tone = 'danger'; }
+  else if(status === 'canceled'){ text = 'Your subscription is canceled. Reach out to us to keep using AestheticFlow.'; tone = 'danger'; }
+  else if(status === 'trialing' && daysLeft !== null){
+    if(daysLeft <= 0){ text = 'Your trial has ended. Reach out to us to pick a plan and keep going.'; tone = 'danger'; }
+    else if(daysLeft <= 3){ text = `Your trial ends in ${daysLeft} day${daysLeft===1?'':'s'} — head to Settings to sort out billing.`; tone = 'warn'; }
+  }
+
+  if(!text){ el.innerHTML = ''; return; }
+  const bg = tone==='danger' ? 'rgba(230,90,90,0.12)' : 'rgba(212,175,55,0.12)';
+  const border = tone==='danger' ? 'var(--danger)' : 'var(--rose-gold)';
+  el.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:${bg}; border:1px solid ${border}; border-radius:8px; padding:10px 16px; margin-bottom:18px; font-size:13px;">
+      <span>${esc(text)}</span>
+      <button class="btn btn-secondary btn-sm" id="billingBannerSettingsBtn" style="white-space:nowrap;">Go to Billing</button>
+    </div>`;
+  document.getElementById('billingBannerSettingsBtn').addEventListener('click', ()=>{ activeView='settings'; activeClientId=null; render(); });
+}
+
 function render(){
   const perms = currentPerms();
   if(!activeClientId && !perms.nav.includes(activeView)) activeView = 'dashboard';
   renderNav();
+  renderBillingBanner();
   const main = document.getElementById('mainContent');
   if(activeClientId){
     main.innerHTML = renderClientDetail();
