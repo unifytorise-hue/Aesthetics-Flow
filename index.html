@@ -518,7 +518,7 @@ function seedData(){
       {id:'ct1', type:'grant', amount:20, reason:'Trial credits', date:todayISO()}
     ],
     socialPosts:[],
-    apiKey:'af_live_' + 'demo0000000000000000000000000000',
+    apiKeys:[],
     locations:[
       {id:'loc1', name:'Main Location', address:'Replace with your real address', phone:''},
       {id:'loc2', name:'Second Location', address:'Replace with your real address', phone:''},
@@ -638,7 +638,7 @@ async function loadState(){
     const [
       clinicIdRes, clinicRowRes, clinicRes, locationsRes, staffRes, clientsRes, treatmentsRes, photoSetsRes, documentsRes,
       appointmentsRes, leadsRes, inventoryRes, invoicesRes, lineItemsRes, campaignsRes,
-      socialPostsRes, creditTxRes, aiChatRes
+      socialPostsRes, creditTxRes, aiChatRes, apiKeysRes
     ] = await Promise.all([
       sb.rpc('my_clinic_id'),
       sb.from('clinics').select('*').maybeSingle(),
@@ -657,7 +657,8 @@ async function loadState(){
       sb.from('campaigns').select('*'),
       sb.from('social_posts').select('*'),
       sb.from('credit_transactions').select('*'),
-      sb.from('ai_chat_messages').select('*').order('id', {ascending:true})
+      sb.from('ai_chat_messages').select('*').order('id', {ascending:true}),
+      sb.from('api_keys').select('*').order('created_at', {ascending:false})
     ]);
 
     const clinicId = clinicIdRes.data;
@@ -686,7 +687,7 @@ async function loadState(){
       contentCredits: Number(clinicRow.content_credits ?? 20),
       creditTransactions:(creditTxRes.data||[]).map(t=>({ id:t.id, type:t.type, amount:Number(t.amount), reason:t.reason, date:t.date })),
       socialPosts:(socialPostsRes.data||[]).map(p=>({ id:p.id, contentType:p.content_type, mediaUrl:p.media_url, mediaFilename:p.media_filename, treatmentContext:p.treatment_context, caption:p.caption||'', hashtags:p.hashtags||'', platforms:p.platforms||[] })),
-      apiKey: clinicRow.api_key || generateApiKey(),
+      apiKeys:(apiKeysRes.data||[]).map(k=>({ id:k.id, label:k.label, keyPrefix:k.key_prefix, createdAt:k.created_at, lastUsedAt:k.last_used_at, revokedAt:k.revoked_at })),
       locations:(locationsRes.data||[]).map(l=>({ id:l.id, name:l.name, address:l.address, phone:l.phone })),
       currentLocationId: clinicRow.current_location_id || (locationsRes.data[0] && locationsRes.data[0].id) || null,
       staff:(staffRes.data||[]).map(s=>({ id:s.id, name:s.name, role:s.role, locationId:s.location_id, commissionRate:Number(s.commission_rate)||0, licenseExpiry:s.license_expiry, salesTarget:Number(s.sales_target)||0, targetBonusPercent:Number(s.target_bonus_percent)||0, email:s.email||'', authUserId:s.auth_user_id })),
@@ -775,7 +776,7 @@ async function persistStateToSupabase(s){
     clinic_id:s.clinicId, name:s.clinic.name, practitioner_name:s.clinic.practitionerName, logo_url:s.clinic.logoUrl||null, currency:s.clinic.currency,
     origination_commission_rate:s.clinic.originationCommissionRate, depreciation_period_years:s.clinic.depreciationPeriodYears,
     org_sales_target:s.clinic.orgSalesTarget, org_bonus_percent:s.clinic.orgBonusPercent,
-    api_key:s.apiKey, content_credits:s.contentCredits, current_location_id:s.currentLocationId||null,
+    content_credits:s.contentCredits, current_location_id:s.currentLocationId||null,
     current_staff_id:s.currentStaffId||null, next_invoice_seq:s.nextInvoiceSeq
   });
 }
@@ -2448,16 +2449,27 @@ function renderSettings(){
 
   const apiKeyCard = perms.canManageStaff ? `
       <div class="card">
-        <div class="card-title">API Access <span class="muted" style="text-transform:none; letter-spacing:0;">(Preview)</span></div>
-        <p class="muted" style="font-size:13px; margin-bottom:16px;">This is a preview of the key-management UI for future API access — there's no live API behind it yet; that needs the real backend (Phase 3).</p>
-        <div class="field-group">
-          <label>Your API Key</label>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <input id="apiKeyDisplay" type="text" readonly value="${state.apiKey||''}" style="flex:1; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; background:var(--panel2); color:var(--bone);">
-            <button class="btn btn-secondary btn-sm" id="copyApiKeyBtn">Copy</button>
-          </div>
+        <div class="card-title">API Access</div>
+        <p class="muted" style="font-size:13px; margin-bottom:16px;">Live keys for external integrations (booking widgets, marketing tools). Each key is shown in full once, at creation — only a hash is stored after that, so lost keys can't be recovered, only replaced.</p>
+        <div class="roles-list" id="apiKeysList">
+          ${state.apiKeys.filter(k=>!k.revokedAt).map(k=>`
+            <div class="role-row" style="justify-content:space-between;">
+              <div>
+                <strong>${esc(k.label)}</strong>
+                <div class="muted" style="font-size:12px; margin-top:2px; font-family:'JetBrains Mono', monospace;">${esc(k.keyPrefix)}</div>
+                <div class="muted" style="font-size:11px; margin-top:2px;">Created ${k.createdAt ? esc(new Date(k.createdAt).toLocaleDateString()) : '—'} · ${k.lastUsedAt ? 'Last used ' + esc(new Date(k.lastUsedAt).toLocaleDateString()) : 'Never used'}</div>
+              </div>
+              <div class="row-actions">
+                <button class="icon-btn danger" data-revoke-key="${k.id}" title="Revoke">${ICONS.trash}</button>
+              </div>
+            </div>`).join('') || '<p class="empty-state">No active API keys yet.</p>'}
         </div>
-        <button class="btn btn-secondary btn-sm" id="regenApiKeyBtn">Regenerate Key</button>
+        <div class="actions">
+          <button class="btn btn-secondary" id="createApiKeyBtn">${ICONS.plus} Create New Key</button>
+        </div>
+        <p class="muted" style="font-size:12px; margin-top:14px; line-height:1.6;">Send requests with header <code>Authorization: Bearer &lt;your key&gt;</code> to:<br>
+          <code>GET ${esc(SUPABASE_URL)}/functions/v1/public-api/clients</code><br>
+          <code>POST ${esc(SUPABASE_URL)}/functions/v1/public-api/appointments</code> (body: client_name, date, time, service, location_id — optional)</p>
       </div>` : '';
 
   const billingCard = perms.canManageStaff ? (()=>{
@@ -3000,7 +3012,7 @@ function openBuyCreditsModal(){
   ];
   openModal(`
     <div class="modal-title">Buy Content Credits</div>
-    <p class="muted" style="font-size:13px; margin-bottom:18px; line-height:1.6;">Credits are spent generating AI captions and hashtags for social content. This is a preview of the purchase flow — real payment needs Stripe/PayFast checkout (Phase 3 backend). Clicking a package below adds credits directly so you can test the feature, without an actual charge.</p>
+    <p class="muted" style="font-size:13px; margin-bottom:18px; line-height:1.6;">Credits are spent generating AI captions and hashtags for social content. If real billing is connected, this opens Stripe Checkout; otherwise credits are added directly so you can test the feature without an actual charge.</p>
     <div class="credit-packages-grid">
       ${packages.map(p=>`
         <div class="credit-package" data-buy-package="${p.credits}|${p.price}">
@@ -3014,11 +3026,21 @@ function openBuyCreditsModal(){
   document.querySelectorAll('[data-buy-package]').forEach(el=>{
     el.addEventListener('click', async ()=>{
       const [credits, price] = el.dataset.buyPackage.split('|').map(Number);
-      state.contentCredits += credits;
-      state.creditTransactions.unshift({id:'ct'+Date.now(), type:'grant', amount:credits, reason:`Purchased ${credits} credits (demo, ${fmtMoney(price)} — no real charge)`, date:todayISO()});
-      await saveState();
-      closeModal(); render();
-      showToast(`${credits} credits added (demo — no real payment was processed)`);
+      el.style.pointerEvents = 'none';
+      try{
+        const { data, error } = await sb.functions.invoke('create-checkout-session', { body:{ kind:'credits', packageId:String(credits) } });
+        if(error) throw error;
+        if(data && data.configured && data.url){ window.location.href = data.url; return; }
+        state.contentCredits += credits;
+        state.creditTransactions.unshift({id:'ct'+Date.now(), type:'grant', amount:credits, reason:`Purchased ${credits} credits (demo, ${fmtMoney(price)} — no real charge)`, date:todayISO()});
+        await saveState();
+        closeModal(); render();
+        showToast((data && data.message) || `${credits} credits added (demo — no real payment was processed)`);
+      }catch(e){
+        showToast(e.message || 'Could not start checkout');
+      }finally{
+        el.style.pointerEvents = '';
+      }
     });
   });
 }
@@ -3757,16 +3779,36 @@ function bindSettingsEvents(){
     });
   });
 
-  const copyApiKeyBtn = document.getElementById('copyApiKeyBtn');
-  if(copyApiKeyBtn) copyApiKeyBtn.addEventListener('click', async ()=>{
-    const input = document.getElementById('apiKeyDisplay');
-    input.select();
-    await copyToClipboard(input.value, 'API key copied');
+  const createApiKeyBtn = document.getElementById('createApiKeyBtn');
+  if(createApiKeyBtn) createApiKeyBtn.addEventListener('click', openCreateApiKeyModal);
+  document.querySelectorAll('[data-revoke-key]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = state.apiKeys.find(k=>k.id===btn.dataset.revokeKey);
+      confirmAction(`Revoke "${key.label}"? Any integration using this key will stop working immediately.`, async ()=>{
+        try{
+          const { error } = await sb.from('api_keys').update({ revoked_at:new Date().toISOString() }).eq('id', key.id);
+          if(error) throw error;
+          key.revokedAt = new Date().toISOString();
+          render();
+          showToast('API key revoked');
+        }catch(e){ showToast(e.message || 'Could not revoke key'); }
+      });
+    });
   });
 
   const upgradePlanBtn = document.getElementById('upgradePlanBtn');
-  if(upgradePlanBtn) upgradePlanBtn.addEventListener('click', ()=>{
-    showToast('Online upgrades are coming soon — reach out to us to change your plan for now');
+  if(upgradePlanBtn) upgradePlanBtn.addEventListener('click', async ()=>{
+    upgradePlanBtn.disabled = true;
+    try{
+      const { data, error } = await sb.functions.invoke('create-checkout-session', { body:{ kind:'subscription' } });
+      if(error) throw error;
+      if(data && data.configured && data.url){ window.location.href = data.url; return; }
+      showToast((data && data.message) || 'Online upgrades are coming soon — reach out to us to change your plan for now');
+    }catch(e){
+      showToast(e.message || 'Could not start checkout');
+    }finally{
+      upgradePlanBtn.disabled = false;
+    }
   });
   const exportAllDataBtn = document.getElementById('exportAllDataBtn');
   if(exportAllDataBtn) exportAllDataBtn.addEventListener('click', ()=>{
@@ -3789,14 +3831,6 @@ function bindSettingsEvents(){
     showToast('Sales commission settings saved');
   });
 
-  const regenApiKeyBtn = document.getElementById('regenApiKeyBtn');
-  if(regenApiKeyBtn) regenApiKeyBtn.addEventListener('click', ()=>{
-    confirmAction('Regenerate your API key? The old key will stop working immediately.', async ()=>{
-      state.apiKey = generateApiKey();
-      await saveState(); render();
-      showToast('API key regenerated');
-    });
-  });
   const addStaffBtn = document.getElementById('addStaffBtn');
   if(addStaffBtn) addStaffBtn.addEventListener('click', ()=>openStaffModal(null));
 }
@@ -3964,9 +3998,10 @@ function openCampaignSendModal(campaign){
     <p class="muted" style="font-size:13px; margin-bottom:16px; line-height:1.6;">
       Matches ${recipients.length} client${recipients.length===1?'':'s'} in the "${esc(campaign.audience)}" segment
       (${emailRecipients.length} with an email, ${phoneRecipients.length} with a phone number).
-      ${recipients.length > CAP ? `<br><strong style="color:var(--danger);">This is more than ${CAP} recipients — mailto/SMS links break down at that size. Genuine bulk sending needs a real email/SMS provider (SendGrid, Twilio) wired into the Phase 3 backend, not this hand-off.</strong>` : `This opens your own mail or messages app pre-filled — there's no backend here to send silently on your behalf, same as everywhere else in this prototype that sends something.`}
+      ${recipients.length > CAP ? `<br><strong style="color:var(--danger);">This is more than ${CAP} recipients — mailto/SMS links below break down at that size; use "Send Now" instead, which needs a real provider connected.</strong>` : `"Send Now" uses a real provider if one's connected; otherwise use the mail/messages app hand-off below.`}
     </p>
     <div class="send-actions">
+      <button class="btn btn-primary" id="sendCampaignNowBtn">${ICONS.email} Send Now</button>
       ${campaign.type==='Email' ? `<button class="btn btn-secondary" id="sendCampaignEmailBtn" ${!emailRecipients.length || recipients.length>CAP ? 'disabled':''}>${ICONS.email} Open in Mail (BCC)</button>` : ''}
       ${campaign.type==='SMS' ? `<button class="btn btn-secondary" id="sendCampaignSmsBtn" ${!phoneRecipients.length || recipients.length>CAP ? 'disabled':''}>${ICONS.whatsapp} Open in Messages</button>` : ''}
       <button class="btn btn-secondary" id="copyRecipientsBtn">Copy Recipient List</button>
@@ -3974,6 +4009,25 @@ function openCampaignSendModal(campaign){
     <div class="modal-actions">
       <button class="btn btn-secondary" id="cancelModal">Close</button>
     </div>`);
+
+  document.getElementById('sendCampaignNowBtn').addEventListener('click', async (e)=>{
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try{
+      const { data, error } = await sb.functions.invoke('send-campaign', { body:{ campaignId:campaign.id } });
+      if(error) throw error;
+      if(data && data.configured){
+        showToast(`Sent to ${data.sent} recipient${data.sent===1?'':'s'}${data.failed ? ` (${data.failed} failed)` : ''}`);
+        closeModal();
+      } else {
+        showToast((data && data.message) || 'Sending isn\'t connected yet — use the mail/messages hand-off below');
+      }
+    }catch(err){
+      showToast(err.message || 'Could not send campaign');
+    }finally{
+      btn.disabled = false;
+    }
+  });
 
   const emailBtn = document.getElementById('sendCampaignEmailBtn');
   if(emailBtn) emailBtn.addEventListener('click', ()=>{
@@ -4031,11 +4085,61 @@ function openLocationModal(location){
   });
 }
 
-function generateApiKey(){
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let key = 'af_live_';
-  for(let i=0;i<32;i++) key += chars[Math.floor(Math.random()*chars.length)];
-  return key;
+// Generates a cryptographically random secret (crypto.getRandomValues, not
+// Math.random — the old preview used Math.random, which is predictable and
+// not fit for anything that gates real access). Only the SHA-256 hash and a
+// short display prefix are ever sent to Supabase; the full secret exists in
+// memory just long enough to show it once.
+async function generateAndStoreApiKey(label){
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  const secret = Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const fullKey = 'af_live_' + secret;
+  const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fullKey));
+  const keyHash = Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const keyPrefix = fullKey.slice(0, 14) + '…';
+  const row = { id:'key'+Date.now(), clinic_id:state.clinicId, label, key_prefix:keyPrefix, key_hash:keyHash, created_by:state.currentStaffId||null };
+  const { error } = await sb.from('api_keys').insert(row);
+  if(error) throw error;
+  return { fullKey, row };
+}
+
+function openCreateApiKeyModal(){
+  openModal(`
+    <div class="modal-title">Create API Key</div>
+    <div class="field-group"><label>Label</label><div class="field-line"><input id="newKeyLabel" type="text" placeholder="e.g. Booking widget"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancelModal">Cancel</button>
+      <button class="btn btn-primary" id="confirmCreateKeyBtn">Create Key</button>
+    </div>`);
+  document.getElementById('confirmCreateKeyBtn').addEventListener('click', async ()=>{
+    const label = document.getElementById('newKeyLabel').value.trim() || 'API Key';
+    try{
+      const { fullKey, row } = await generateAndStoreApiKey(label);
+      state.apiKeys.unshift({ id:row.id, label:row.label, keyPrefix:row.key_prefix, createdAt:new Date().toISOString(), lastUsedAt:null, revokedAt:null });
+      closeModal();
+      showApiKeyOnceModal(fullKey);
+    }catch(e){ showToast(e.message || 'Could not create API key'); }
+  });
+}
+
+function showApiKeyOnceModal(fullKey){
+  openModal(`
+    <div class="modal-title">Your new API key</div>
+    <p class="empty-state" style="margin-bottom:14px;">Copy this now — for your security, it won't be shown again. If you lose it, revoke it below and create a new one.</p>
+    <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px;">
+      <input id="newKeyDisplay" type="text" readonly value="${esc(fullKey)}" style="flex:1; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-family:'JetBrains Mono', monospace; font-size:12px; background:var(--panel2); color:var(--bone);">
+      <button class="btn btn-secondary btn-sm" id="copyNewKeyBtn">Copy</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="cancelModal">Done</button>
+    </div>`);
+  document.getElementById('copyNewKeyBtn').addEventListener('click', async ()=>{
+    const input = document.getElementById('newKeyDisplay');
+    input.select();
+    await copyToClipboard(input.value, 'API key copied');
+  });
+  render();
 }
 
 /* ---- AI Assistant ---- */
@@ -4232,6 +4336,30 @@ async function enterStaffApp(session){
   document.getElementById('sidebarBrandMark').textContent = state.clinic.name || 'AestheticFlow';
   document.getElementById('mobileBrandMark').textContent = state.clinic.name || 'AestheticFlow';
   render();
+  handleBillingRedirectReturn(session);
+}
+
+// After a Stripe Checkout redirect back to the app (?billing=success or
+// ?billing=cancelled), tell the user what happened and clean the URL. The
+// webhook (not this code) is what actually applies credits/plan changes,
+// so on success we just re-fetch state — it may take a few seconds to
+// reflect if the webhook hasn't landed yet.
+async function handleBillingRedirectReturn(session){
+  const params = new URLSearchParams(window.location.search);
+  const billing = params.get('billing');
+  if(!billing) return;
+  history.replaceState(null, '', window.location.pathname);
+  if(billing === 'success'){
+    showToast('Payment received — updating your account…');
+    state = await loadState();
+    const me = state.staff.find(s=>s.authUserId === session.user.id);
+    state.currentStaffId = me ? me.id : (state.staff[0] && state.staff[0].id);
+    const { data: isAdmin } = await sb.rpc('is_platform_admin');
+    state.isPlatformAdmin = !!isAdmin;
+    render();
+  } else if(billing === 'cancelled'){
+    showToast('Checkout cancelled — no charge was made');
+  }
 }
 
 function renderPendingScreen(email){
