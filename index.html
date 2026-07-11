@@ -631,10 +631,11 @@ function mapInvoice(inv, lineItemsByInvoice){
 async function loadState(){
   try{
     const [
-      clinicRes, locationsRes, staffRes, clientsRes, treatmentsRes, photoSetsRes, documentsRes,
+      clinicIdRes, clinicRes, locationsRes, staffRes, clientsRes, treatmentsRes, photoSetsRes, documentsRes,
       appointmentsRes, leadsRes, inventoryRes, invoicesRes, lineItemsRes, campaignsRes,
       socialPostsRes, creditTxRes, aiChatRes
     ] = await Promise.all([
+      sb.rpc('my_clinic_id'),
       sb.from('clinic_settings').select('*').maybeSingle(),
       sb.from('locations').select('*'),
       sb.from('staff').select('*'),
@@ -653,14 +654,7 @@ async function loadState(){
       sb.from('ai_chat_messages').select('*').order('id', {ascending:true})
     ]);
 
-    // First run against a fresh database: seed it once so everyone sharing
-    // this CRM sees the same starting data from here on.
-    if(!locationsRes.data || !locationsRes.data.length){
-      const seed = seedData();
-      await persistStateToSupabase(seed);
-      return seed;
-    }
-
+    const clinicId = clinicIdRes.data;
     const treatmentsByClient = rowsByKey(treatmentsRes.data, 'client_id');
     const photoSetsByClient = rowsByKey(photoSetsRes.data, 'client_id');
     const documentsByClient = rowsByKey(documentsRes.data, 'client_id');
@@ -668,6 +662,7 @@ async function loadState(){
     const clinicRow = clinicRes.data || {};
 
     return {
+      clinicId,
       clinic:{
         name: clinicRow.name || 'AestheticFlow Clinic',
         practitionerName: clinicRow.practitioner_name || 'Dr Sarah',
@@ -682,7 +677,7 @@ async function loadState(){
       socialPosts:(socialPostsRes.data||[]).map(p=>({ id:p.id, contentType:p.content_type, mediaUrl:p.media_url, mediaFilename:p.media_filename, treatmentContext:p.treatment_context, caption:p.caption||'', hashtags:p.hashtags||'', platforms:p.platforms||[] })),
       apiKey: clinicRow.api_key || generateApiKey(),
       locations:(locationsRes.data||[]).map(l=>({ id:l.id, name:l.name, address:l.address, phone:l.phone })),
-      currentLocationId: clinicRow.current_location_id || locationsRes.data[0].id,
+      currentLocationId: clinicRow.current_location_id || (locationsRes.data[0] && locationsRes.data[0].id) || null,
       staff:(staffRes.data||[]).map(s=>({ id:s.id, name:s.name, role:s.role, locationId:s.location_id, commissionRate:Number(s.commission_rate)||0, licenseExpiry:s.license_expiry, salesTarget:Number(s.sales_target)||0, targetBonusPercent:Number(s.target_bonus_percent)||0, email:s.email||'', authUserId:s.auth_user_id })),
       currentStaffId: clinicRow.current_staff_id || (staffRes.data[0] && staffRes.data[0].id),
       clients:(clientsRes.data||[]).map(c=>mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient)),
@@ -702,9 +697,10 @@ async function loadState(){
 }
 
 // Whole-state overwrite: deletes children-first then inserts parents-first
-// to respect foreign keys. Simplest correct approach at this app's scale
-// (a single small clinic) — not safe against two staff saving at the exact
-// same instant, same limitation the old single-JSON-blob storage already had.
+// to respect foreign keys. RLS scopes every delete/insert to the caller's
+// own clinic_id, so this can't touch another tenant's rows — but it's still
+// not safe against two staff at the same clinic saving at the exact same
+// instant, same limitation the old single-JSON-blob storage already had.
 async function persistStateToSupabase(s){
   await sb.from('ai_chat_messages').delete().gte('id', 0);
   await sb.from('invoice_line_items').delete().neq('id','');
@@ -722,11 +718,11 @@ async function persistStateToSupabase(s){
   await sb.from('staff').delete().neq('id','');
   await sb.from('locations').delete().neq('id','');
 
-  if(s.locations.length) await sb.from('locations').insert(s.locations.map(l=>({ id:l.id, name:l.name, address:l.address, phone:l.phone })));
-  if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent, email:st.email||null, auth_user_id:st.authUserId||null })));
-  if(s.inventory.length) await sb.from('inventory').insert(s.inventory.map(i=>({ id:i.id, name:i.name, stock:i.stock, expires_in:i.expiresIn||null, price:i.price||0 })));
+  if(s.locations.length) await sb.from('locations').insert(s.locations.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, address:l.address, phone:l.phone })));
+  if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, clinic_id:s.clinicId, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent, email:st.email||null, auth_user_id:st.authUserId||null })));
+  if(s.inventory.length) await sb.from('inventory').insert(s.inventory.map(i=>({ id:i.id, clinic_id:s.clinicId, name:i.name, stock:i.stock, expires_in:i.expiresIn||null, price:i.price||0 })));
   if(s.clients.length) await sb.from('clients').insert(s.clients.map(c=>({
-    id:c.id, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status,
+    id:c.id, clinic_id:s.clinicId, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status,
     location_id:c.locationId, captured_by:c.capturedBy, capture_date:c.captureDate||null,
     skin_type:c.skinType, concerns:c.concerns||[], medical_notes:c.medicalNotes||'',
     last_treatment_name:(c.lastTreatment&&c.lastTreatment.name)||'—', last_treatment_date:(c.lastTreatment&&c.lastTreatment.date)||'—', last_treatment_practitioner:(c.lastTreatment&&c.lastTreatment.practitioner)||'—',
@@ -739,33 +735,33 @@ async function persistStateToSupabase(s){
     (c.treatments||[]).forEach(t=>{
       allTreatments.push({
         id: t.id || ('t'+Date.now()+Math.random().toString(36).slice(2,8)),
-        client_id:c.id, name:t.name, date:t.date, area:t.area||[], product:t.product||'', batch:t.batch||'',
+        clinic_id:s.clinicId, client_id:c.id, name:t.name, date:t.date, area:t.area||[], product:t.product||'', batch:t.batch||'',
         notes:t.notes||'', price:t.price||0, practitioner:t.practitioner, sold_by:t.soldBy||null,
         is_new_procedure:!!t.isNewProcedure, verified:!!t.verified, verified_by:t.verifiedBy||null, verified_date:t.verifiedDate||null
       });
     });
-    (c.photoSets||[]).forEach(p=>{ allPhotoSets.push({ id:p.id, client_id:c.id, date:p.date, caption:p.caption||'', before_url:p.beforeUrl||null, after_url:p.afterUrl||null }); });
-    (c.documents||[]).forEach(d=>{ allDocuments.push({ id:d.id, client_id:c.id, filename:d.filename, file_type:d.fileType, uploaded_date:d.uploadedDate||null, data_url:d.dataUrl||null }); });
+    (c.photoSets||[]).forEach(p=>{ allPhotoSets.push({ id:p.id, clinic_id:s.clinicId, client_id:c.id, date:p.date, caption:p.caption||'', before_url:p.beforeUrl||null, after_url:p.afterUrl||null }); });
+    (c.documents||[]).forEach(d=>{ allDocuments.push({ id:d.id, clinic_id:s.clinicId, client_id:c.id, filename:d.filename, file_type:d.fileType, uploaded_date:d.uploadedDate||null, data_url:d.dataUrl||null }); });
   });
   if(allTreatments.length) await sb.from('treatments').insert(allTreatments);
   if(allPhotoSets.length) await sb.from('photo_sets').insert(allPhotoSets);
   if(allDocuments.length) await sb.from('documents').insert(allDocuments);
 
-  if(s.appointments.length) await sb.from('appointments').insert(s.appointments.map(a=>({ id:a.id, client_id:a.clientId||null, client_name:a.clientName, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, location_id:a.locationId||null })));
-  if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null })));
+  if(s.appointments.length) await sb.from('appointments').insert(s.appointments.map(a=>({ id:a.id, clinic_id:s.clinicId, client_id:a.clientId||null, client_name:a.clientName, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, location_id:a.locationId||null })));
+  if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null })));
 
-  if(s.invoices.length) await sb.from('invoices').insert(s.invoices.map(inv=>({ id:inv.id, invoice_number:inv.invoiceNumber, client_id:inv.clientId||null, client_name:inv.clientName, type:inv.type, status:inv.status, notes:inv.notes||'', created_date:inv.createdDate||null, due_date:inv.dueDate||null, stock_deducted:!!inv.stockDeducted })));
+  if(s.invoices.length) await sb.from('invoices').insert(s.invoices.map(inv=>({ id:inv.id, clinic_id:s.clinicId, invoice_number:inv.invoiceNumber, client_id:inv.clientId||null, client_name:inv.clientName, type:inv.type, status:inv.status, notes:inv.notes||'', created_date:inv.createdDate||null, due_date:inv.dueDate||null, stock_deducted:!!inv.stockDeducted })));
   const allLineItems = [];
-  s.invoices.forEach(inv=>{ (inv.lineItems||[]).forEach(li=>{ allLineItems.push({ id:li.id, invoice_id:inv.id, description:li.description, product_id:li.productId||null, quantity:li.quantity, unit_price:li.unitPrice }); }); });
+  s.invoices.forEach(inv=>{ (inv.lineItems||[]).forEach(li=>{ allLineItems.push({ id:li.id, clinic_id:s.clinicId, invoice_id:inv.id, description:li.description, product_id:li.productId||null, quantity:li.quantity, unit_price:li.unitPrice }); }); });
   if(allLineItems.length) await sb.from('invoice_line_items').insert(allLineItems);
 
-  if(s.campaigns.length) await sb.from('campaigns').insert(s.campaigns.map(k=>({ id:k.id, name:k.name, type:k.type, subject:k.subject||'', body:k.body||'', audience:k.audience||'all', clients_count:k.clients||0, status:k.status })));
-  if(s.socialPosts.length) await sb.from('social_posts').insert(s.socialPosts.map(p=>({ id:p.id, content_type:p.contentType, media_url:p.mediaUrl||null, media_filename:p.mediaFilename||null, treatment_context:p.treatmentContext||null, caption:p.caption||'', hashtags:p.hashtags||'', platforms:p.platforms||[] })));
-  if(s.creditTransactions.length) await sb.from('credit_transactions').insert(s.creditTransactions.map(t=>({ id:t.id, type:t.type, amount:t.amount, reason:t.reason||null, date:t.date||null })));
-  if(s.aiChat.length) await sb.from('ai_chat_messages').insert(s.aiChat.map(m=>({ from_role:m.from, text:m.text, suggest_campaign:!!m.suggestCampaign, suggest_invoice_for:m.suggestInvoiceFor||null, suggest_invoice_type:m.suggestInvoiceType||null })));
+  if(s.campaigns.length) await sb.from('campaigns').insert(s.campaigns.map(k=>({ id:k.id, clinic_id:s.clinicId, name:k.name, type:k.type, subject:k.subject||'', body:k.body||'', audience:k.audience||'all', clients_count:k.clients||0, status:k.status })));
+  if(s.socialPosts.length) await sb.from('social_posts').insert(s.socialPosts.map(p=>({ id:p.id, clinic_id:s.clinicId, content_type:p.contentType, media_url:p.mediaUrl||null, media_filename:p.mediaFilename||null, treatment_context:p.treatmentContext||null, caption:p.caption||'', hashtags:p.hashtags||'', platforms:p.platforms||[] })));
+  if(s.creditTransactions.length) await sb.from('credit_transactions').insert(s.creditTransactions.map(t=>({ id:t.id, clinic_id:s.clinicId, type:t.type, amount:t.amount, reason:t.reason||null, date:t.date||null })));
+  if(s.aiChat.length) await sb.from('ai_chat_messages').insert(s.aiChat.map(m=>({ clinic_id:s.clinicId, from_role:m.from, text:m.text, suggest_campaign:!!m.suggestCampaign, suggest_invoice_for:m.suggestInvoiceFor||null, suggest_invoice_type:m.suggestInvoiceType||null })));
 
   await sb.from('clinic_settings').upsert({
-    id:true, name:s.clinic.name, practitioner_name:s.clinic.practitionerName, currency:s.clinic.currency,
+    clinic_id:s.clinicId, name:s.clinic.name, practitioner_name:s.clinic.practitionerName, currency:s.clinic.currency,
     origination_commission_rate:s.clinic.originationCommissionRate, depreciation_period_years:s.clinic.depreciationPeriodYears,
     org_sales_target:s.clinic.orgSalesTarget, org_bonus_percent:s.clinic.orgBonusPercent,
     api_key:s.apiKey, content_credits:s.contentCredits, current_location_id:s.currentLocationId||null,
@@ -2505,7 +2501,7 @@ async function loadTeamChat(){
 // Appends just the new message rather than rewriting the whole table, so
 // concurrent senders can't clobber each other's messages.
 async function saveTeamChat(message){
-  try{ await sb.from('team_chat_messages').insert({ staff_id:message.staffId, staff_name:message.staffName, text:message.text }); }
+  try{ await sb.from('team_chat_messages').insert({ clinic_id:state.clinicId, staff_id:message.staffId, staff_name:message.staffName, text:message.text }); }
   catch(e){ showToast('⚠ Message may not have saved — storage error'); }
 }
 
@@ -4182,14 +4178,34 @@ function renderPendingScreen(email){
           <div class="brand-mark">Aesthetic<em>Flow</em></div>
           <div class="eyebrow" style="margin-top:8px;">Account Pending</div>
         </div>
-        <p class="portal-note" style="margin-top:0;">We couldn't find a staff or client record for <strong>${esc(email)}</strong>. Ask an Owner or Admin to add your email in Settings (staff) or on your client record, then retry.</p>
+        <p class="portal-note" style="margin-top:0;">We couldn't find a staff or client record for <strong>${esc(email)}</strong> at any clinic.</p>
+        <p class="portal-note">If a clinic already invited you, ask an Owner or Admin to add this exact email in their Settings, then retry.</p>
         <button class="btn btn-primary" id="retryClaimBtn" style="width:100%; justify-content:center; margin-top:8px;">Retry</button>
+        <div class="portal-divider">or</div>
+        <div class="field-group"><label>New Clinic Name</label><div class="field-line"><input id="newClinicName" type="text" placeholder="e.g. Bright Skin Clinic"></div></div>
+        <button class="btn btn-secondary" id="createClinicBtn" style="width:100%; justify-content:center;">Set Up a New Clinic</button>
+        <p class="portal-note">Creates a brand-new clinic with you as Owner — use this if you're the first person from your business signing up.</p>
         <button class="btn btn-secondary" id="pendingSignOutBtn" style="width:100%; justify-content:center; margin-top:10px;">Sign Out</button>
       </div>
     </div>`;
   document.getElementById('retryClaimBtn').addEventListener('click', async ()=>{
     const { data:{ session } } = await sb.auth.getSession();
     await handleSession(session);
+  });
+  document.getElementById('createClinicBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('newClinicName').value.trim();
+    if(!name){ showToast('Enter a clinic name'); return; }
+    const btn = document.getElementById('createClinicBtn'); btn.disabled = true;
+    try{
+      const { error } = await sb.rpc('create_clinic_and_claim_owner', { p_clinic_name: name });
+      if(error) throw error;
+      const { data:{ session } } = await sb.auth.getSession();
+      await handleSession(session);
+    }catch(e){
+      showToast(e.message || 'Could not create clinic');
+    }finally{
+      btn.disabled = false;
+    }
   });
   document.getElementById('pendingSignOutBtn').addEventListener('click', async ()=>{
     await sb.auth.signOut();
@@ -4230,7 +4246,7 @@ function renderStaffAuth(mode, opts){
         <div class="field-group"><label>Email</label><div class="field-line"><input id="authEmail" type="email" placeholder="you@clinic.com"></div></div>
         <div class="field-group"><label>Password</label><div class="field-line"><input id="authPassword" type="password" placeholder="••••••••"></div></div>
         <button class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?'Sign Up':'Sign In'}</button>
-        ${isSignup ? `<p class="portal-note">Your email must already be added by an Owner or Admin in Settings before you can sign up.</p>` : ''}
+        ${isSignup ? `<p class="portal-note">Joining an existing clinic? Your email must already be added by an Owner or Admin in their Settings. First from your business? Sign up anyway — you'll get the option to set up a new clinic.</p>` : ''}
         <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="toggleAuthModeLink">${isSignup?'Already have an account? Sign in':'New staff member? Sign up'}</span></div>
         <div class="portal-divider">or</div>
         <div class="empty-state" style="text-align:center;"><span style="cursor:pointer; color:var(--sage);" id="goToPortalFromStaff">Client Portal →</span></div>
