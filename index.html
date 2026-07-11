@@ -4392,7 +4392,7 @@ function renderPortalDashboard(){
             <div class="portal-row-right">${fmtDate(t.date)}</div>
           </div>`).join('') : `<p class="empty-state">No treatment history yet.</p>`}
       </div>
-      <div class="card">
+      <div class="card" style="margin-bottom:20px;">
         <div class="card-title">Invoices &amp; Quotes</div>
         ${invoices.length ? invoices.map(inv=>`
           <div class="portal-row">
@@ -4400,7 +4400,34 @@ function renderPortalDashboard(){
             <div class="portal-row-right">${fmtMoney(invoiceTotal(inv))}<br><span class="status ${inv.status}">${inv.status}</span></div>
           </div>`).join('') : `<p class="empty-state">No invoices or quotes yet.</p>`}
       </div>
+      <div class="card">
+        <div class="card-title">Change Password</div>
+        <p class="muted" style="font-size:13px; margin-bottom:16px;">Updates the password for your own portal sign-in.</p>
+        <div class="field-group"><label>New Password</label><div class="field-line"><input id="portalNewPassword1" type="password" placeholder="At least 6 characters"></div></div>
+        <div class="field-group"><label>Confirm New Password</label><div class="field-line"><input id="portalNewPassword2" type="password" placeholder="Repeat new password"></div></div>
+        <button class="btn btn-secondary btn-sm" id="portalChangePasswordBtn">Update Password</button>
+      </div>
     </div>`;
+
+  document.getElementById('portalChangePasswordBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('portalChangePasswordBtn');
+    const p1 = document.getElementById('portalNewPassword1').value;
+    const p2 = document.getElementById('portalNewPassword2').value;
+    if(p1.length < 6){ showToast('Password must be at least 6 characters'); return; }
+    if(p1 !== p2){ showToast('Passwords do not match'); return; }
+    btn.disabled = true;
+    try{
+      const { error } = await sb.auth.updateUser({ password: p1 });
+      if(error) throw error;
+      document.getElementById('portalNewPassword1').value = '';
+      document.getElementById('portalNewPassword2').value = '';
+      showToast('Password updated');
+    }catch(e){
+      showToast(e.message || 'Could not update password');
+    }finally{
+      btn.disabled = false;
+    }
+  });
 
   document.getElementById('portalSignOutBtn').addEventListener('click', async ()=>{
     await sb.auth.signOut();
