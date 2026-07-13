@@ -471,7 +471,9 @@ const ROLE_PERMISSIONS = {
 };
 function currentRole(){
   const staff = state.staff && state.staff.find(s=>s.id===state.currentStaffId);
-  return (staff && staff.role) || 'Owner';
+  // Fail closed to the lowest-privilege role when currentStaffId doesn't
+  // resolve to a real staff row, not open to Owner.
+  return (staff && staff.role) || 'Receptionist';
 }
 function currentPerms(){ return ROLE_PERMISSIONS[currentRole()] || ROLE_PERMISSIONS.Receptionist; }
 
@@ -1813,7 +1815,7 @@ function renderCampaignsList(perms){
           <div class="campaign-name">${esc(k.name)}</div>
           <div class="content-type-pill" style="margin-bottom:10px;">${esc(k.type||'Email')}</div>
           <div class="campaign-stat-label">Audience</div>
-          <div class="campaign-stat-value" style="font-size:15px;">${esc(k.clients||0)} clients</div>
+          <div class="campaign-stat-value" style="font-size:15px;">${getAudienceClients(k.audience).length} clients</div>
           <div class="campaign-stat-label">Status</div>
           <button class="status-pill ${k.status}" data-toggle-campaign="${k.id}">${k.status}</button>
           ${k.body ? `<p class="muted" style="font-size:12px; margin-top:14px; line-height:1.5;">${esc((k.body||'').slice(0,90))}${(k.body||'').length>90?'…':''}</p>` : `<p class="empty-state" style="margin-top:14px;">No message content yet — click edit to add it.</p>`}
@@ -2011,15 +2013,19 @@ function computeStaffPerformance(){
     });
 }
 
+// Mirrors isAtRisk() in the send-campaign edge function: the two checks are
+// independent, not gated on each other, so a client with no last-treatment
+// date but an overdue next-action still counts as at-risk.
 function getAtRiskClients(){
   const today = new Date();
   return state.clients.filter(c=>{
-    if(!c.lastTreatment.date || c.lastTreatment.date==='—') return false;
-    const last = new Date(c.lastTreatment.date+'T00:00:00');
-    if(isNaN(last)) return false;
-    const daysSince = Math.floor((today - last) / (1000*60*60*24));
+    let overTreatmentGap = false;
+    if(c.lastTreatment.date && c.lastTreatment.date!=='—'){
+      const last = new Date(c.lastTreatment.date+'T00:00:00');
+      if(!isNaN(last)) overTreatmentGap = Math.floor((today - last) / (1000*60*60*24)) > 90;
+    }
     const overdue = c.nextAction && c.nextAction.date && c.nextAction.date!=='—' && new Date(c.nextAction.date+'T00:00:00') < today;
-    return daysSince > 90 || overdue;
+    return overTreatmentGap || overdue;
   });
 }
 
@@ -4145,7 +4151,7 @@ function buildAIContext(){
     .map(c=>`${c.name} (${c.status}) — ${c.nextAction.label}, due ${fmtDate(c.nextAction.date)}`);
   const leadSummary = state.leads.map(l=>`${l.name} (${l.source}) — ${l.stage}`);
   const inventoryAlerts = state.inventory.filter(i=>i.expiresIn).map(i=>`${i.name} expires in ${i.expiresIn} days`);
-  const campaignSummary = state.campaigns.map(k=>`${k.name}: ${k.clients} clients, ${k.status}`);
+  const campaignSummary = state.campaigns.map(k=>`${k.name}: ${getAudienceClients(k.audience).length} clients, ${k.status}`);
   const outstandingInvoices = state.invoices
     .filter(i=>i.status!=='Paid')
     .map(i=>`${i.clientName}: ${i.type} for ${fmtMoney(invoiceTotal(i))}, status ${i.status}`);
