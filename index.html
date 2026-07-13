@@ -3392,6 +3392,15 @@ function renderTreatmentEntryModal(c, treatmentTypes, areas, practitioners, sele
   });
 }
 
+// Mirrors the DB-level unique index (clinic_id, practitioner, date, time)
+// that backstops this — checking here first gives a clear message instead
+// of a raw save failure, and keeps state.appointments itself conflict-free
+// so the bulk wipe-and-reinsert in persistStateToSupabase never hits it.
+function findConflictingAppointment(date, time, practitioner, excludeId){
+  if(!practitioner || !time || time==='—') return null;
+  return state.appointments.find(a=>a.id!==excludeId && a.date===date && a.time===time && a.practitioner===practitioner) || null;
+}
+
 function promptFollowUpBooking(client, practitioner){
   openModal(`
     <div class="modal-title">Schedule follow-up?</div>
@@ -3402,9 +3411,16 @@ function promptFollowUpBooking(client, practitioner){
     </div>`);
   document.getElementById('cancelModal').addEventListener('click', ()=>promptReviewRequest(client));
   document.getElementById('confirmBookFollowUp').addEventListener('click', async ()=>{
+    const chosenPractitioner = practitioner || 'Dr James';
+    if(findConflictingAppointment(client.nextAction.date, '10:00', chosenPractitioner)){
+      showToast(`${chosenPractitioner} already has an appointment at 10:00 on ${fmtDate(client.nextAction.date)} — book manually from the calendar with a different time`);
+      closeModal();
+      promptReviewRequest(client);
+      return;
+    }
     state.appointments.push({
       id:'a'+Date.now(), clientId:client.id, clientName:client.name, date:client.nextAction.date, time:'10:00',
-      service:'Follow-up', practitioner: practitioner || 'Dr James', locationId: state.currentLocationId
+      service:'Follow-up', practitioner: chosenPractitioner, locationId: state.currentLocationId
     });
     await saveState();
     closeModal();
@@ -3489,11 +3505,14 @@ function bindCalendarEvents(){
       if(!service) return;
       const clientName = document.getElementById('apClient').value||'—';
       const matchedClient = state.clients.find(c=>c.name.trim().toLowerCase()===clientName.trim().toLowerCase());
+      const date = document.getElementById('apDate').value||todayISO();
+      const time = document.getElementById('apTime').value||'—';
+      const practitioner = document.getElementById('apPractitioner').value;
+      const conflict = findConflictingAppointment(date, time, practitioner);
+      if(conflict){ showToast(`${practitioner} already has an appointment at ${time} on ${fmtDate(date)}`); return; }
       state.appointments.push({
         id:'a'+Date.now(), clientId: matchedClient ? matchedClient.id : null, clientName,
-        date:document.getElementById('apDate').value||todayISO(),
-        time:document.getElementById('apTime').value||'—',
-        service, practitioner:document.getElementById('apPractitioner').value,
+        date, time, service, practitioner,
         locationId: state.currentLocationId
       });
       await saveState();
