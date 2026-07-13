@@ -13,14 +13,29 @@ email/SMS, or call a paid API until the user supplies the corresponding key.
 Set secrets via the Supabase Dashboard (Edge Functions → Secrets) — there's
 no MCP tool for it, so this always needs the user to do it themselves.
 
-- **`create-checkout-session`** + **`stripe-webhook`** — real Stripe Checkout
-  for content-credit purchases and the monthly subscription. Needs
-  `STRIPE_SECRET_KEY`, `STRIPE_SUBSCRIPTION_PRICE_CENTS` (a real pricing
-  decision, deliberately not defaulted), and `STRIPE_WEBHOOK_SECRET` (from
-  Stripe Dashboard → Developers → Webhooks, pointed at the `stripe-webhook`
-  URL, subscribed to `checkout.session.completed`,
-  `customer.subscription.updated`, `customer.subscription.deleted`). **This
-  is the main launch blocker** — needs a Stripe account + keys from the user.
+- **`create-paystack-transaction`** + **`paystack-webhook`** (replaced Stripe
+  2026-07-13) — real Paystack Checkout for content-credit purchases and the
+  monthly subscription. Needs `PAYSTACK_SECRET_KEY` and
+  `PAYSTACK_SUBSCRIPTION_PLAN_CODE` (a Plan created in the Paystack
+  Dashboard → Plans — a real pricing decision, deliberately not defaulted).
+  `PAYSTACK_CURRENCY` is optional — omit it to use the Paystack account's
+  default currency. Webhook: Paystack Dashboard → Settings → API Keys &
+  Webhooks → Webhook URL, pointed at the `paystack-webhook` function URL —
+  unlike Stripe, Paystack signs webhooks with the same secret key (no
+  separate webhook secret to generate). **This is the main launch
+  blocker** — needs a Paystack account + keys from the user. The
+  `subscription.create`/`subscription.disable`/`invoice.payment_failed`
+  handling in `paystack-webhook` is best-effort from Paystack's docs, not
+  verified against a live payload yet — check `get_logs` for that function
+  against a real event once the webhook is live and adjust field paths if
+  Paystack's actual payload differs.
+- The old `create-checkout-session` and `stripe-webhook` Stripe functions
+  are retired — redeployed as inert 410-response stubs (no MCP tool exists
+  to delete a deployed edge function outright). Safe to delete manually via
+  the Supabase Dashboard. `clinics.stripe_customer_id`/`stripe_subscription_id`
+  were renamed to `paystack_customer_code`/`paystack_subscription_code`.
+  If Stripe's own dashboard still has a webhook endpoint configured, remove
+  it there too so Stripe stops retrying against the stub.
 - **`send-campaign`** — real bulk email (SendGrid) / SMS (Twilio) sending for
   Campaigns, replacing the mailto:/sms: hand-off. Needs `SENDGRID_API_KEY` +
   `SENDGRID_FROM_EMAIL` for email, `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN`

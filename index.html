@@ -476,8 +476,18 @@ function currentRole(){
 function currentPerms(){ return ROLE_PERMISSIONS[currentRole()] || ROLE_PERMISSIONS.Receptionist; }
 
 /* ---------------- Date helpers ---------------- */
-function todayISO(){ return new Date().toISOString().slice(0,10); }
-function isoOffset(days){ const d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+// Build the date string from local getFullYear/Month/Date, not toISOString()
+// (which converts to UTC first) -- otherwise every date recorded in the last
+// few hours of the local day is off by one in negative-UTC-offset timezones,
+// and in the first few hours of the day in positive-UTC-offset ones.
+function localISO(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayISO(){ return localISO(new Date()); }
+function isoOffset(days){ const d=new Date(); d.setDate(d.getDate()+days); return localISO(d); }
 function fmtDate(iso){
   if(!iso || iso==='—') return '—';
   const d = new Date(iso+'T00:00:00');
@@ -492,7 +502,7 @@ function weekDates(){
   const days=[];
   for(let i=0;i<5;i++){
     const d = new Date(monday); d.setDate(monday.getDate()+i);
-    days.push({ iso: d.toISOString().slice(0,10), label: d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()+' '+d.getDate() });
+    days.push({ iso: localISO(d), label: d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()+' '+d.getDate() });
   }
   return days;
 }
@@ -1639,7 +1649,7 @@ function renderInvoiceBuilderModal(){
 }
 
 function deductInventoryForInvoice(invoice){
-  if(invoice.stockDeducted) return;
+  if(invoice.type==='Quote' || invoice.stockDeducted) return;
   invoice.lineItems.forEach(li=>{
     if(li.productId){
       const product = state.inventory.find(p=>p.id===li.productId);
@@ -2533,7 +2543,7 @@ async function loadTeamChat(){
     if(error) throw error;
     teamChatMessages = (data||[]).map(m=>{
       const d = new Date(m.created_at);
-      return { id:'tc'+m.id, staffId:m.staff_id, staffName:m.staff_name, text:m.text, date:d.toISOString().slice(0,10), time:d.toTimeString().slice(0,5) };
+      return { id:'tc'+m.id, staffId:m.staff_id, staffName:m.staff_name, text:m.text, date:localISO(d), time:d.toTimeString().slice(0,5) };
     });
   }catch(e){
     teamChatMessages = [];
@@ -3014,7 +3024,7 @@ function openBuyCreditsModal(){
   ];
   openModal(`
     <div class="modal-title">Buy Content Credits</div>
-    <p class="muted" style="font-size:13px; margin-bottom:18px; line-height:1.6;">Credits are spent generating AI captions and hashtags for social content. If real billing is connected, this opens Stripe Checkout; otherwise credits are added directly so you can test the feature without an actual charge.</p>
+    <p class="muted" style="font-size:13px; margin-bottom:18px; line-height:1.6;">Credits are spent generating AI captions and hashtags for social content. If real billing is connected, this opens Paystack Checkout; otherwise credits are added directly so you can test the feature without an actual charge.</p>
     <div class="credit-packages-grid">
       ${packages.map(p=>`
         <div class="credit-package" data-buy-package="${p.credits}|${p.price}">
@@ -3030,7 +3040,7 @@ function openBuyCreditsModal(){
       const [credits, price] = el.dataset.buyPackage.split('|').map(Number);
       el.style.pointerEvents = 'none';
       try{
-        const { data, error } = await sb.functions.invoke('create-checkout-session', { body:{ kind:'credits', packageId:String(credits) } });
+        const { data, error } = await sb.functions.invoke('create-paystack-transaction', { body:{ kind:'credits', packageId:String(credits) } });
         if(error) throw error;
         if(data && data.configured && data.url){ window.location.href = data.url; return; }
         state.contentCredits += credits;
@@ -3786,7 +3796,7 @@ function bindSettingsEvents(){
   if(upgradePlanBtn) upgradePlanBtn.addEventListener('click', async ()=>{
     upgradePlanBtn.disabled = true;
     try{
-      const { data, error } = await sb.functions.invoke('create-checkout-session', { body:{ kind:'subscription' } });
+      const { data, error } = await sb.functions.invoke('create-paystack-transaction', { body:{ kind:'subscription' } });
       if(error) throw error;
       if(data && data.configured && data.url){ window.location.href = data.url; return; }
       showToast((data && data.message) || 'Online upgrades are coming soon — reach out to us to change your plan for now');
@@ -4325,7 +4335,7 @@ async function enterStaffApp(session){
   handleBillingRedirectReturn(session);
 }
 
-// After a Stripe Checkout redirect back to the app (?billing=success or
+// After a Paystack Checkout redirect back to the app (?billing=success or
 // ?billing=cancelled), tell the user what happened and clean the URL. The
 // webhook (not this code) is what actually applies credits/plan changes,
 // so on success we just re-fetch state — it may take a few seconds to
