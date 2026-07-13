@@ -4478,11 +4478,12 @@ function renderStaffAuth(mode, opts){
 let portalData = null;
 
 async function loadClientPortalData(clientId){
-  const [clientRes, treatmentsRes, invoicesRes, apptRes, brandingRes] = await Promise.all([
+  const [clientRes, treatmentsRes, invoicesRes, apptRes, photoSetsRes, brandingRes] = await Promise.all([
     sb.from('clients').select('*').eq('id', clientId).maybeSingle(),
     sb.from('treatments').select('*').eq('client_id', clientId),
     sb.from('invoices').select('*, invoice_line_items(*)').eq('client_id', clientId),
     sb.from('appointments').select('*').eq('client_id', clientId),
+    sb.from('photo_sets').select('*').eq('client_id', clientId),
     sb.rpc('client_clinic_branding')
   ]);
   const c = clientRes.data;
@@ -4492,6 +4493,7 @@ async function loadClientPortalData(clientId){
     treatments: (treatmentsRes.data||[]).map(mapTreatment),
     invoices: (invoicesRes.data||[]).map(inv=>mapInvoice(inv, {[inv.id]: inv.invoice_line_items||[]})),
     appointments: (apptRes.data||[]).map(a=>({ id:a.id, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner })),
+    photoSets: (photoSetsRes.data||[]).map(mapPhotoSet),
     clinicName: branding.name || 'AestheticFlow'
   };
 }
@@ -4583,6 +4585,7 @@ function renderPortalDashboard(){
   const appts = (portalData.appointments||[]).filter(a=>a.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
   const treatments = (portalData.treatments||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const invoices = (portalData.invoices||[]).slice().sort((a,b)=>(b.createdDate||'').localeCompare(a.createdDate||''));
+  const photoSets = (portalData.photoSets||[]).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
   document.getElementById('clientPortalApp').innerHTML = `
     <div class="portal-wrap">
@@ -4617,6 +4620,17 @@ function renderPortalDashboard(){
             <div class="portal-row-right">${fmtMoney(invoiceTotal(inv))}<br><span class="status ${inv.status}">${inv.status}</span></div>
           </div>`).join('') : `<p class="empty-state">No invoices or quotes yet.</p>`}
       </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">Before &amp; After Photos</div>
+        ${photoSets.length ? photoSets.map(s=>`
+          <div class="photo-set">
+            <div class="photo-set-meta">${fmtDate(s.date)}${s.caption?` · ${esc(s.caption)}`:''}</div>
+            <div class="photo-pair">
+              <div class="photo-slot">${s.beforeUrl ? `<img src="${s.beforeUrl}" data-lightbox="${s.beforeUrl}"><span class="photo-tag">Before</span>` : `<div class="photo-empty">No before photo</div>`}</div>
+              <div class="photo-slot">${s.afterUrl ? `<img src="${s.afterUrl}" data-lightbox="${s.afterUrl}"><span class="photo-tag">After</span>` : `<div class="photo-empty">No after photo</div>`}</div>
+            </div>
+          </div>`).join('') : `<p class="empty-state">No photos yet.</p>`}
+      </div>
       <div class="card">
         <div class="card-title">Change Password</div>
         <p class="muted" style="font-size:13px; margin-bottom:16px;">Updates the password for your own portal sign-in.</p>
@@ -4625,6 +4639,10 @@ function renderPortalDashboard(){
         <button class="btn btn-secondary btn-sm" id="portalChangePasswordBtn">Update Password</button>
       </div>
     </div>`;
+
+  document.querySelectorAll('#clientPortalApp [data-lightbox]').forEach(img=>{
+    img.addEventListener('click', ()=>openLightbox(img.dataset.lightbox));
+  });
 
   document.getElementById('portalChangePasswordBtn').addEventListener('click', async ()=>{
     const btn = document.getElementById('portalChangePasswordBtn');
