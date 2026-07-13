@@ -591,11 +591,13 @@ function seedData(){
   };
 }
 
-// Backend: Supabase Postgres, shared by everyone using this CRM instance.
-// The anon key below is meant to be public (that's how Supabase client auth
-// works) — access control belongs to Row Level Security policies, not key
-// secrecy. RLS is not yet configured on these tables (tracked as a followup);
-// until it is, anyone with this page open can read/write everything.
+// Backend: Supabase Postgres, multi-tenant across every clinic using this
+// CRM instance. The anon key below is meant to be public (that's how
+// Supabase client auth works) — access control belongs to Row Level
+// Security, not key secrecy. Every table has RLS enabled with clinic_id-
+// scoped policies (staff full access to their own clinic; clients read-only
+// on their own rows) — see is_staff()/my_clinic_id()/my_client_id() in the
+// database.
 const SUPABASE_URL = 'https://zatgwmdinqzrwxxdmxoe.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_9JnxNNmtbRTAbREvni3BpQ_HkG_lE_-';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -3249,30 +3251,14 @@ async function runContentIdeasGeneration(){
 
 // Every AI feature in this app (content ideas, captions, campaign copy, the
 // assistant chat) calls Anthropic's Messages API the same way, so the actual
-// fetch/parse/error-handling lives here once. This only succeeds when the
-// app is running somewhere that can reach api.anthropic.com with the right
-// auth attached (e.g. proxied by a sandboxed preview host) — on a plain
-// static host this fetch will fail (no key, and the API doesn't allow
-// unauthenticated cross-origin browser calls), so callers should always
-// wrap this in a try/catch and show a clear fallback message.
+// invoke/parse/error-handling lives here once. Routed through the ai-proxy
+// edge function, which holds ANTHROPIC_API_KEY server-side — callers should
+// always wrap this in a try/catch and show a clear fallback message.
 async function callAnthropicAPI(messages, {system, max_tokens=500} = {}){
-  let response;
-  try{
-    response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens,
-        ...(system ? {system} : {}),
-        messages
-      })
-    });
-  }catch(networkErr){
-    throw new Error('AI features aren\'t reachable from this environment — this app calls Anthropic\'s API directly from the browser, which only works when hosted behind a backend that can proxy the request.');
-  }
-  if(!response.ok) throw new Error('API request failed: ' + response.status);
-  const data = await response.json();
+  const { data, error } = await sb.functions.invoke('ai-proxy', { body: { messages, system, max_tokens } });
+  if(error) throw new Error('AI request failed: ' + error.message);
+  if(data && data.configured === false) throw new Error(data.message || "AI features aren't connected yet — ask your admin to configure them.");
+  if(!data || !data.content) throw new Error(data && data.error ? data.error : 'AI request failed');
   return data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
 }
 
