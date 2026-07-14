@@ -4533,7 +4533,8 @@ function renderPortalAuth(mode, opts){
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('clientPortalApp').style.display = 'block';
 
-  if(mode === 'check-email'){
+  if(mode === 'check-email' || mode === 'reset-sent'){
+    const isReset = mode === 'reset-sent';
     document.getElementById('clientPortalApp').innerHTML = `
       <div class="portal-center-wrap">
         <div class="portal-login-card">
@@ -4541,11 +4542,44 @@ function renderPortalAuth(mode, opts){
             <div class="brand-mark">Aesthetic<em>Flow</em></div>
             <div class="eyebrow" style="margin-top:8px;">Client Portal</div>
           </div>
-          <p class="portal-note" style="margin-top:0;">Check <strong>${esc(opts.email)}</strong> to confirm your account, then come back and sign in.</p>
+          <p class="portal-note" style="margin-top:0;">${isReset ? `If an account exists for` : `Check`} <strong>${esc(opts.email)}</strong>${isReset ? `, a password reset link has been sent.` : ` to confirm your account, then come back and sign in.`}</p>
           <button class="btn btn-primary" id="backToPortalSignIn" style="width:100%; justify-content:center; margin-top:8px;">Back to Sign In</button>
         </div>
       </div>`;
     document.getElementById('backToPortalSignIn').addEventListener('click', ()=>renderPortalAuth('signin'));
+    return;
+  }
+
+  if(mode === 'forgot'){
+    document.getElementById('clientPortalApp').innerHTML = `
+      <div class="portal-center-wrap">
+        <div class="portal-login-card">
+          <div class="brand" style="text-align:center; margin-bottom:32px;">
+            <div class="brand-mark">Aesthetic<em>Flow</em></div>
+            <div class="eyebrow" style="margin-top:8px;">Reset Password</div>
+          </div>
+          <p class="portal-note" style="margin-top:0;">Enter the email you use for the client portal and we'll send you a link to set a new password.</p>
+          <div class="field-group"><label>Email</label><div class="field-line"><input id="portalForgotEmail" type="email" placeholder="you@email.com"></div></div>
+          <button class="btn btn-primary" id="portalForgotSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">Send Reset Link</button>
+          <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--sage);" id="backToPortalSignInFromForgot">← Back to Sign In</span></div>
+        </div>
+      </div>`;
+    document.getElementById('backToPortalSignInFromForgot').addEventListener('click', ()=>renderPortalAuth('signin'));
+    document.getElementById('portalForgotSubmitBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('portalForgotEmail').value.trim().toLowerCase();
+      if(!email){ showToast('Enter your email'); return; }
+      const btn = document.getElementById('portalForgotSubmitBtn'); btn.disabled = true;
+      try{
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+        if(error) throw error;
+        renderPortalAuth('reset-sent', {email});
+      }catch(e){
+        // Don't reveal whether the email exists -- same message either way.
+        renderPortalAuth('reset-sent', {email});
+      }finally{
+        btn.disabled = false;
+      }
+    });
     return;
   }
 
@@ -4560,13 +4594,14 @@ function renderPortalAuth(mode, opts){
         <div class="field-group"><label>Email</label><div class="field-line"><input id="portalAuthEmail" type="email" placeholder="you@email.com"></div></div>
         <div class="field-group"><label>Password</label><div class="field-line"><input id="portalAuthPassword" type="password" placeholder="••••••••"></div></div>
         <button class="btn btn-primary" id="portalAuthSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?'Sign Up':'Sign In'}</button>
-        ${isSignup ? `<p class="portal-note">Use the email your clinic has on file for you.</p>` : ''}
+        ${isSignup ? `<p class="portal-note">Use the email your clinic has on file for you.</p>` : `<div class="empty-state" style="text-align:center; margin-top:12px;"><span style="cursor:pointer; color:var(--sage);" id="portalForgotLink">Forgot password?</span></div>`}
         <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="togglePortalAuthMode">${isSignup?'Already have an account? Sign in':'First time here? Sign up'}</span></div>
         <div class="empty-state" style="text-align:center; margin-top:10px;"><span style="cursor:pointer; color:var(--sage);" id="backToStaffLink">← Back to staff sign-in</span></div>
       </div>
     </div>`;
 
   document.getElementById('togglePortalAuthMode').addEventListener('click', ()=>renderPortalAuth(isSignup?'signin':'signup'));
+  if(!isSignup) document.getElementById('portalForgotLink').addEventListener('click', ()=>renderPortalAuth('forgot'));
   document.getElementById('backToStaffLink').addEventListener('click', async ()=>{
     const { data:{ session } } = await sb.auth.getSession();
     if(session && state){
@@ -4594,6 +4629,47 @@ function renderPortalAuth(mode, opts){
       await handleSession(session);
     }catch(e){
       showToast(e.message || 'Incorrect email or password — contact your clinic');
+    }finally{
+      btn.disabled = false;
+    }
+  });
+}
+
+// Shown when Supabase redirects back after a password-reset email link is
+// clicked (see the onAuthStateChange PASSWORD_RECOVERY listener near init()
+// below). That listener grants a temporary session scoped to this one
+// action; updateUser() here is what actually sets the new password.
+function renderSetNewPassword(){
+  document.getElementById('staffApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('platformAdminApp').style.display = 'none';
+  document.getElementById('clientPortalApp').style.display = 'block';
+  document.getElementById('clientPortalApp').innerHTML = `
+    <div class="portal-center-wrap">
+      <div class="portal-login-card">
+        <div class="brand" style="text-align:center; margin-bottom:32px;">
+          <div class="brand-mark">Aesthetic<em>Flow</em></div>
+          <div class="eyebrow" style="margin-top:8px;">Set New Password</div>
+        </div>
+        <div class="field-group"><label>New Password</label><div class="field-line"><input id="newPw1" type="password" placeholder="At least 6 characters"></div></div>
+        <div class="field-group"><label>Confirm New Password</label><div class="field-line"><input id="newPw2" type="password" placeholder="Repeat new password"></div></div>
+        <button class="btn btn-primary" id="setNewPwBtn" style="width:100%; justify-content:center; margin-top:8px;">Set Password</button>
+      </div>
+    </div>`;
+  document.getElementById('setNewPwBtn').addEventListener('click', async ()=>{
+    const p1 = document.getElementById('newPw1').value;
+    const p2 = document.getElementById('newPw2').value;
+    if(p1.length < 6){ showToast('Password must be at least 6 characters'); return; }
+    if(p1 !== p2){ showToast('Passwords do not match'); return; }
+    const btn = document.getElementById('setNewPwBtn'); btn.disabled = true;
+    try{
+      const { error } = await sb.auth.updateUser({ password: p1 });
+      if(error) throw error;
+      showToast('Password updated — signing you in…');
+      const { data:{ session } } = await sb.auth.getSession();
+      await handleSession(session);
+    }catch(e){
+      showToast(e.message || 'Could not set new password');
     }finally{
       btn.disabled = false;
     }
@@ -4797,6 +4873,14 @@ window.addEventListener('error', (e)=>{
 window.addEventListener('unhandledrejection', (e)=>{
   console.error('Unhandled rejection:', e.reason);
   try{ showToast('⚠ Something went wrong: ' + (e.reason && e.reason.message ? e.reason.message : 'unknown error')); }catch(_){}
+});
+
+// Fires when a user lands back here after clicking a password-reset email
+// link (see the "Forgot password?" flow in renderPortalAuth). Supabase
+// grants a temporary session for this one purpose; renderSetNewPassword()
+// is where that session actually gets used, via auth.updateUser().
+sb.auth.onAuthStateChange((event, session)=>{
+  if(event === 'PASSWORD_RECOVERY') renderSetNewPassword();
 });
 
 (async function init(){
