@@ -477,6 +477,175 @@ function currentRole(){
 }
 function currentPerms(){ return ROLE_PERMISSIONS[currentRole()] || ROLE_PERMISSIONS.Receptionist; }
 
+/* ---------------- Language / i18n ----------------
+   Scope is deliberately bounded for now: nav labels, the staff and client
+   portal auth screens, and the client portal dashboard -- the highest-value,
+   most self-contained surfaces (client-facing, and simple enough to keep in
+   sync). The rest of the staff CRM (client records, invoices, leads,
+   campaigns, reports, AI assistant, platform admin) stays English-only.
+   Add more languages by adding a key to TRANSLATIONS + LANGUAGES; add more
+   translated strings by adding a key to every language block and calling
+   t('your.key') at the render site instead of a literal string. */
+const LANGUAGES = [
+  {code:'en', label:'English'},
+  {code:'es', label:'Español'},
+  {code:'fr', label:'Français'},
+];
+const TRANSLATIONS = {
+  en: {
+    'nav.dashboard':'Dashboard', 'nav.clients':'Clients', 'nav.calendar':'Calendar', 'nav.leads':'Sales Pipeline',
+    'nav.inventory':'Inventory', 'nav.invoices':'Invoices', 'nav.sales':'Sales Team', 'nav.teamchat':'Team Chat',
+    'nav.campaigns':'Campaigns', 'nav.reports':'Reports', 'nav.settings':'Settings', 'nav.ai':'AI Assistant',
+    'common.save':'Save', 'common.cancel':'Cancel', 'common.close':'Close', 'common.signOut':'Sign Out', 'common.language':'Language',
+    'auth.staffSignIn':'Staff Sign-In', 'auth.staffSignUp':'Staff Sign Up', 'auth.email':'Email', 'auth.password':'Password',
+    'auth.signIn':'Sign In', 'auth.signUp':'Sign Up', 'auth.newStaffSignUp':'New staff member? Sign up',
+    'auth.alreadyHaveAccount':'Already have an account? Sign in', 'auth.clientPortalLink':'Client Portal →',
+    'portal.title':'Client Portal', 'portal.createAccount':'Create Portal Account', 'portal.forgotPassword':'Forgot password?',
+    'portal.firstTimeSignUp':'First time here? Sign up', 'portal.backToStaffSignIn':'← Back to staff sign-in',
+    'portal.backToSignIn':'← Back to Sign In', 'portal.resetPasswordTitle':'Reset Password', 'portal.sendResetLink':'Send Reset Link',
+    'portal.setNewPasswordTitle':'Set New Password', 'portal.newPassword':'New Password', 'portal.confirmNewPassword':'Confirm New Password',
+    'portal.setPassword':'Set Password', 'portal.updatePassword':'Update Password', 'portal.changePassword':'Change Password',
+    'portal.welcome':'Welcome', 'portal.upcomingAppointments':'Upcoming Appointments', 'portal.treatmentHistory':'Treatment History',
+    'portal.invoicesQuotes':'Invoices & Quotes', 'portal.beforeAfterPhotos':'Before & After Photos',
+    'portal.noAppointments':'No upcoming appointments.', 'portal.noTreatments':'No treatment history yet.',
+    'portal.noInvoices':'No invoices or quotes yet.', 'portal.noPhotos':'No photos yet.',
+  },
+  es: {
+    'nav.dashboard':'Panel', 'nav.clients':'Clientes', 'nav.calendar':'Calendario', 'nav.leads':'Embudo de Ventas',
+    'nav.inventory':'Inventario', 'nav.invoices':'Facturas', 'nav.sales':'Equipo de Ventas', 'nav.teamchat':'Chat del Equipo',
+    'nav.campaigns':'Campañas', 'nav.reports':'Informes', 'nav.settings':'Configuración', 'nav.ai':'Asistente IA',
+    'common.save':'Guardar', 'common.cancel':'Cancelar', 'common.close':'Cerrar', 'common.signOut':'Cerrar Sesión', 'common.language':'Idioma',
+    'auth.staffSignIn':'Acceso del Personal', 'auth.staffSignUp':'Registro del Personal', 'auth.email':'Correo electrónico', 'auth.password':'Contraseña',
+    'auth.signIn':'Iniciar Sesión', 'auth.signUp':'Registrarse', 'auth.newStaffSignUp':'¿Nuevo miembro del personal? Regístrate',
+    'auth.alreadyHaveAccount':'¿Ya tienes una cuenta? Inicia sesión', 'auth.clientPortalLink':'Portal del Cliente →',
+    'portal.title':'Portal del Cliente', 'portal.createAccount':'Crear Cuenta del Portal', 'portal.forgotPassword':'¿Olvidaste tu contraseña?',
+    'portal.firstTimeSignUp':'¿Primera vez aquí? Regístrate', 'portal.backToStaffSignIn':'← Volver al acceso del personal',
+    'portal.backToSignIn':'← Volver a Iniciar Sesión', 'portal.resetPasswordTitle':'Restablecer Contraseña', 'portal.sendResetLink':'Enviar Enlace',
+    'portal.setNewPasswordTitle':'Establecer Nueva Contraseña', 'portal.newPassword':'Nueva Contraseña', 'portal.confirmNewPassword':'Confirmar Nueva Contraseña',
+    'portal.setPassword':'Establecer Contraseña', 'portal.updatePassword':'Actualizar Contraseña', 'portal.changePassword':'Cambiar Contraseña',
+    'portal.welcome':'Bienvenido/a', 'portal.upcomingAppointments':'Próximas Citas', 'portal.treatmentHistory':'Historial de Tratamientos',
+    'portal.invoicesQuotes':'Facturas y Presupuestos', 'portal.beforeAfterPhotos':'Fotos de Antes y Después',
+    'portal.noAppointments':'No hay próximas citas.', 'portal.noTreatments':'Aún no hay historial de tratamientos.',
+    'portal.noInvoices':'Aún no hay facturas ni presupuestos.', 'portal.noPhotos':'Aún no hay fotos.',
+  },
+  fr: {
+    'nav.dashboard':'Tableau de bord', 'nav.clients':'Clients', 'nav.calendar':'Calendrier', 'nav.leads':'Pipeline des Ventes',
+    'nav.inventory':'Inventaire', 'nav.invoices':'Factures', 'nav.sales':'Équipe Commerciale', 'nav.teamchat':"Chat d'Équipe",
+    'nav.campaigns':'Campagnes', 'nav.reports':'Rapports', 'nav.settings':'Paramètres', 'nav.ai':'Assistant IA',
+    'common.save':'Enregistrer', 'common.cancel':'Annuler', 'common.close':'Fermer', 'common.signOut':'Déconnexion', 'common.language':'Langue',
+    'auth.staffSignIn':'Connexion du Personnel', 'auth.staffSignUp':'Inscription du Personnel', 'auth.email':'E-mail', 'auth.password':'Mot de passe',
+    'auth.signIn':'Se connecter', 'auth.signUp':"S'inscrire", 'auth.newStaffSignUp':'Nouveau membre du personnel ? Inscrivez-vous',
+    'auth.alreadyHaveAccount':'Vous avez déjà un compte ? Connectez-vous', 'auth.clientPortalLink':'Portail Client →',
+    'portal.title':'Portail Client', 'portal.createAccount':'Créer un Compte', 'portal.forgotPassword':'Mot de passe oublié ?',
+    'portal.firstTimeSignUp':'Première visite ? Inscrivez-vous', 'portal.backToStaffSignIn':'← Retour à la connexion du personnel',
+    'portal.backToSignIn':'← Retour à la connexion', 'portal.resetPasswordTitle':'Réinitialiser le Mot de Passe', 'portal.sendResetLink':'Envoyer le Lien',
+    'portal.setNewPasswordTitle':'Définir un Nouveau Mot de Passe', 'portal.newPassword':'Nouveau Mot de Passe', 'portal.confirmNewPassword':'Confirmer le Mot de Passe',
+    'portal.setPassword':'Définir le Mot de Passe', 'portal.updatePassword':'Mettre à Jour le Mot de Passe', 'portal.changePassword':'Changer le Mot de Passe',
+    'portal.welcome':'Bienvenue', 'portal.upcomingAppointments':'Rendez-vous à Venir', 'portal.treatmentHistory':'Historique des Traitements',
+    'portal.invoicesQuotes':'Factures et Devis', 'portal.beforeAfterPhotos':'Photos Avant/Après',
+    'portal.noAppointments':'Aucun rendez-vous à venir.', 'portal.noTreatments':'Aucun historique de traitement pour le moment.',
+    'portal.noInvoices':'Aucune facture ni devis pour le moment.', 'portal.noPhotos':'Aucune photo pour le moment.',
+  },
+};
+// Language is a browser/device preference (auth screens render before any
+// clinic is loaded, so it can't live in clinic_settings) -- stored locally,
+// not synced across devices.
+function getLang(){ return localStorage.getItem('af_lang') || 'en'; }
+function setLang(code){ localStorage.setItem('af_lang', code); }
+function t(key){
+  const lang = getLang();
+  return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
+}
+function languageSwitcherHtml(idAttr){
+  return `<select id="${idAttr}" class="lang-switcher" style="background:transparent; border:1px solid var(--line); color:inherit; border-radius:6px; font-size:11.5px; padding:4px 6px;">
+    ${LANGUAGES.map(l=>`<option value="${l.code}" ${getLang()===l.code?'selected':''}>${l.label}</option>`).join('')}
+  </select>`;
+}
+function bindLanguageSwitcher(idAttr, onChangeRerender){
+  const el = document.getElementById(idAttr);
+  if(el) el.addEventListener('change', e=>{ setLang(e.target.value); onChangeRerender(); });
+}
+
+/* ---------------- Reference data: countries & currencies ----------------
+   COUNTRIES covers UN member states plus commonly-listed territories.
+   Selectors built from this always offer a free-text "Other" fallback since
+   no fixed list can be perfectly exhaustive. */
+const COUNTRIES = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo (Congo-Brazzaville)","Costa Rica","Croatia","Cuba","Cyprus","Czechia","Democratic Republic of the Congo","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kosovo","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"];
+const CURRENCIES = [
+  {code:'USD',symbol:'$',name:'US Dollar'},{code:'EUR',symbol:'€',name:'Euro'},{code:'GBP',symbol:'£',name:'British Pound'},
+  {code:'ZAR',symbol:'R',name:'South African Rand'},{code:'NGN',symbol:'₦',name:'Nigerian Naira'},{code:'KES',symbol:'KSh',name:'Kenyan Shilling'},
+  {code:'GHS',symbol:'GH₵',name:'Ghanaian Cedi'},{code:'EGP',symbol:'E£',name:'Egyptian Pound'},{code:'MAD',symbol:'DH',name:'Moroccan Dirham'},
+  {code:'TZS',symbol:'TSh',name:'Tanzanian Shilling'},{code:'UGX',symbol:'USh',name:'Ugandan Shilling'},{code:'ETB',symbol:'Br',name:'Ethiopian Birr'},
+  {code:'XOF',symbol:'CFA',name:'West African CFA Franc'},{code:'XAF',symbol:'FCFA',name:'Central African CFA Franc'},{code:'DZD',symbol:'DA',name:'Algerian Dinar'},
+  {code:'TND',symbol:'DT',name:'Tunisian Dinar'},{code:'AOA',symbol:'Kz',name:'Angolan Kwanza'},{code:'MZN',symbol:'MT',name:'Mozambican Metical'},
+  {code:'ZMW',symbol:'ZK',name:'Zambian Kwacha'},{code:'BWP',symbol:'P',name:'Botswana Pula'},{code:'NAD',symbol:'N$',name:'Namibian Dollar'},
+  {code:'MUR',symbol:'₨',name:'Mauritian Rupee'},{code:'RWF',symbol:'FRw',name:'Rwandan Franc'},{code:'CAD',symbol:'C$',name:'Canadian Dollar'},
+  {code:'AUD',symbol:'A$',name:'Australian Dollar'},{code:'NZD',symbol:'NZ$',name:'New Zealand Dollar'},{code:'CHF',symbol:'CHF',name:'Swiss Franc'},
+  {code:'SEK',symbol:'kr',name:'Swedish Krona'},{code:'NOK',symbol:'kr',name:'Norwegian Krone'},{code:'DKK',symbol:'kr',name:'Danish Krone'},
+  {code:'PLN',symbol:'zł',name:'Polish Zloty'},{code:'CZK',symbol:'Kč',name:'Czech Koruna'},{code:'HUF',symbol:'Ft',name:'Hungarian Forint'},
+  {code:'RON',symbol:'lei',name:'Romanian Leu'},{code:'BGN',symbol:'лв',name:'Bulgarian Lev'},{code:'HRK',symbol:'kn',name:'Croatian Kuna'},
+  {code:'ISK',symbol:'kr',name:'Icelandic Krona'},{code:'TRY',symbol:'₺',name:'Turkish Lira'},{code:'RUB',symbol:'₽',name:'Russian Ruble'},
+  {code:'UAH',symbol:'₴',name:'Ukrainian Hryvnia'},{code:'ILS',symbol:'₪',name:'Israeli Shekel'},{code:'AED',symbol:'د.إ',name:'UAE Dirham'},
+  {code:'SAR',symbol:'﷼',name:'Saudi Riyal'},{code:'QAR',symbol:'﷼',name:'Qatari Riyal'},{code:'KWD',symbol:'د.ك',name:'Kuwaiti Dinar'},
+  {code:'BHD',symbol:'.د.ب',name:'Bahraini Dinar'},{code:'OMR',symbol:'﷼',name:'Omani Rial'},{code:'JOD',symbol:'د.ا',name:'Jordanian Dinar'},
+  {code:'LBP',symbol:'ل.ل',name:'Lebanese Pound'},{code:'IQD',symbol:'ع.د',name:'Iraqi Dinar'},{code:'IRR',symbol:'﷼',name:'Iranian Rial'},
+  {code:'PKR',symbol:'₨',name:'Pakistani Rupee'},{code:'INR',symbol:'₹',name:'Indian Rupee'},{code:'BDT',symbol:'৳',name:'Bangladeshi Taka'},
+  {code:'LKR',symbol:'₨',name:'Sri Lankan Rupee'},{code:'NPR',symbol:'₨',name:'Nepalese Rupee'},{code:'AFN',symbol:'؋',name:'Afghan Afghani'},
+  {code:'CNY',symbol:'¥',name:'Chinese Yuan'},{code:'JPY',symbol:'¥',name:'Japanese Yen'},{code:'KRW',symbol:'₩',name:'South Korean Won'},
+  {code:'HKD',symbol:'HK$',name:'Hong Kong Dollar'},{code:'TWD',symbol:'NT$',name:'Taiwan Dollar'},{code:'SGD',symbol:'S$',name:'Singapore Dollar'},
+  {code:'MYR',symbol:'RM',name:'Malaysian Ringgit'},{code:'THB',symbol:'฿',name:'Thai Baht'},{code:'IDR',symbol:'Rp',name:'Indonesian Rupiah'},
+  {code:'PHP',symbol:'₱',name:'Philippine Peso'},{code:'VND',symbol:'₫',name:'Vietnamese Dong'},{code:'MMK',symbol:'K',name:'Myanmar Kyat'},
+  {code:'KHR',symbol:'៛',name:'Cambodian Riel'},{code:'LAK',symbol:'₭',name:'Lao Kip'},{code:'MNT',symbol:'₮',name:'Mongolian Tugrik'},
+  {code:'KZT',symbol:'₸',name:'Kazakhstani Tenge'},{code:'UZS',symbol:"so'm",name:'Uzbekistani Som'},{code:'AZN',symbol:'₼',name:'Azerbaijani Manat'},
+  {code:'GEL',symbol:'₾',name:'Georgian Lari'},{code:'AMD',symbol:'֏',name:'Armenian Dram'},{code:'MXN',symbol:'$',name:'Mexican Peso'},
+  {code:'BRL',symbol:'R$',name:'Brazilian Real'},{code:'ARS',symbol:'$',name:'Argentine Peso'},{code:'CLP',symbol:'$',name:'Chilean Peso'},
+  {code:'COP',symbol:'$',name:'Colombian Peso'},{code:'PEN',symbol:'S/',name:'Peruvian Sol'},{code:'UYU',symbol:'$U',name:'Uruguayan Peso'},
+  {code:'BOB',symbol:'Bs.',name:'Bolivian Boliviano'},{code:'PYG',symbol:'₲',name:'Paraguayan Guarani'},{code:'VES',symbol:'Bs.',name:'Venezuelan Bolivar'},
+  {code:'GTQ',symbol:'Q',name:'Guatemalan Quetzal'},{code:'CRC',symbol:'₡',name:'Costa Rican Colon'},{code:'DOP',symbol:'RD$',name:'Dominican Peso'},
+  {code:'JMD',symbol:'J$',name:'Jamaican Dollar'},{code:'TTD',symbol:'TT$',name:'Trinidad Dollar'},{code:'HNL',symbol:'L',name:'Honduran Lempira'},
+  {code:'NIO',symbol:'C$',name:'Nicaraguan Cordoba'},{code:'PAB',symbol:'B/.',name:'Panamanian Balboa'},{code:'CUP',symbol:'$',name:'Cuban Peso'},
+  {code:'FJD',symbol:'FJ$',name:'Fijian Dollar'},{code:'PGK',symbol:'K',name:'Papua New Guinean Kina'},{code:'WST',symbol:'WS$',name:'Samoan Tala'},
+  {code:'TOP',symbol:"T$",name:'Tongan Paʻanga'},{code:'XPF',symbol:'₣',name:'CFP Franc'},{code:'ALL',symbol:'L',name:'Albanian Lek'},
+  {code:'MKD',symbol:'ден',name:'Macedonian Denar'},{code:'RSD',symbol:'дин',name:'Serbian Dinar'},{code:'BAM',symbol:'KM',name:'Bosnia-Herzegovina Mark'},
+  {code:'MDL',symbol:'L',name:'Moldovan Leu'},{code:'BYN',symbol:'Br',name:'Belarusian Ruble'},{code:'YER',symbol:'﷼',name:'Yemeni Rial'},
+  {code:'SYP',symbol:'£',name:'Syrian Pound'},{code:'LYD',symbol:'ل.د',name:'Libyan Dinar'},{code:'SDG',symbol:'ج.س.',name:'Sudanese Pound'},
+  {code:'SSP',symbol:'£',name:'South Sudanese Pound'},{code:'SOS',symbol:'Sh',name:'Somali Shilling'},{code:'DJF',symbol:'Fdj',name:'Djiboutian Franc'},
+  {code:'ERN',symbol:'Nfk',name:'Eritrean Nakfa'},{code:'GMD',symbol:'D',name:'Gambian Dalasi'},{code:'SLL',symbol:'Le',name:'Sierra Leonean Leone'},
+  {code:'LRD',symbol:'L$',name:'Liberian Dollar'},{code:'GNF',symbol:'FG',name:'Guinean Franc'},{code:'CDF',symbol:'FC',name:'Congolese Franc'},
+  {code:'MWK',symbol:'MK',name:'Malawian Kwacha'},{code:'SZL',symbol:'E',name:'Swazi Lilangeni'},{code:'LSL',symbol:'L',name:'Lesotho Loti'},
+  {code:'MGA',symbol:'Ar',name:'Malagasy Ariary'},{code:'KMF',symbol:'CF',name:'Comorian Franc'},{code:'SCR',symbol:'₨',name:'Seychellois Rupee'},
+  {code:'CVE',symbol:'$',name:'Cape Verdean Escudo'},{code:'STN',symbol:'Db',name:'Sao Tome and Principe Dobra'},{code:'MVR',symbol:'.ރ',name:'Maldivian Rufiyaa'},
+  {code:'BTN',symbol:'Nu.',name:'Bhutanese Ngultrum'},{code:'BND',symbol:'B$',name:'Brunei Dollar'},{code:'BBD',symbol:'Bds$',name:'Barbadian Dollar'},
+  {code:'BSD',symbol:'B$',name:'Bahamian Dollar'},{code:'BZD',symbol:'BZ$',name:'Belize Dollar'},{code:'GYD',symbol:'G$',name:'Guyanese Dollar'},
+  {code:'SRD',symbol:'$',name:'Surinamese Dollar'},{code:'HTG',symbol:'G',name:'Haitian Gourde'},{code:'AWG',symbol:'ƒ',name:'Aruban Florin'},
+  {code:'ANG',symbol:'ƒ',name:'Netherlands Antillean Guilder'},{code:'KYD',symbol:'CI$',name:'Cayman Islands Dollar'},{code:'XCD',symbol:'EC$',name:'East Caribbean Dollar'},
+];
+// Renders a <select> of COUNTRIES plus "Other" with a free-text field that
+// shows when the country isn't in the list. `id` is the select's element id;
+// the paired text input is `${id}Other`. `selected` is the current value.
+function countrySelectHtml(id, selected){
+  const known = COUNTRIES.includes(selected);
+  const isOther = selected && !known;
+  return `<select id="${id}">
+      <option value="">—</option>
+      ${COUNTRIES.map(c=>`<option value="${esc(c)}" ${selected===c?'selected':''}>${esc(c)}</option>`).join('')}
+      <option value="__other__" ${isOther?'selected':''}>Other (type below)…</option>
+    </select>
+    <input id="${id}Other" type="text" placeholder="Enter country" value="${isOther?esc(selected):''}" style="margin-top:8px; display:${isOther?'block':'none'};">`;
+}
+function bindCountrySelect(id){
+  const sel = document.getElementById(id);
+  const other = document.getElementById(id+'Other');
+  if(!sel || !other) return;
+  sel.addEventListener('change', ()=>{ other.style.display = sel.value==='__other__' ? 'block' : 'none'; });
+}
+function countrySelectValue(id){
+  const sel = document.getElementById(id);
+  const other = document.getElementById(id+'Other');
+  if(!sel) return '';
+  return sel.value==='__other__' ? (other ? other.value.trim() : '') : sel.value;
+}
+
 /* ---------------- Date helpers ---------------- */
 // Build the date string from local getFullYear/Month/Date, not toISOString()
 // (which converts to UTC first) -- otherwise every date recorded in the last
@@ -628,7 +797,7 @@ function mapPhotoSet(p){ return { id:p.id, date:p.date, caption:p.caption||'', b
 function mapDocument(d){ return { id:d.id, filename:d.filename, fileType:d.file_type, uploadedDate:d.uploaded_date, dataUrl:d.data_url }; }
 function mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient){
   return {
-    id:c.id, name:c.name, phone:c.phone, email:c.email, clientSince:c.client_since, status:c.status,
+    id:c.id, name:c.name, phone:c.phone, email:c.email, clientSince:c.client_since, status:c.status, country:c.country||'',
     locationId:c.location_id, capturedBy:c.captured_by, captureDate:c.capture_date,
     skinType:c.skin_type, concerns:c.concerns||[], medicalNotes:c.medical_notes||'',
     lastTreatment:{ name:c.last_treatment_name||'—', date:c.last_treatment_date||'—', practitioner:c.last_treatment_practitioner||'—' },
@@ -693,6 +862,7 @@ async function loadState(){
         subscriptionStatus: clinicBillingRow.subscription_status || 'trialing',
         trialEndsAt: clinicBillingRow.trial_ends_at || null,
         currency: clinicRow.currency || '$',
+        country: clinicRow.country || '',
         originationCommissionRate: Number(clinicRow.origination_commission_rate ?? 8),
         depreciationPeriodYears: Number(clinicRow.depreciation_period_years ?? 2),
         orgSalesTarget: Number(clinicRow.org_sales_target ?? 8000),
@@ -748,7 +918,7 @@ async function persistStateToSupabase(s){
   if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, clinic_id:s.clinicId, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent, email:st.email||null, auth_user_id:st.authUserId||null })));
   if(s.inventory.length) await sb.from('inventory').insert(s.inventory.map(i=>({ id:i.id, clinic_id:s.clinicId, name:i.name, stock:i.stock, expires_in:i.expiresIn||null, price:i.price||0 })));
   if(s.clients.length) await sb.from('clients').insert(s.clients.map(c=>({
-    id:c.id, clinic_id:s.clinicId, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status,
+    id:c.id, clinic_id:s.clinicId, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status, country:c.country||null,
     location_id:c.locationId, captured_by:c.capturedBy, capture_date:c.captureDate||null,
     skin_type:c.skinType, concerns:c.concerns||[], medical_notes:c.medicalNotes||'',
     last_treatment_name:(c.lastTreatment&&c.lastTreatment.name)||'—', last_treatment_date:(c.lastTreatment&&c.lastTreatment.date)||'—', last_treatment_practitioner:(c.lastTreatment&&c.lastTreatment.practitioner)||'—',
@@ -788,6 +958,7 @@ async function persistStateToSupabase(s){
 
   await sb.from('clinic_settings').upsert({
     clinic_id:s.clinicId, name:s.clinic.name, practitioner_name:s.clinic.practitionerName, logo_url:s.clinic.logoUrl||null, currency:s.clinic.currency,
+    country:s.clinic.country||null,
     origination_commission_rate:s.clinic.originationCommissionRate, depreciation_period_years:s.clinic.depreciationPeriodYears,
     org_sales_target:s.clinic.orgSalesTarget, org_bonus_percent:s.clinic.orgBonusPercent,
     content_credits:s.contentCredits, current_location_id:s.currentLocationId||null,
@@ -866,7 +1037,7 @@ function renderNav(){
   nav.innerHTML='';
   const perms = currentPerms();
   NAV_ITEMS.filter(item=>perms.nav.includes(item.id)).forEach(item=>{
-    const btn = el(`<button class="nav-item ${activeView===item.id?'active':''}">${ICONS[item.icon]}<span class="label">${item.label}</span></button>`);
+    const btn = el(`<button class="nav-item ${activeView===item.id?'active':''}">${ICONS[item.icon]}<span class="label">${t('nav.'+item.id)}</span></button>`);
     btn.addEventListener('click', ()=>{
       activeView=item.id; activeClientId=null; render();
       document.getElementById('sidebar').classList.remove('open');
@@ -2385,16 +2556,19 @@ function renderSettings(){
         <div class="field-group"><label>Clinic Name</label><div class="field-line"><input id="setClinicName" type="text" value="${esc(state.clinic.name)}"></div></div>
         <div class="field-group"><label>Logo URL (optional)</label><div class="field-line"><input id="setLogoUrl" type="text" placeholder="https://…" value="${esc(state.clinic.logoUrl||'')}"></div></div>
         <div class="field-group"><label>Practitioner Display Name</label><div class="field-line"><input id="setPractitioner" type="text" value="${esc(state.clinic.practitionerName)}"></div></div>
-        <div class="field-group"><label>Currency Symbol</label><div class="field-line"><select id="setCurrency">
-          ${['R','$','£','€'].map(sym=>`<option ${state.clinic.currency===sym?'selected':''}>${sym}</option>`).join('')}
+        <div class="field-group"><label>Currency</label><div class="field-line"><select id="setCurrency">
+          ${CURRENCIES.map(c=>`<option value="${esc(c.symbol)}" ${state.clinic.currency===c.symbol?'selected':''}>${c.code} — ${esc(c.symbol)} ${c.name}</option>`).join('')}
         </select></div></div>
-        <button class="btn btn-primary" id="saveSettingsBtn">Save Changes</button>
+        <div class="field-group"><label>Country</label><div class="field-line" style="border:none; display:block;">${countrySelectHtml('setCountry', state.clinic.country||'')}</div></div>
+        <div class="field-group"><label>${t('common.language')}</label><div class="field-line" style="border:none;">${languageSwitcherHtml('setLanguage')}</div></div>
+        <button class="btn btn-primary" id="saveSettingsBtn">${t('common.save')} Changes</button>
       </div>` : `
       <div class="card">
         <div class="card-title">Clinic Profile</div>
         <div class="detail-row" style="border-top:none;"><span class="detail-label">Clinic Name</span><span class="detail-value">${esc(state.clinic.name)}</span></div>
         <div class="detail-row"><span class="detail-label">Practitioner</span><span class="detail-value">${esc(state.clinic.practitionerName)}</span></div>
         <div class="detail-row"><span class="detail-label">Currency</span><span class="detail-value">${esc(state.clinic.currency)}</span></div>
+        <div class="detail-row"><span class="detail-label">Country</span><span class="detail-value">${esc(state.clinic.country||'—')}</span></div>
         <p class="empty-state" style="margin-top:14px;">Only Owners and Admins can edit clinic settings.</p>
       </div>`;
 
@@ -2749,6 +2923,7 @@ function openClientModal(client){
     <div class="field-group"><label>Name</label><div class="field-line"><input id="mName" type="text" value="${isEdit?esc(client.name):''}" placeholder="Full name"></div></div>
     <div class="field-group"><label>Phone</label><div class="field-line"><input id="mPhone" type="text" value="${isEdit?esc(client.phone):''}" placeholder="Phone number"></div></div>
     <div class="field-group"><label>Email</label><div class="field-line"><input id="mEmail" type="email" value="${isEdit?esc(client.email):''}" placeholder="name@email.com"></div></div>
+    <div class="field-group"><label>Country</label><div class="field-line" style="border:none; display:block;">${countrySelectHtml('mCountry', isEdit?(client.country||''):'')}</div></div>
     ${!isEdit ? `
     <div class="field-group"><label>Account Originator</label><div class="field-line"><select id="mCapturedBy">
       ${state.staff.map(s=>`<option value="${s.id}" ${s.id===state.currentStaffId?'selected':''}>${esc(s.name)}</option>`).join('')}
@@ -2761,17 +2936,19 @@ function openClientModal(client){
       <button class="btn btn-secondary" id="cancelModal">Cancel</button>
       <button class="btn btn-primary" id="saveClientBtn">${isEdit?'Save Changes':'Save'}</button>
     </div>`);
+  bindCountrySelect('mCountry');
   document.getElementById('saveClientBtn').addEventListener('click', async ()=>{
     const name = document.getElementById('mName').value.trim();
     if(!name) return;
     const phone = document.getElementById('mPhone').value;
     const email = document.getElementById('mEmail').value;
+    const country = countrySelectValue('mCountry');
     if(isEdit){
-      client.name = name; client.phone = phone; client.email = email;
+      client.name = name; client.phone = phone; client.email = email; client.country = country;
     } else {
       const capturedBy = document.getElementById('mCapturedBy').value;
       state.clients.push({
-        id:'c'+Date.now(), name, phone, email, clientSince:new Date().getFullYear(), status:'new',
+        id:'c'+Date.now(), name, phone, email, country, clientSince:new Date().getFullYear(), status:'new',
         skinType:'Normal', concerns:[], medicalNotes:'',
         lastTreatment:{name:'—', date:'—', practitioner:'—'}, nextAction:{label:'Book first visit', date:'—'}, treatments:[],
         photoConsent:null, photoSets:[], documents:[], capturedBy, captureDate:todayISO(), locationId:state.currentLocationId,
@@ -3729,6 +3906,10 @@ function bindCampaignEvents(){
 
 /* ---- Settings ---- */
 function bindSettingsEvents(){
+  bindCountrySelect('setCountry');
+  const langSel = document.getElementById('setLanguage');
+  if(langSel) langSel.addEventListener('change', e=>{ setLang(e.target.value); render(); });
+
   const saveBtn = document.getElementById('saveSettingsBtn');
   if(saveBtn){
     saveBtn.addEventListener('click', async ()=>{
@@ -3736,6 +3917,7 @@ function bindSettingsEvents(){
       state.clinic.logoUrl = document.getElementById('setLogoUrl').value.trim();
       state.clinic.practitionerName = document.getElementById('setPractitioner').value.trim() || state.clinic.practitionerName;
       state.clinic.currency = document.getElementById('setCurrency').value;
+      state.clinic.country = countrySelectValue('setCountry');
       await saveState();
       document.getElementById('sidebarBrandMark').textContent = state.clinic.name;
       document.getElementById('mobileBrandMark').textContent = state.clinic.name;
@@ -4439,15 +4621,17 @@ function renderStaffAuth(mode, opts){
     document.getElementById('authScreen').innerHTML = `
       <div class="portal-center-wrap">
         <div class="portal-login-card">
+          <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchStaffCheckEmail')}</div>
           <div class="brand" style="text-align:center; margin-bottom:32px;">
             <div class="brand-mark">Aesthetic<em>Flow</em></div>
-            <div class="eyebrow" style="margin-top:8px;">Staff Sign-In</div>
+            <div class="eyebrow" style="margin-top:8px;">${t('auth.staffSignIn')}</div>
           </div>
           <p class="portal-note" style="margin-top:0;">Check <strong>${esc(opts.email)}</strong> to confirm your account, then come back and sign in.</p>
           <button class="btn btn-primary" id="backToSignIn" style="width:100%; justify-content:center; margin-top:8px;">Back to Sign In</button>
         </div>
       </div>`;
     document.getElementById('backToSignIn').addEventListener('click', ()=>renderStaffAuth('signin'));
+    bindLanguageSwitcher('langSwitchStaffCheckEmail', ()=>renderStaffAuth(mode, opts));
     return;
   }
 
@@ -4455,22 +4639,24 @@ function renderStaffAuth(mode, opts){
   document.getElementById('authScreen').innerHTML = `
     <div class="portal-center-wrap">
       <div class="portal-login-card">
+        <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchStaffAuth')}</div>
         <div class="brand" style="text-align:center; margin-bottom:32px;">
           <div class="brand-mark">Aesthetic<em>Flow</em></div>
-          <div class="eyebrow" style="margin-top:8px;">${isSignup?'Staff Sign Up':'Staff Sign-In'}</div>
+          <div class="eyebrow" style="margin-top:8px;">${isSignup?t('auth.staffSignUp'):t('auth.staffSignIn')}</div>
         </div>
-        <div class="field-group"><label>Email</label><div class="field-line"><input id="authEmail" type="email" placeholder="you@clinic.com"></div></div>
-        <div class="field-group"><label>Password</label><div class="field-line"><input id="authPassword" type="password" placeholder="••••••••"></div></div>
-        <button class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?'Sign Up':'Sign In'}</button>
+        <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="authEmail" type="email" placeholder="you@clinic.com"></div></div>
+        <div class="field-group"><label>${t('auth.password')}</label><div class="field-line"><input id="authPassword" type="password" placeholder="••••••••"></div></div>
+        <button class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?t('auth.signUp'):t('auth.signIn')}</button>
         ${isSignup ? `<p class="portal-note">Joining an existing clinic? Your email must already be added by an Owner or Admin in their Settings. First from your business? Sign up anyway — you'll get the option to set up a new clinic.</p>` : ''}
-        <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="toggleAuthModeLink">${isSignup?'Already have an account? Sign in':'New staff member? Sign up'}</span></div>
+        <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="toggleAuthModeLink">${isSignup?t('auth.alreadyHaveAccount'):t('auth.newStaffSignUp')}</span></div>
         <div class="portal-divider">or</div>
-        <div class="empty-state" style="text-align:center;"><span style="cursor:pointer; color:var(--sage);" id="goToPortalFromStaff">Client Portal →</span></div>
+        <div class="empty-state" style="text-align:center;"><span style="cursor:pointer; color:var(--sage);" id="goToPortalFromStaff">${t('auth.clientPortalLink')}</span></div>
       </div>
     </div>`;
 
   document.getElementById('toggleAuthModeLink').addEventListener('click', ()=>renderStaffAuth(isSignup?'signin':'signup'));
   document.getElementById('goToPortalFromStaff').addEventListener('click', ()=>renderPortalAuth('signin'));
+  bindLanguageSwitcher('langSwitchStaffAuth', ()=>renderStaffAuth(mode, opts));
   document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
     const password = document.getElementById('authPassword').value;
@@ -4538,15 +4724,17 @@ function renderPortalAuth(mode, opts){
     document.getElementById('clientPortalApp').innerHTML = `
       <div class="portal-center-wrap">
         <div class="portal-login-card">
+          <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchPortalCheckEmail')}</div>
           <div class="brand" style="text-align:center; margin-bottom:32px;">
             <div class="brand-mark">Aesthetic<em>Flow</em></div>
-            <div class="eyebrow" style="margin-top:8px;">Client Portal</div>
+            <div class="eyebrow" style="margin-top:8px;">${t('portal.title')}</div>
           </div>
           <p class="portal-note" style="margin-top:0;">${isReset ? `If an account exists for` : `Check`} <strong>${esc(opts.email)}</strong>${isReset ? `, a password reset link has been sent.` : ` to confirm your account, then come back and sign in.`}</p>
-          <button class="btn btn-primary" id="backToPortalSignIn" style="width:100%; justify-content:center; margin-top:8px;">Back to Sign In</button>
+          <button class="btn btn-primary" id="backToPortalSignIn" style="width:100%; justify-content:center; margin-top:8px;">${t('portal.backToSignIn')}</button>
         </div>
       </div>`;
     document.getElementById('backToPortalSignIn').addEventListener('click', ()=>renderPortalAuth('signin'));
+    bindLanguageSwitcher('langSwitchPortalCheckEmail', ()=>renderPortalAuth(mode, opts));
     return;
   }
 
@@ -4554,17 +4742,19 @@ function renderPortalAuth(mode, opts){
     document.getElementById('clientPortalApp').innerHTML = `
       <div class="portal-center-wrap">
         <div class="portal-login-card">
+          <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchPortalForgot')}</div>
           <div class="brand" style="text-align:center; margin-bottom:32px;">
             <div class="brand-mark">Aesthetic<em>Flow</em></div>
-            <div class="eyebrow" style="margin-top:8px;">Reset Password</div>
+            <div class="eyebrow" style="margin-top:8px;">${t('portal.resetPasswordTitle')}</div>
           </div>
           <p class="portal-note" style="margin-top:0;">Enter the email you use for the client portal and we'll send you a link to set a new password.</p>
-          <div class="field-group"><label>Email</label><div class="field-line"><input id="portalForgotEmail" type="email" placeholder="you@email.com"></div></div>
-          <button class="btn btn-primary" id="portalForgotSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">Send Reset Link</button>
-          <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--sage);" id="backToPortalSignInFromForgot">← Back to Sign In</span></div>
+          <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="portalForgotEmail" type="email" placeholder="you@email.com"></div></div>
+          <button class="btn btn-primary" id="portalForgotSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${t('portal.sendResetLink')}</button>
+          <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--sage);" id="backToPortalSignInFromForgot">${t('portal.backToSignIn')}</span></div>
         </div>
       </div>`;
     document.getElementById('backToPortalSignInFromForgot').addEventListener('click', ()=>renderPortalAuth('signin'));
+    bindLanguageSwitcher('langSwitchPortalForgot', ()=>renderPortalAuth(mode, opts));
     document.getElementById('portalForgotSubmitBtn').addEventListener('click', async ()=>{
       const email = document.getElementById('portalForgotEmail').value.trim().toLowerCase();
       if(!email){ showToast('Enter your email'); return; }
@@ -4587,21 +4777,23 @@ function renderPortalAuth(mode, opts){
   document.getElementById('clientPortalApp').innerHTML = `
     <div class="portal-center-wrap">
       <div class="portal-login-card">
+        <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchPortalAuth')}</div>
         <div class="brand" style="text-align:center; margin-bottom:32px;">
           <div class="brand-mark">Aesthetic<em>Flow</em></div>
-          <div class="eyebrow" style="margin-top:8px;">${isSignup?'Create Portal Account':'Client Portal'}</div>
+          <div class="eyebrow" style="margin-top:8px;">${isSignup?t('portal.createAccount'):t('portal.title')}</div>
         </div>
-        <div class="field-group"><label>Email</label><div class="field-line"><input id="portalAuthEmail" type="email" placeholder="you@email.com"></div></div>
-        <div class="field-group"><label>Password</label><div class="field-line"><input id="portalAuthPassword" type="password" placeholder="••••••••"></div></div>
-        <button class="btn btn-primary" id="portalAuthSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?'Sign Up':'Sign In'}</button>
-        ${isSignup ? `<p class="portal-note">Use the email your clinic has on file for you.</p>` : `<div class="empty-state" style="text-align:center; margin-top:12px;"><span style="cursor:pointer; color:var(--sage);" id="portalForgotLink">Forgot password?</span></div>`}
-        <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="togglePortalAuthMode">${isSignup?'Already have an account? Sign in':'First time here? Sign up'}</span></div>
-        <div class="empty-state" style="text-align:center; margin-top:10px;"><span style="cursor:pointer; color:var(--sage);" id="backToStaffLink">← Back to staff sign-in</span></div>
+        <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="portalAuthEmail" type="email" placeholder="you@email.com"></div></div>
+        <div class="field-group"><label>${t('auth.password')}</label><div class="field-line"><input id="portalAuthPassword" type="password" placeholder="••••••••"></div></div>
+        <button class="btn btn-primary" id="portalAuthSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?t('auth.signUp'):t('auth.signIn')}</button>
+        ${isSignup ? `<p class="portal-note">Use the email your clinic has on file for you.</p>` : `<div class="empty-state" style="text-align:center; margin-top:12px;"><span style="cursor:pointer; color:var(--sage);" id="portalForgotLink">${t('portal.forgotPassword')}</span></div>`}
+        <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="togglePortalAuthMode">${isSignup?t('auth.alreadyHaveAccount'):t('portal.firstTimeSignUp')}</span></div>
+        <div class="empty-state" style="text-align:center; margin-top:10px;"><span style="cursor:pointer; color:var(--sage);" id="backToStaffLink">${t('portal.backToStaffSignIn')}</span></div>
       </div>
     </div>`;
 
   document.getElementById('togglePortalAuthMode').addEventListener('click', ()=>renderPortalAuth(isSignup?'signin':'signup'));
   if(!isSignup) document.getElementById('portalForgotLink').addEventListener('click', ()=>renderPortalAuth('forgot'));
+  bindLanguageSwitcher('langSwitchPortalAuth', ()=>renderPortalAuth(mode, opts));
   document.getElementById('backToStaffLink').addEventListener('click', async ()=>{
     const { data:{ session } } = await sb.auth.getSession();
     if(session && state){
@@ -4647,15 +4839,17 @@ function renderSetNewPassword(){
   document.getElementById('clientPortalApp').innerHTML = `
     <div class="portal-center-wrap">
       <div class="portal-login-card">
+        <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchSetPw')}</div>
         <div class="brand" style="text-align:center; margin-bottom:32px;">
           <div class="brand-mark">Aesthetic<em>Flow</em></div>
-          <div class="eyebrow" style="margin-top:8px;">Set New Password</div>
+          <div class="eyebrow" style="margin-top:8px;">${t('portal.setNewPasswordTitle')}</div>
         </div>
-        <div class="field-group"><label>New Password</label><div class="field-line"><input id="newPw1" type="password" placeholder="At least 6 characters"></div></div>
-        <div class="field-group"><label>Confirm New Password</label><div class="field-line"><input id="newPw2" type="password" placeholder="Repeat new password"></div></div>
-        <button class="btn btn-primary" id="setNewPwBtn" style="width:100%; justify-content:center; margin-top:8px;">Set Password</button>
+        <div class="field-group"><label>${t('portal.newPassword')}</label><div class="field-line"><input id="newPw1" type="password" placeholder="At least 6 characters"></div></div>
+        <div class="field-group"><label>${t('portal.confirmNewPassword')}</label><div class="field-line"><input id="newPw2" type="password" placeholder="Repeat new password"></div></div>
+        <button class="btn btn-primary" id="setNewPwBtn" style="width:100%; justify-content:center; margin-top:8px;">${t('portal.setPassword')}</button>
       </div>
     </div>`;
+  bindLanguageSwitcher('langSwitchSetPw', renderSetNewPassword);
   document.getElementById('setNewPwBtn').addEventListener('click', async ()=>{
     const p1 = document.getElementById('newPw1').value;
     const p2 = document.getElementById('newPw2').value;
@@ -4689,36 +4883,39 @@ function renderPortalDashboard(){
       <div class="portal-header">
         <div>
           <div class="eyebrow" style="margin-bottom:4px;">${esc(portalData.clinicName)}</div>
-          <div class="page-title">Welcome, ${esc(c.name.split(' ')[0])}</div>
+          <div class="page-title">${t('portal.welcome')}, ${esc(c.name.split(' ')[0])}</div>
         </div>
-        <button class="btn btn-secondary btn-sm" id="portalSignOutBtn">Sign Out</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+          ${languageSwitcherHtml('langSwitchPortalDash')}
+          <button class="btn btn-secondary btn-sm" id="portalSignOutBtn">${t('common.signOut')}</button>
+        </div>
       </div>
       <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">Upcoming Appointments</div>
+        <div class="card-title">${t('portal.upcomingAppointments')}</div>
         ${appts.length ? appts.map(a=>`
           <div class="portal-row">
             <div><div class="portal-row-title">${esc(a.service)}</div><div class="portal-row-meta">${esc(a.practitioner||'')}</div></div>
             <div class="portal-row-right">${fmtDate(a.date)} · ${esc(a.time)}</div>
-          </div>`).join('') : `<p class="empty-state">No upcoming appointments.</p>`}
+          </div>`).join('') : `<p class="empty-state">${t('portal.noAppointments')}</p>`}
       </div>
       <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">Treatment History</div>
-        ${treatments.length ? treatments.map(t=>`
+        <div class="card-title">${t('portal.treatmentHistory')}</div>
+        ${treatments.length ? treatments.map(t2=>`
           <div class="portal-row">
-            <div><div class="portal-row-title">${esc(t.name)}</div><div class="portal-row-meta">${t.area && t.area.length ? esc(t.area.join(', ')) : ''}</div></div>
-            <div class="portal-row-right">${fmtDate(t.date)}</div>
-          </div>`).join('') : `<p class="empty-state">No treatment history yet.</p>`}
+            <div><div class="portal-row-title">${esc(t2.name)}</div><div class="portal-row-meta">${t2.area && t2.area.length ? esc(t2.area.join(', ')) : ''}</div></div>
+            <div class="portal-row-right">${fmtDate(t2.date)}</div>
+          </div>`).join('') : `<p class="empty-state">${t('portal.noTreatments')}</p>`}
       </div>
       <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">Invoices &amp; Quotes</div>
+        <div class="card-title">${t('portal.invoicesQuotes')}</div>
         ${invoices.length ? invoices.map(inv=>`
           <div class="portal-row">
             <div><div class="portal-row-title">${esc(inv.invoiceNumber||inv.type)}</div><div class="portal-row-meta">${inv.type} · ${inv.lineItems.length} item(s)</div></div>
             <div class="portal-row-right">${fmtMoney(invoiceTotal(inv))}<br><span class="status ${inv.status}">${inv.status}</span></div>
-          </div>`).join('') : `<p class="empty-state">No invoices or quotes yet.</p>`}
+          </div>`).join('') : `<p class="empty-state">${t('portal.noInvoices')}</p>`}
       </div>
       <div class="card" style="margin-bottom:20px;">
-        <div class="card-title">Before &amp; After Photos</div>
+        <div class="card-title">${t('portal.beforeAfterPhotos')}</div>
         ${photoSets.length ? photoSets.map(s=>`
           <div class="photo-set">
             <div class="photo-set-meta">${fmtDate(s.date)}${s.caption?` · ${esc(s.caption)}`:''}</div>
@@ -4726,20 +4923,21 @@ function renderPortalDashboard(){
               <div class="photo-slot">${s.beforeUrl ? `<img src="${s.beforeUrl}" data-lightbox="${s.beforeUrl}"><span class="photo-tag">Before</span>` : `<div class="photo-empty">No before photo</div>`}</div>
               <div class="photo-slot">${s.afterUrl ? `<img src="${s.afterUrl}" data-lightbox="${s.afterUrl}"><span class="photo-tag">After</span>` : `<div class="photo-empty">No after photo</div>`}</div>
             </div>
-          </div>`).join('') : `<p class="empty-state">No photos yet.</p>`}
+          </div>`).join('') : `<p class="empty-state">${t('portal.noPhotos')}</p>`}
       </div>
       <div class="card">
-        <div class="card-title">Change Password</div>
+        <div class="card-title">${t('portal.changePassword')}</div>
         <p class="muted" style="font-size:13px; margin-bottom:16px;">Updates the password for your own portal sign-in.</p>
-        <div class="field-group"><label>New Password</label><div class="field-line"><input id="portalNewPassword1" type="password" placeholder="At least 6 characters"></div></div>
-        <div class="field-group"><label>Confirm New Password</label><div class="field-line"><input id="portalNewPassword2" type="password" placeholder="Repeat new password"></div></div>
-        <button class="btn btn-secondary btn-sm" id="portalChangePasswordBtn">Update Password</button>
+        <div class="field-group"><label>${t('portal.newPassword')}</label><div class="field-line"><input id="portalNewPassword1" type="password" placeholder="At least 6 characters"></div></div>
+        <div class="field-group"><label>${t('portal.confirmNewPassword')}</label><div class="field-line"><input id="portalNewPassword2" type="password" placeholder="Repeat new password"></div></div>
+        <button class="btn btn-secondary btn-sm" id="portalChangePasswordBtn">${t('portal.updatePassword')}</button>
       </div>
     </div>`;
 
   document.querySelectorAll('#clientPortalApp [data-lightbox]').forEach(img=>{
     img.addEventListener('click', ()=>openLightbox(img.dataset.lightbox));
   });
+  bindLanguageSwitcher('langSwitchPortalDash', renderPortalDashboard);
 
   document.getElementById('portalChangePasswordBtn').addEventListener('click', async ()=>{
     const btn = document.getElementById('portalChangePasswordBtn');
