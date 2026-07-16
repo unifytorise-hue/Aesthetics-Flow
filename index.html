@@ -552,6 +552,11 @@ const TRANSLATIONS = {
 // not synced across devices.
 function getLang(){ return localStorage.getItem('af_lang') || 'en'; }
 function setLang(code){ localStorage.setItem('af_lang', code); }
+// BCP 47 locale used for date/number formatting (toLocaleDateString /
+// toLocaleString), driven by the same language preference as t() -- so
+// switching language also switches date/number conventions, not just text.
+const LOCALE_BY_LANG = { en:'en-GB', es:'es-ES', fr:'fr-FR' };
+function getLocale(){ return LOCALE_BY_LANG[getLang()] || 'en-GB'; }
 function t(key){
   const lang = getLang();
   return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
@@ -663,7 +668,7 @@ function fmtDate(iso){
   if(!iso || iso==='—') return '—';
   const d = new Date(iso+'T00:00:00');
   if(isNaN(d)) return iso;
-  return d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+  return d.toLocaleDateString(getLocale(), {day:'2-digit', month:'short', year:'numeric'});
 }
 function weekDates(){
   const now = new Date();
@@ -673,7 +678,7 @@ function weekDates(){
   const days=[];
   for(let i=0;i<5;i++){
     const d = new Date(monday); d.setDate(monday.getDate()+i);
-    days.push({ iso: localISO(d), label: d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()+' '+d.getDate() });
+    days.push({ iso: localISO(d), label: d.toLocaleDateString(getLocale(),{weekday:'short'}).toUpperCase()+' '+d.getDate() });
   }
   return days;
 }
@@ -688,7 +693,7 @@ let campaignsSubTab = 'campaigns';
 
 function fmtMoney(n){
   const symbol = (state && state.clinic && state.clinic.currency) || 'R';
-  return symbol + Number(n||0).toLocaleString();
+  return symbol + Number(n||0).toLocaleString(getLocale());
 }
 
 function seedData(){
@@ -1142,7 +1147,7 @@ function renderDashboard(){
   const today = state.appointments.filter(a=>a.date===todayISO() && a.locationId===state.currentLocationId).sort((a,b)=>a.time.localeCompare(b.time));
   const revenue = monthlyRevenue();
   const newLeadsCount = state.leads.filter(l=>l.stage==='New Leads').length;
-  const todayLabel = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+  const todayLabel = new Date().toLocaleDateString(getLocale(), {weekday:'long', day:'numeric', month:'long'});
   const me = state.staff.find(s=>s.id===state.currentStaffId);
   const insight = generateAIInsight();
   return `
@@ -1433,7 +1438,7 @@ function renderCalendar(){
   return `
     <div class="topbar">
       <div class="page-title">Calendar</div>
-      <div class="eyebrow">${esc(currentLocation ? currentLocation.name : '')} · ${new Date().toLocaleDateString('en-GB',{month:'long', year:'numeric'})}</div>
+      <div class="eyebrow">${esc(currentLocation ? currentLocation.name : '')} · ${new Date().toLocaleDateString(getLocale(),{month:'long', year:'numeric'})}</div>
     </div>
     <div class="cal-filters">
       <div>
@@ -2011,7 +2016,7 @@ function renderSocialContent(perms){
   const groups = {};
   posts.forEach(p=>{
     const d = new Date(p.createdDate+'T00:00:00');
-    const key = isNaN(d) ? 'Undated' : d.toLocaleDateString('en-GB',{month:'long', year:'numeric'});
+    const key = isNaN(d) ? 'Undated' : d.toLocaleDateString(getLocale(),{month:'long', year:'numeric'});
     (groups[key] = groups[key] || []).push(p);
   });
 
@@ -2451,7 +2456,7 @@ function renderReports(){
   const monthLabels = [];
   for(let i=5;i>=0;i--){
     const d = new Date(); d.setMonth(d.getMonth()-i);
-    monthLabels.push({ label: d.toLocaleDateString('en-GB',{month:'short'}), revenue: revenueForMonthOffset(i) });
+    monthLabels.push({ label: d.toLocaleDateString(getLocale(),{month:'short'}), revenue: revenueForMonthOffset(i) });
   }
   const maxMonthRevenue = Math.max(1, ...monthLabels.map(m=>m.revenue));
 
@@ -2649,7 +2654,7 @@ function renderSettings(){
               <div>
                 <strong>${esc(k.label)}</strong>
                 <div class="muted" style="font-size:12px; margin-top:2px; font-family:'JetBrains Mono', monospace;">${esc(k.keyPrefix)}</div>
-                <div class="muted" style="font-size:11px; margin-top:2px;">Created ${k.createdAt ? esc(new Date(k.createdAt).toLocaleDateString()) : '—'} · ${k.lastUsedAt ? 'Last used ' + esc(new Date(k.lastUsedAt).toLocaleDateString()) : 'Never used'}</div>
+                <div class="muted" style="font-size:11px; margin-top:2px;">Created ${k.createdAt ? esc(new Date(k.createdAt).toLocaleDateString(getLocale())) : '—'} · ${k.lastUsedAt ? 'Last used ' + esc(new Date(k.lastUsedAt).toLocaleDateString(getLocale())) : 'Never used'}</div>
               </div>
               <div class="row-actions">
                 <button class="icon-btn danger" data-revoke-key="${k.id}" title="Revoke">${ICONS.trash}</button>
