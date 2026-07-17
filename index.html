@@ -370,6 +370,25 @@
     .responsive-table td{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:none; }
     .responsive-table td::before{ content:attr(data-label); font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:rgba(242,236,221,0.4); font-weight:600; margin-right:12px; }
   }
+
+  /* RTL (Arabic). Flexbox row-direction layout (the sidebar/main split,
+     nav-item icon+label, most card rows) mirrors automatically from
+     [dir="rtl"] on <html> per the CSS spec -- these overrides only cover
+     physical left/right properties that don't auto-flip: borders, one-sided
+     padding, and text-align. This covers the primary navigation shell and
+     data tables; scattered small inline-style spacing tweaks deeper in the
+     app (badge margins, the printable invoice template, the platform admin
+     table) are not individually mirrored -- functional but not pixel-audited. */
+  [dir="rtl"] .sidebar{ border-right:none; border-left:1px solid var(--line); }
+  [dir="rtl"] .brand-mark{ padding-left:0; padding-right:4px; }
+  [dir="rtl"] .nav-item{ text-align:right; }
+  [dir="rtl"] .nav-item.active{ border-left:none; border-right:2px solid var(--rose-gold); padding-left:12px; padding-right:10px; }
+  [dir="rtl"] thead th{ text-align:right; }
+  [dir="rtl"] .search-wrap input{ padding-left:14px; padding-right:26px; }
+  @media (max-width:900px){
+    [dir="rtl"] .sidebar{ left:auto; right:0; transform:translateX(100%); }
+    [dir="rtl"] .sidebar.open{ transform:translateX(0); }
+  }
 </style>
 </head>
 <body>
@@ -490,7 +509,10 @@ const LANGUAGES = [
   {code:'en', label:'English'},
   {code:'es', label:'Español'},
   {code:'fr', label:'Français'},
+  {code:'pt', label:'Português'},
+  {code:'ar', label:'العربية'},
 ];
+const RTL_LANGS = ['ar'];
 const TRANSLATIONS = {
   en: {
     'nav.dashboard':'Dashboard', 'nav.clients':'Clients', 'nav.calendar':'Calendar', 'nav.leads':'Sales Pipeline',
@@ -509,6 +531,9 @@ const TRANSLATIONS = {
     'portal.invoicesQuotes':'Invoices & Quotes', 'portal.beforeAfterPhotos':'Before & After Photos',
     'portal.noAppointments':'No upcoming appointments.', 'portal.noTreatments':'No treatment history yet.',
     'portal.noInvoices':'No invoices or quotes yet.', 'portal.noPhotos':'No photos yet.',
+    'msg.invoiceHeader':'{type} from {clinic}', 'msg.invoiceGreeting':'Hi {name},', 'msg.invoiceTotal':'Total: {total}', 'msg.invoiceThanks':'Thank you!',
+    'msg.reviewRequest':"Hi {name}, thank you for visiting {clinic}! We'd love to hear how your treatment went — would you mind leaving us a quick review? It helps other clients find us and means a lot to our team.", 'msg.reviewSubject':'How was your visit to {clinic}?',
+    'invoiceType.Invoice':'Invoice', 'invoiceType.Quote':'Quote',
   },
   es: {
     'nav.dashboard':'Panel', 'nav.clients':'Clientes', 'nav.calendar':'Calendario', 'nav.leads':'Embudo de Ventas',
@@ -527,6 +552,9 @@ const TRANSLATIONS = {
     'portal.invoicesQuotes':'Facturas y Presupuestos', 'portal.beforeAfterPhotos':'Fotos de Antes y Después',
     'portal.noAppointments':'No hay próximas citas.', 'portal.noTreatments':'Aún no hay historial de tratamientos.',
     'portal.noInvoices':'Aún no hay facturas ni presupuestos.', 'portal.noPhotos':'Aún no hay fotos.',
+    'msg.invoiceHeader':'{type} de {clinic}', 'msg.invoiceGreeting':'Hola {name},', 'msg.invoiceTotal':'Total: {total}', 'msg.invoiceThanks':'¡Gracias!',
+    'msg.reviewRequest':'Hola {name}, ¡gracias por visitar {clinic}! Nos encantaría saber cómo fue tu tratamiento — ¿te importaría dejarnos una reseña rápida? Ayuda a que otros clientes nos encuentren y significa mucho para nuestro equipo.', 'msg.reviewSubject':'¿Cómo fue tu visita a {clinic}?',
+    'invoiceType.Invoice':'Factura', 'invoiceType.Quote':'Presupuesto',
   },
   fr: {
     'nav.dashboard':'Tableau de bord', 'nav.clients':'Clients', 'nav.calendar':'Calendrier', 'nav.leads':'Pipeline des Ventes',
@@ -545,6 +573,51 @@ const TRANSLATIONS = {
     'portal.invoicesQuotes':'Factures et Devis', 'portal.beforeAfterPhotos':'Photos Avant/Après',
     'portal.noAppointments':'Aucun rendez-vous à venir.', 'portal.noTreatments':'Aucun historique de traitement pour le moment.',
     'portal.noInvoices':'Aucune facture ni devis pour le moment.', 'portal.noPhotos':'Aucune photo pour le moment.',
+    'msg.invoiceHeader':'{type} de {clinic}', 'msg.invoiceGreeting':'Bonjour {name},', 'msg.invoiceTotal':'Total : {total}', 'msg.invoiceThanks':'Merci !',
+    'msg.reviewRequest':"Bonjour {name}, merci de votre visite chez {clinic} ! Nous aimerions savoir comment s'est passé votre traitement — accepteriez-vous de nous laisser un avis rapide ? Cela aide d'autres clients à nous trouver et compte beaucoup pour notre équipe.", 'msg.reviewSubject':"Comment s'est passée votre visite chez {clinic} ?",
+    'invoiceType.Invoice':'Facture', 'invoiceType.Quote':'Devis',
+  },
+  pt: {
+    'nav.dashboard':'Painel', 'nav.clients':'Clientes', 'nav.calendar':'Calendário', 'nav.leads':'Funil de Vendas',
+    'nav.inventory':'Inventário', 'nav.invoices':'Faturas', 'nav.sales':'Equipa de Vendas', 'nav.teamchat':'Chat da Equipa',
+    'nav.campaigns':'Campanhas', 'nav.reports':'Relatórios', 'nav.settings':'Configurações', 'nav.ai':'Assistente IA',
+    'common.save':'Guardar', 'common.cancel':'Cancelar', 'common.close':'Fechar', 'common.signOut':'Terminar Sessão', 'common.language':'Idioma',
+    'auth.staffSignIn':'Acesso da Equipa', 'auth.staffSignUp':'Registo da Equipa', 'auth.email':'E-mail', 'auth.password':'Palavra-passe',
+    'auth.signIn':'Iniciar Sessão', 'auth.signUp':'Registar', 'auth.newStaffSignUp':'Novo membro da equipa? Registe-se',
+    'auth.alreadyHaveAccount':'Já tem uma conta? Inicie sessão', 'auth.clientPortalLink':'Portal do Cliente →',
+    'portal.title':'Portal do Cliente', 'portal.createAccount':'Criar Conta do Portal', 'portal.forgotPassword':'Esqueceu-se da palavra-passe?',
+    'portal.firstTimeSignUp':'Primeira vez aqui? Registe-se', 'portal.backToStaffSignIn':'← Voltar ao acesso da equipa',
+    'portal.backToSignIn':'← Voltar a Iniciar Sessão', 'portal.resetPasswordTitle':'Redefinir Palavra-passe', 'portal.sendResetLink':'Enviar Link',
+    'portal.setNewPasswordTitle':'Definir Nova Palavra-passe', 'portal.newPassword':'Nova Palavra-passe', 'portal.confirmNewPassword':'Confirmar Nova Palavra-passe',
+    'portal.setPassword':'Definir Palavra-passe', 'portal.updatePassword':'Atualizar Palavra-passe', 'portal.changePassword':'Alterar Palavra-passe',
+    'portal.welcome':'Bem-vindo/a', 'portal.upcomingAppointments':'Próximas Consultas', 'portal.treatmentHistory':'Histórico de Tratamentos',
+    'portal.invoicesQuotes':'Faturas e Orçamentos', 'portal.beforeAfterPhotos':'Fotos de Antes e Depois',
+    'portal.noAppointments':'Sem próximas consultas.', 'portal.noTreatments':'Ainda sem histórico de tratamentos.',
+    'portal.noInvoices':'Ainda sem faturas ou orçamentos.', 'portal.noPhotos':'Ainda sem fotos.',
+    'msg.invoiceHeader':'{type} de {clinic}', 'msg.invoiceGreeting':'Olá {name},', 'msg.invoiceTotal':'Total: {total}', 'msg.invoiceThanks':'Obrigado!',
+    'msg.reviewRequest':'Olá {name}, obrigado por visitar {clinic}! Gostaríamos de saber como foi o seu tratamento — importa-se de nos deixar uma avaliação rápida? Ajuda outros clientes a encontrar-nos e significa muito para a nossa equipa.', 'msg.reviewSubject':'Como foi a sua visita à {clinic}?',
+    'invoiceType.Invoice':'Fatura', 'invoiceType.Quote':'Orçamento',
+  },
+  ar: {
+    'nav.dashboard':'لوحة التحكم', 'nav.clients':'العملاء', 'nav.calendar':'التقويم', 'nav.leads':'مسار المبيعات',
+    'nav.inventory':'المخزون', 'nav.invoices':'الفواتير', 'nav.sales':'فريق المبيعات', 'nav.teamchat':'دردشة الفريق',
+    'nav.campaigns':'الحملات', 'nav.reports':'التقارير', 'nav.settings':'الإعدادات', 'nav.ai':'المساعد الذكي',
+    'common.save':'حفظ', 'common.cancel':'إلغاء', 'common.close':'إغلاق', 'common.signOut':'تسجيل الخروج', 'common.language':'اللغة',
+    'auth.staffSignIn':'تسجيل دخول الموظفين', 'auth.staffSignUp':'تسجيل الموظفين', 'auth.email':'البريد الإلكتروني', 'auth.password':'كلمة المرور',
+    'auth.signIn':'تسجيل الدخول', 'auth.signUp':'إنشاء حساب', 'auth.newStaffSignUp':'موظف جديد؟ سجّل الآن',
+    'auth.alreadyHaveAccount':'لديك حساب بالفعل؟ سجّل الدخول', 'auth.clientPortalLink':'→ بوابة العميل',
+    'portal.title':'بوابة العميل', 'portal.createAccount':'إنشاء حساب في البوابة', 'portal.forgotPassword':'هل نسيت كلمة المرور؟',
+    'portal.firstTimeSignUp':'أول مرة هنا؟ سجّل الآن', 'portal.backToStaffSignIn':'← العودة لتسجيل دخول الموظفين',
+    'portal.backToSignIn':'← العودة لتسجيل الدخول', 'portal.resetPasswordTitle':'إعادة تعيين كلمة المرور', 'portal.sendResetLink':'إرسال رابط إعادة التعيين',
+    'portal.setNewPasswordTitle':'تعيين كلمة مرور جديدة', 'portal.newPassword':'كلمة المرور الجديدة', 'portal.confirmNewPassword':'تأكيد كلمة المرور الجديدة',
+    'portal.setPassword':'تعيين كلمة المرور', 'portal.updatePassword':'تحديث كلمة المرور', 'portal.changePassword':'تغيير كلمة المرور',
+    'portal.welcome':'مرحباً', 'portal.upcomingAppointments':'المواعيد القادمة', 'portal.treatmentHistory':'سجل العلاجات',
+    'portal.invoicesQuotes':'الفواتير والعروض', 'portal.beforeAfterPhotos':'صور قبل وبعد',
+    'portal.noAppointments':'لا توجد مواعيد قادمة.', 'portal.noTreatments':'لا يوجد سجل علاجات بعد.',
+    'portal.noInvoices':'لا توجد فواتير أو عروض بعد.', 'portal.noPhotos':'لا توجد صور بعد.',
+    'msg.invoiceHeader':'{type} من {clinic}', 'msg.invoiceGreeting':'مرحباً {name}،', 'msg.invoiceTotal':'الإجمالي: {total}', 'msg.invoiceThanks':'شكراً لك!',
+    'msg.reviewRequest':'مرحباً {name}، شكراً لزيارتك {clinic}! يسعدنا معرفة رأيك في علاجك — هل يمكنك ترك تقييم سريع لنا؟ هذا يساعد عملاء آخرين على إيجادنا ويعني الكثير لفريقنا.', 'msg.reviewSubject':'كيف كانت زيارتك إلى {clinic}؟',
+    'invoiceType.Invoice':'فاتورة', 'invoiceType.Quote':'عرض سعر',
   },
 };
 // Language is a browser/device preference (auth screens render before any
@@ -555,11 +628,30 @@ function setLang(code){ localStorage.setItem('af_lang', code); }
 // BCP 47 locale used for date/number formatting (toLocaleDateString /
 // toLocaleString), driven by the same language preference as t() -- so
 // switching language also switches date/number conventions, not just text.
-const LOCALE_BY_LANG = { en:'en-GB', es:'es-ES', fr:'fr-FR' };
+const LOCALE_BY_LANG = { en:'en-GB', es:'es-ES', fr:'fr-FR', pt:'pt-PT', ar:'ar-SA' };
 function getLocale(){ return LOCALE_BY_LANG[getLang()] || 'en-GB'; }
+function isRtl(){ return RTL_LANGS.includes(getLang()); }
+// Keeps <html dir="rtl"/lang="ar"> in sync with the language preference so
+// CSS logical-property overrides (see .rtl-mode rules) and native form
+// controls (date/time pickers, text alignment) mirror correctly. Call after
+// every setLang() + render(), not just once at load.
+function applyDirection(){
+  document.documentElement.dir = isRtl() ? 'rtl' : 'ltr';
+  document.documentElement.lang = getLang();
+  document.body.classList.toggle('rtl-mode', isRtl());
+}
 function t(key){
   const lang = getLang();
   return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
+}
+// t() + {placeholder} substitution, for client-facing message templates
+// where interpolated values (names, amounts) sit mid-sentence and word
+// order differs by language -- each language's string carries its own
+// placeholder positions rather than being built from concatenated parts.
+function tf(key, vars){
+  let s = t(key);
+  Object.keys(vars||{}).forEach(k=>{ s = s.split('{'+k+'}').join(vars[k]); });
+  return s;
 }
 function languageSwitcherHtml(idAttr){
   return `<select id="${idAttr}" class="lang-switcher" style="background:transparent; border:1px solid var(--line); color:inherit; border-radius:6px; font-size:11.5px; padding:4px 6px;">
@@ -568,7 +660,7 @@ function languageSwitcherHtml(idAttr){
 }
 function bindLanguageSwitcher(idAttr, onChangeRerender){
   const el = document.getElementById(idAttr);
-  if(el) el.addEventListener('change', e=>{ setLang(e.target.value); onChangeRerender(); });
+  if(el) el.addEventListener('change', e=>{ setLang(e.target.value); applyDirection(); onChangeRerender(); });
 }
 
 /* ---------------- Reference data: countries & currencies ----------------
@@ -576,6 +668,39 @@ function bindLanguageSwitcher(idAttr, onChangeRerender){
    Selectors built from this always offer a free-text "Other" fallback since
    no fixed list can be perfectly exhaustive. */
 const COUNTRIES = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo (Congo-Brazzaville)","Costa Rica","Croatia","Cuba","Cyprus","Czechia","Democratic Republic of the Congo","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kosovo","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"];
+const COUNTRY_CALLING_CODES = {
+  "Afghanistan":"93","Albania":"355","Algeria":"213","Andorra":"376","Angola":"244","Antigua and Barbuda":"1268",
+  "Argentina":"54","Armenia":"374","Australia":"61","Austria":"43","Azerbaijan":"994","Bahamas":"1242","Bahrain":"973",
+  "Bangladesh":"880","Barbados":"1246","Belarus":"375","Belgium":"32","Belize":"501","Benin":"229","Bhutan":"975",
+  "Bolivia":"591","Bosnia and Herzegovina":"387","Botswana":"267","Brazil":"55","Brunei":"673","Bulgaria":"359",
+  "Burkina Faso":"226","Burundi":"257","Cabo Verde":"238","Cambodia":"855","Cameroon":"237","Canada":"1",
+  "Central African Republic":"236","Chad":"235","Chile":"56","China":"86","Colombia":"57","Comoros":"269",
+  "Congo (Congo-Brazzaville)":"242","Costa Rica":"506","Croatia":"385","Cuba":"53","Cyprus":"357","Czechia":"420",
+  "Democratic Republic of the Congo":"243","Denmark":"45","Djibouti":"253","Dominica":"1767","Dominican Republic":"1809",
+  "Ecuador":"593","Egypt":"20","El Salvador":"503","Equatorial Guinea":"240","Eritrea":"291","Estonia":"372",
+  "Eswatini":"268","Ethiopia":"251","Fiji":"679","Finland":"358","France":"33","Gabon":"241","Gambia":"220",
+  "Georgia":"995","Germany":"49","Ghana":"233","Greece":"30","Grenada":"1473","Guatemala":"502","Guinea":"224",
+  "Guinea-Bissau":"245","Guyana":"592","Haiti":"509","Honduras":"504","Hungary":"36","Iceland":"354","India":"91",
+  "Indonesia":"62","Iran":"98","Iraq":"964","Ireland":"353","Israel":"972","Italy":"39","Ivory Coast":"225",
+  "Jamaica":"1876","Japan":"81","Jordan":"962","Kazakhstan":"7","Kenya":"254","Kiribati":"686","Kosovo":"383",
+  "Kuwait":"965","Kyrgyzstan":"996","Laos":"856","Latvia":"371","Lebanon":"961","Lesotho":"266","Liberia":"231",
+  "Libya":"218","Liechtenstein":"423","Lithuania":"370","Luxembourg":"352","Madagascar":"261","Malawi":"265",
+  "Malaysia":"60","Maldives":"960","Mali":"223","Malta":"356","Marshall Islands":"692","Mauritania":"222",
+  "Mauritius":"230","Mexico":"52","Micronesia":"691","Moldova":"373","Monaco":"377","Mongolia":"976","Montenegro":"382",
+  "Morocco":"212","Mozambique":"258","Myanmar":"95","Namibia":"264","Nauru":"674","Nepal":"977","Netherlands":"31",
+  "New Zealand":"64","Nicaragua":"505","Niger":"227","Nigeria":"234","North Korea":"850","North Macedonia":"389",
+  "Norway":"47","Oman":"968","Pakistan":"92","Palau":"680","Palestine":"970","Panama":"507","Papua New Guinea":"675",
+  "Paraguay":"595","Peru":"51","Philippines":"63","Poland":"48","Portugal":"351","Qatar":"974","Romania":"40",
+  "Russia":"7","Rwanda":"250","Saint Kitts and Nevis":"1869","Saint Lucia":"1758","Saint Vincent and the Grenadines":"1784",
+  "Samoa":"685","San Marino":"378","Sao Tome and Principe":"239","Saudi Arabia":"966","Senegal":"221","Serbia":"381",
+  "Seychelles":"248","Sierra Leone":"232","Singapore":"65","Slovakia":"421","Slovenia":"386","Solomon Islands":"677",
+  "Somalia":"252","South Africa":"27","South Korea":"82","South Sudan":"211","Spain":"34","Sri Lanka":"94","Sudan":"249",
+  "Suriname":"597","Sweden":"46","Switzerland":"41","Syria":"963","Taiwan":"886","Tajikistan":"992","Tanzania":"255",
+  "Thailand":"66","Timor-Leste":"670","Togo":"228","Tonga":"676","Trinidad and Tobago":"1868","Tunisia":"216",
+  "Turkey":"90","Turkmenistan":"993","Tuvalu":"688","Uganda":"256","Ukraine":"380","United Arab Emirates":"971",
+  "United Kingdom":"44","United States":"1","Uruguay":"598","Uzbekistan":"998","Vanuatu":"678","Vatican City":"39",
+  "Venezuela":"58","Vietnam":"84","Yemen":"967","Zambia":"260","Zimbabwe":"263",
+};
 const CURRENCIES = [
   {code:'USD',symbol:'$',name:'US Dollar'},{code:'EUR',symbol:'€',name:'Euro'},{code:'GBP',symbol:'£',name:'British Pound'},
   {code:'ZAR',symbol:'R',name:'South African Rand'},{code:'NGN',symbol:'₦',name:'Nigerian Naira'},{code:'KES',symbol:'KSh',name:'Kenyan Shilling'},
@@ -649,6 +774,28 @@ function countrySelectValue(id){
   const other = document.getElementById(id+'Other');
   if(!sel) return '';
   return sel.value==='__other__' ? (other ? other.value.trim() : '') : sel.value;
+}
+
+// Normalizes a staff-entered phone number to full international digits (no
+// leading +/0/00) for wa.me links, which require the country calling code
+// baked into the digit string -- without this, a locally-typed number like
+// "082 123 4567" produces an invalid WhatsApp recipient. Falls back to the
+// old digits-only behavior when the client has no country on file, so
+// existing data isn't broken.
+function normalizePhoneForWhatsApp(phone, countryName){
+  if(!phone) return '';
+  const trimmed = phone.trim();
+  if(trimmed.startsWith('+')) return trimmed.slice(1).replace(/[^0-9]/g, '');
+  let digits = trimmed.replace(/[^0-9]/g, '');
+  if(digits.startsWith('00')) return digits.slice(2);
+  const code = COUNTRY_CALLING_CODES[countryName];
+  if(!code) return digits;
+  if(digits.startsWith('0')) digits = digits.slice(1);
+  return code + digits;
+}
+function phonePlaceholderForCountry(countryName){
+  const code = COUNTRY_CALLING_CODES[countryName];
+  return code ? `+${code} phone number` : 'Phone number';
 }
 
 /* ---------------- Date helpers ---------------- */
@@ -1901,9 +2048,14 @@ function downloadCsv(filename, rows){
   URL.revokeObjectURL(url);
 }
 
+function invoiceHeaderText(invoice){
+  return tf('msg.invoiceHeader', { type: t('invoiceType.'+invoice.type), clinic: state.clinic.name });
+}
 function buildInvoiceMessage(invoice){
   const lines = invoice.lineItems.map(li=>`${li.description} x${li.quantity} — ${fmtMoney(li.unitPrice*li.quantity)}`).join('\n');
-  return `${invoice.type} from ${state.clinic.name}\n\nHi ${invoice.clientName},\n\n${lines}\n\nTotal: ${fmtMoney(invoiceTotal(invoice))}\n${invoice.notes ? '\n'+invoice.notes : ''}\n\nThank you!`;
+  const greeting = tf('msg.invoiceGreeting', { name: invoice.clientName });
+  const total = tf('msg.invoiceTotal', { total: fmtMoney(invoiceTotal(invoice)) });
+  return `${invoiceHeaderText(invoice)}\n\n${greeting}\n\n${lines}\n\n${total}\n${invoice.notes ? '\n'+invoice.notes : ''}\n\n${t('msg.invoiceThanks')}`;
 }
 
 function openInvoiceDetailModal(invoice){
@@ -1936,7 +2088,7 @@ function openInvoiceDetailModal(invoice){
 
   document.getElementById('sendEmailBtn').addEventListener('click', async ()=>{
     if(!client || !client.email){ showToast('This client has no email on file'); return; }
-    const subject = encodeURIComponent(`${invoice.type} from ${state.clinic.name}`);
+    const subject = encodeURIComponent(invoiceHeaderText(invoice));
     const body = encodeURIComponent(buildInvoiceMessage(invoice));
     window.open(`mailto:${client.email}?subject=${subject}&body=${body}`, '_blank');
     deductInventoryForInvoice(invoice);
@@ -1947,7 +2099,7 @@ function openInvoiceDetailModal(invoice){
   });
   document.getElementById('sendWhatsappBtn').addEventListener('click', async ()=>{
     if(!client || !client.phone){ showToast('This client has no phone number on file'); return; }
-    const digits = client.phone.replace(/[^0-9]/g, '');
+    const digits = normalizePhoneForWhatsApp(client.phone, client.country);
     const text = encodeURIComponent(buildInvoiceMessage(invoice));
     window.open(`https://wa.me/${digits}?text=${text}`, '_blank');
     deductInventoryForInvoice(invoice);
@@ -2926,7 +3078,7 @@ function openClientModal(client){
   openModal(`
     <div class="modal-title">${isEdit?'Edit Client':'Add Client'}</div>
     <div class="field-group"><label>Name</label><div class="field-line"><input id="mName" type="text" value="${isEdit?esc(client.name):''}" placeholder="Full name"></div></div>
-    <div class="field-group"><label>Phone</label><div class="field-line"><input id="mPhone" type="text" value="${isEdit?esc(client.phone):''}" placeholder="Phone number"></div></div>
+    <div class="field-group"><label>Phone</label><div class="field-line"><input id="mPhone" type="text" value="${isEdit?esc(client.phone):''}" placeholder="${phonePlaceholderForCountry(isEdit?(client.country||''):'')}"></div></div>
     <div class="field-group"><label>Email</label><div class="field-line"><input id="mEmail" type="email" value="${isEdit?esc(client.email):''}" placeholder="name@email.com"></div></div>
     <div class="field-group"><label>Country</label><div class="field-line" style="border:none; display:block;">${countrySelectHtml('mCountry', isEdit?(client.country||''):'')}</div></div>
     ${!isEdit ? `
@@ -2942,6 +3094,9 @@ function openClientModal(client){
       <button class="btn btn-primary" id="saveClientBtn">${isEdit?'Save Changes':'Save'}</button>
     </div>`);
   bindCountrySelect('mCountry');
+  document.getElementById('mCountry').addEventListener('change', ()=>{
+    document.getElementById('mPhone').placeholder = phonePlaceholderForCountry(countrySelectValue('mCountry'));
+  });
   document.getElementById('saveClientBtn').addEventListener('click', async ()=>{
     const name = document.getElementById('mName').value.trim();
     if(!name) return;
@@ -3625,7 +3780,7 @@ function promptReviewRequest(client){
 }
 
 function openReviewRequestModal(client){
-  const message = `Hi ${client.name}, thank you for visiting ${state.clinic.name}! We'd love to hear how your treatment went — would you mind leaving us a quick review? It helps other clients find us and means a lot to our team.`;
+  const message = tf('msg.reviewRequest', { name: client.name, clinic: state.clinic.name });
   openModal(`
     <div class="modal-title">Review Request</div>
     <textarea id="reviewMsgText" style="min-height:120px;">${esc(message)}</textarea>
@@ -3642,13 +3797,13 @@ function openReviewRequestModal(client){
   });
   const emailBtn = document.getElementById('emailReviewBtn');
   if(emailBtn) emailBtn.addEventListener('click', ()=>{
-    const subject = encodeURIComponent(`How was your visit to ${state.clinic.name}?`);
+    const subject = encodeURIComponent(tf('msg.reviewSubject', { clinic: state.clinic.name }));
     const body = encodeURIComponent(document.getElementById('reviewMsgText').value);
     window.open(`mailto:${client.email}?subject=${subject}&body=${body}`, '_blank');
   });
   const waBtn = document.getElementById('whatsappReviewBtn');
   if(waBtn) waBtn.addEventListener('click', ()=>{
-    const digits = client.phone.replace(/[^0-9]/g, '');
+    const digits = normalizePhoneForWhatsApp(client.phone, client.country);
     const text = encodeURIComponent(document.getElementById('reviewMsgText').value);
     window.open(`https://wa.me/${digits}?text=${text}`, '_blank');
   });
@@ -3913,7 +4068,7 @@ function bindCampaignEvents(){
 function bindSettingsEvents(){
   bindCountrySelect('setCountry');
   const langSel = document.getElementById('setLanguage');
-  if(langSel) langSel.addEventListener('change', e=>{ setLang(e.target.value); render(); });
+  if(langSel) langSel.addEventListener('change', e=>{ setLang(e.target.value); applyDirection(); render(); });
 
   const saveBtn = document.getElementById('saveSettingsBtn');
   if(saveBtn){
@@ -5087,6 +5242,7 @@ sb.auth.onAuthStateChange((event, session)=>{
 });
 
 (async function init(){
+  applyDirection();
   document.getElementById('goToPortalLink').addEventListener('click', ()=>{
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
