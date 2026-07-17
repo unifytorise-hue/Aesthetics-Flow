@@ -370,6 +370,25 @@
     .responsive-table td{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:none; }
     .responsive-table td::before{ content:attr(data-label); font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:rgba(242,236,221,0.4); font-weight:600; margin-right:12px; }
   }
+
+  /* RTL (Arabic). Flexbox row-direction layout (the sidebar/main split,
+     nav-item icon+label, most card rows) mirrors automatically from
+     [dir="rtl"] on <html> per the CSS spec -- these overrides only cover
+     physical left/right properties that don't auto-flip: borders, one-sided
+     padding, and text-align. This covers the primary navigation shell and
+     data tables; scattered small inline-style spacing tweaks deeper in the
+     app (badge margins, the printable invoice template, the platform admin
+     table) are not individually mirrored -- functional but not pixel-audited. */
+  [dir="rtl"] .sidebar{ border-right:none; border-left:1px solid var(--line); }
+  [dir="rtl"] .brand-mark{ padding-left:0; padding-right:4px; }
+  [dir="rtl"] .nav-item{ text-align:right; }
+  [dir="rtl"] .nav-item.active{ border-left:none; border-right:2px solid var(--rose-gold); padding-left:12px; padding-right:10px; }
+  [dir="rtl"] thead th{ text-align:right; }
+  [dir="rtl"] .search-wrap input{ padding-left:14px; padding-right:26px; }
+  @media (max-width:900px){
+    [dir="rtl"] .sidebar{ left:auto; right:0; transform:translateX(100%); }
+    [dir="rtl"] .sidebar.open{ transform:translateX(0); }
+  }
 </style>
 </head>
 <body>
@@ -490,7 +509,10 @@ const LANGUAGES = [
   {code:'en', label:'English'},
   {code:'es', label:'Español'},
   {code:'fr', label:'Français'},
+  {code:'pt', label:'Português'},
+  {code:'ar', label:'العربية'},
 ];
+const RTL_LANGS = ['ar'];
 const TRANSLATIONS = {
   en: {
     'nav.dashboard':'Dashboard', 'nav.clients':'Clients', 'nav.calendar':'Calendar', 'nav.leads':'Sales Pipeline',
@@ -546,6 +568,42 @@ const TRANSLATIONS = {
     'portal.noAppointments':'Aucun rendez-vous à venir.', 'portal.noTreatments':'Aucun historique de traitement pour le moment.',
     'portal.noInvoices':'Aucune facture ni devis pour le moment.', 'portal.noPhotos':'Aucune photo pour le moment.',
   },
+  pt: {
+    'nav.dashboard':'Painel', 'nav.clients':'Clientes', 'nav.calendar':'Calendário', 'nav.leads':'Funil de Vendas',
+    'nav.inventory':'Inventário', 'nav.invoices':'Faturas', 'nav.sales':'Equipa de Vendas', 'nav.teamchat':'Chat da Equipa',
+    'nav.campaigns':'Campanhas', 'nav.reports':'Relatórios', 'nav.settings':'Configurações', 'nav.ai':'Assistente IA',
+    'common.save':'Guardar', 'common.cancel':'Cancelar', 'common.close':'Fechar', 'common.signOut':'Terminar Sessão', 'common.language':'Idioma',
+    'auth.staffSignIn':'Acesso da Equipa', 'auth.staffSignUp':'Registo da Equipa', 'auth.email':'E-mail', 'auth.password':'Palavra-passe',
+    'auth.signIn':'Iniciar Sessão', 'auth.signUp':'Registar', 'auth.newStaffSignUp':'Novo membro da equipa? Registe-se',
+    'auth.alreadyHaveAccount':'Já tem uma conta? Inicie sessão', 'auth.clientPortalLink':'Portal do Cliente →',
+    'portal.title':'Portal do Cliente', 'portal.createAccount':'Criar Conta do Portal', 'portal.forgotPassword':'Esqueceu-se da palavra-passe?',
+    'portal.firstTimeSignUp':'Primeira vez aqui? Registe-se', 'portal.backToStaffSignIn':'← Voltar ao acesso da equipa',
+    'portal.backToSignIn':'← Voltar a Iniciar Sessão', 'portal.resetPasswordTitle':'Redefinir Palavra-passe', 'portal.sendResetLink':'Enviar Link',
+    'portal.setNewPasswordTitle':'Definir Nova Palavra-passe', 'portal.newPassword':'Nova Palavra-passe', 'portal.confirmNewPassword':'Confirmar Nova Palavra-passe',
+    'portal.setPassword':'Definir Palavra-passe', 'portal.updatePassword':'Atualizar Palavra-passe', 'portal.changePassword':'Alterar Palavra-passe',
+    'portal.welcome':'Bem-vindo/a', 'portal.upcomingAppointments':'Próximas Consultas', 'portal.treatmentHistory':'Histórico de Tratamentos',
+    'portal.invoicesQuotes':'Faturas e Orçamentos', 'portal.beforeAfterPhotos':'Fotos de Antes e Depois',
+    'portal.noAppointments':'Sem próximas consultas.', 'portal.noTreatments':'Ainda sem histórico de tratamentos.',
+    'portal.noInvoices':'Ainda sem faturas ou orçamentos.', 'portal.noPhotos':'Ainda sem fotos.',
+  },
+  ar: {
+    'nav.dashboard':'لوحة التحكم', 'nav.clients':'العملاء', 'nav.calendar':'التقويم', 'nav.leads':'مسار المبيعات',
+    'nav.inventory':'المخزون', 'nav.invoices':'الفواتير', 'nav.sales':'فريق المبيعات', 'nav.teamchat':'دردشة الفريق',
+    'nav.campaigns':'الحملات', 'nav.reports':'التقارير', 'nav.settings':'الإعدادات', 'nav.ai':'المساعد الذكي',
+    'common.save':'حفظ', 'common.cancel':'إلغاء', 'common.close':'إغلاق', 'common.signOut':'تسجيل الخروج', 'common.language':'اللغة',
+    'auth.staffSignIn':'تسجيل دخول الموظفين', 'auth.staffSignUp':'تسجيل الموظفين', 'auth.email':'البريد الإلكتروني', 'auth.password':'كلمة المرور',
+    'auth.signIn':'تسجيل الدخول', 'auth.signUp':'إنشاء حساب', 'auth.newStaffSignUp':'موظف جديد؟ سجّل الآن',
+    'auth.alreadyHaveAccount':'لديك حساب بالفعل؟ سجّل الدخول', 'auth.clientPortalLink':'→ بوابة العميل',
+    'portal.title':'بوابة العميل', 'portal.createAccount':'إنشاء حساب في البوابة', 'portal.forgotPassword':'هل نسيت كلمة المرور؟',
+    'portal.firstTimeSignUp':'أول مرة هنا؟ سجّل الآن', 'portal.backToStaffSignIn':'← العودة لتسجيل دخول الموظفين',
+    'portal.backToSignIn':'← العودة لتسجيل الدخول', 'portal.resetPasswordTitle':'إعادة تعيين كلمة المرور', 'portal.sendResetLink':'إرسال رابط إعادة التعيين',
+    'portal.setNewPasswordTitle':'تعيين كلمة مرور جديدة', 'portal.newPassword':'كلمة المرور الجديدة', 'portal.confirmNewPassword':'تأكيد كلمة المرور الجديدة',
+    'portal.setPassword':'تعيين كلمة المرور', 'portal.updatePassword':'تحديث كلمة المرور', 'portal.changePassword':'تغيير كلمة المرور',
+    'portal.welcome':'مرحباً', 'portal.upcomingAppointments':'المواعيد القادمة', 'portal.treatmentHistory':'سجل العلاجات',
+    'portal.invoicesQuotes':'الفواتير والعروض', 'portal.beforeAfterPhotos':'صور قبل وبعد',
+    'portal.noAppointments':'لا توجد مواعيد قادمة.', 'portal.noTreatments':'لا يوجد سجل علاجات بعد.',
+    'portal.noInvoices':'لا توجد فواتير أو عروض بعد.', 'portal.noPhotos':'لا توجد صور بعد.',
+  },
 };
 // Language is a browser/device preference (auth screens render before any
 // clinic is loaded, so it can't live in clinic_settings) -- stored locally,
@@ -555,8 +613,18 @@ function setLang(code){ localStorage.setItem('af_lang', code); }
 // BCP 47 locale used for date/number formatting (toLocaleDateString /
 // toLocaleString), driven by the same language preference as t() -- so
 // switching language also switches date/number conventions, not just text.
-const LOCALE_BY_LANG = { en:'en-GB', es:'es-ES', fr:'fr-FR' };
+const LOCALE_BY_LANG = { en:'en-GB', es:'es-ES', fr:'fr-FR', pt:'pt-PT', ar:'ar-SA' };
 function getLocale(){ return LOCALE_BY_LANG[getLang()] || 'en-GB'; }
+function isRtl(){ return RTL_LANGS.includes(getLang()); }
+// Keeps <html dir="rtl"/lang="ar"> in sync with the language preference so
+// CSS logical-property overrides (see .rtl-mode rules) and native form
+// controls (date/time pickers, text alignment) mirror correctly. Call after
+// every setLang() + render(), not just once at load.
+function applyDirection(){
+  document.documentElement.dir = isRtl() ? 'rtl' : 'ltr';
+  document.documentElement.lang = getLang();
+  document.body.classList.toggle('rtl-mode', isRtl());
+}
 function t(key){
   const lang = getLang();
   return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
@@ -568,7 +636,7 @@ function languageSwitcherHtml(idAttr){
 }
 function bindLanguageSwitcher(idAttr, onChangeRerender){
   const el = document.getElementById(idAttr);
-  if(el) el.addEventListener('change', e=>{ setLang(e.target.value); onChangeRerender(); });
+  if(el) el.addEventListener('change', e=>{ setLang(e.target.value); applyDirection(); onChangeRerender(); });
 }
 
 /* ---------------- Reference data: countries & currencies ----------------
@@ -3913,7 +3981,7 @@ function bindCampaignEvents(){
 function bindSettingsEvents(){
   bindCountrySelect('setCountry');
   const langSel = document.getElementById('setLanguage');
-  if(langSel) langSel.addEventListener('change', e=>{ setLang(e.target.value); render(); });
+  if(langSel) langSel.addEventListener('change', e=>{ setLang(e.target.value); applyDirection(); render(); });
 
   const saveBtn = document.getElementById('saveSettingsBtn');
   if(saveBtn){
@@ -5087,6 +5155,7 @@ sb.auth.onAuthStateChange((event, session)=>{
 });
 
 (async function init(){
+  applyDirection();
   document.getElementById('goToPortalLink').addEventListener('click', ()=>{
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
