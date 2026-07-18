@@ -519,6 +519,7 @@ const TRANSLATIONS = {
     'nav.inventory':'Inventory', 'nav.invoices':'Invoices', 'nav.sales':'Sales Team', 'nav.teamchat':'Team Chat',
     'nav.campaigns':'Campaigns', 'nav.reports':'Reports', 'nav.settings':'Settings', 'nav.ai':'AI Assistant',
     'common.save':'Save', 'common.cancel':'Cancel', 'common.close':'Close', 'common.signOut':'Sign Out', 'common.language':'Language',
+    'common.edit':'Edit', 'common.delete':'Delete', 'common.send':'Send',
     'auth.staffSignIn':'Staff Sign-In', 'auth.staffSignUp':'Staff Sign Up', 'auth.email':'Email', 'auth.password':'Password',
     'auth.signIn':'Sign In', 'auth.signUp':'Sign Up', 'auth.newStaffSignUp':'New staff member? Sign up',
     'auth.alreadyHaveAccount':'Already have an account? Sign in', 'auth.clientPortalLink':'Client Portal →',
@@ -534,12 +535,89 @@ const TRANSLATIONS = {
     'msg.invoiceHeader':'{type} from {clinic}', 'msg.invoiceGreeting':'Hi {name},', 'msg.invoiceTotal':'Total: {total}', 'msg.invoiceThanks':'Thank you!',
     'msg.reviewRequest':"Hi {name}, thank you for visiting {clinic}! We'd love to hear how your treatment went — would you mind leaving us a quick review? It helps other clients find us and means a lot to our team.", 'msg.reviewSubject':'How was your visit to {clinic}?',
     'invoiceType.Invoice':'Invoice', 'invoiceType.Quote':'Quote',
+    'dash.greeting':'Good Morning, {name}', 'dash.aiAssistant':'AI Assistant:', 'dash.askAI':'Ask AI',
+    'dash.todaySchedule':"Today's Schedule", 'dash.noAppointments':'No appointments scheduled today.',
+    'dash.revenueThisMonth':'Revenue This Month', 'dash.fromTreatments':'From {n} logged treatments',
+    'dash.newLeads':'New Leads', 'dash.newLeadsCaption':'Currently in "New Leads" stage',
+    'clients.title':'Clients', 'clients.total':'{n} Total', 'clients.searchPlaceholder':'Search clients...',
+    'clients.addClient':'Add Client', 'clients.exportCsv':'Export CSV', 'clients.noMatch':'No clients match your search.',
+    'clients.colName':'Name', 'clients.colLastVisit':'Last Visit', 'clients.colStatus':'Status',
+    'clients.statusVip':'VIP', 'clients.statusActive':'Active', 'clients.statusNew':'New',
+    'clients.edit':'Edit', 'clients.delete':'Delete', 'clients.notFound':'Client not found.',
+    'clients.tabOverview':'Overview', 'clients.tabAssessment':'Skin Assessment', 'clients.tabTreatments':'Treatments',
+    'clients.tabPhotos':'Photos', 'clients.tabDocuments':'Documents', 'clients.tabPayments':'Payments',
+    'clients.lastTreatment':'Last Treatment', 'clients.date':'Date', 'clients.practitioner':'Practitioner',
+    'clients.nextAction':'Next Action', 'clients.bookAppointment':'Book Appointment', 'clients.addTreatment':'Add Treatment',
+    'clients.draftInvoice':'Draft Invoice', 'clients.briefMe':'Brief Me',
+    'clients.skinType':'Skin Type', 'clients.concerns':'Concerns', 'clients.medicalNotes':'Medical Notes',
+    'clients.medicalNotesPlaceholder':'Allergies, medications, prior procedures...', 'clients.uploadPhotos':'Upload Photos',
+    'clients.before':'Before', 'clients.after':'After', 'clients.saveConsultation':'Save Consultation',
+    'clients.photoConsentTitle':'Clinical Photography Consent',
+    'clients.photoConsentIntro':"Before any before/after photos can be stored for {name}, they need to consent to clinical photography. This is separate from general treatment consent — photography has its own legal basis in most jurisdictions.",
+    'clients.consentClinical':"I have obtained {name}'s consent to take clinical photos for treatment documentation",
+    'clients.consentMarketing':'Client has also separately agreed these photos may be used for marketing (optional)',
+    'clients.saveConsent':'Save Consent', 'clients.staffOnlyConsent':'Only clinical staff can record photography consent.',
+    'clients.beforeAfter':'Before & After', 'clients.consentOnFile':'Photography consent on file',
+    'clients.marketingApproved':' · marketing use approved', 'clients.noBeforePhoto':'No before photo', 'clients.noAfterPhoto':'No after photo',
+    'clients.noPhotosYet':'No photos yet.', 'clients.addPhotos':'Add Before/After Photos',
+    'clients.treatmentHistory':'Treatment History', 'clients.batch':'Batch', 'clients.noTreatments':'No treatment history recorded yet.',
+    'clients.invoicesQuotes':'Invoices & Quotes', 'clients.item':'item', 'clients.items':'items', 'clients.noInvoices':'No invoices or quotes yet.',
+    'clients.newInvoice':'New Invoice', 'clients.documents':'Documents', 'clients.file':'file', 'clients.uploaded':'uploaded',
+    'clients.tooLarge':'too large to store — kept as a reference only', 'clients.noDocuments':'No documents yet.', 'clients.uploadDocument':'Upload Document',
+    'clients.phone':'Phone', 'clients.email':'Email', 'clients.clientSince':'Client Since', 'clients.editClient':'Edit client', 'clients.deleteClient':'Delete client',
+    'skinType.Normal':'Normal', 'skinType.Oily':'Oily', 'skinType.Dry':'Dry', 'skinType.Combination':'Combination', 'skinType.Sensitive':'Sensitive',
+    'concern.Wrinkles':'Wrinkles', 'concern.Pigmentation':'Pigmentation', 'concern.Acne':'Acne', 'concern.Volume Loss':'Volume Loss',
+    'cal.title':'Calendar', 'cal.practitioner':'Practitioner', 'cal.all':'All', 'cal.today':'Today', 'cal.noAppointments':'No appointments', 'cal.newAppointment':'New Appointment',
+    'leads.title':'Sales Pipeline', 'leads.inPipeline':'{n} In Pipeline', 'leads.convertedToClient':'Converted to client', 'leads.move':'Move →', 'leads.empty':'Empty', 'leads.addLead':'Add Lead',
+    'leadStage.New Leads':'New Leads', 'leadStage.Consultation':'Consultation', 'leadStage.Quote Sent':'Quote Sent', 'leadStage.Booked':'Booked', 'leadStage.Completed':'Completed',
+    'inv.title':'Inventory', 'inv.products':'{n} Products', 'inv.expiresAlert':'{name} expires in {days} days', 'inv.colProduct':'Product', 'inv.colStock':'Stock', 'inv.colPrice':'Price', 'inv.noProducts':'No products yet.', 'inv.addProduct':'Add Product',
+    'invStatus.Draft':'Draft', 'invStatus.Sent':'Sent', 'invStatus.Paid':'Paid',
+    'invoices.title':'Invoices & Quotes', 'invoices.total':'{n} Total', 'invoices.colNumber':'#', 'invoices.colClient':'Client', 'invoices.colType':'Type',
+    'invoices.colTotal':'Total', 'invoices.colStatus':'Status', 'invoices.colDate':'Date', 'invoices.noInvoices':'No invoices or quotes yet.',
+    'invoices.exportCsv':'Export CSV', 'invoices.newQuote':'New Quote', 'invoices.newInvoice':'New Invoice',
+    'invoices.newTypeTitle':'New {type}', 'invoices.client':'Client', 'invoices.type':'Type', 'invoices.lineItems':'Line Items', 'invoices.item':'Item',
+    'invoices.customService':'Custom / Service...', 'invoices.inStock':'{n} in stock', 'invoices.description':'Description', 'invoices.qty':'Qty', 'invoices.price':'Price',
+    'invoices.addLine':'Add Line', 'invoices.notes':'Notes', 'invoices.notesPlaceholder':'Payment terms, thank-you note, etc.', 'invoices.saveType':'Save {type}',
+    'invoices.prototypeNote':'Sending hands off to your own email/WhatsApp app with the invoice pre-filled — this prototype has no backend to send on its own.',
+    'invoices.email':'Email', 'invoices.whatsapp':'WhatsApp', 'invoices.printSavePdf':'Print / Save PDF', 'invoices.markPaid':'Mark Paid',
+    'sales.title':'Sales Team', 'sales.clientsAttributed':'{n} Clients Attributed', 'sales.clientsWord':'clients', 'sales.targetBoard':'Sales Target Board', 'sales.updateTargets':'Update Targets',
+    'sales.orgWideTarget':'Organization-Wide Target', 'sales.orgMet':'✓ Met — everyone gets +{pct}% bonus', 'sales.orgPending':'+{pct}% bonus for everyone if met',
+    'sales.noOrgTarget':'No organization-wide target set — configure one in Settings → Sales Commission Model.',
+    'sales.thisMonth':'{amount} this month', 'sales.target':'Target: {amount}',
+    'sales.individualMet':'✓ Target met — +{pct}% bonus', 'sales.individualPending':'+{pct}% bonus if met',
+    'sales.noIndividualTargets':'No individual targets set yet — add them per person under Settings → Staff.',
+    'sales.individualBonus':'Individual bonus: {amount}', 'sales.orgBonusShare':'Org bonus share: {amount}',
+    'sales.bonusDisclaimer':"Bonus figures are planning calculations from logged treatment revenue — same as commission, they're not connected to actual payroll.",
+    'sales.totalClientRevenue':'Total Client Revenue', 'sales.allTimeAcrossAttributed':'All-time, across attributed clients',
+    'sales.commissionOwed':'Origination Commission Owed', 'sales.commissionOwedShort':'Commission Owed', 'sales.thisMonthAfterDep':'This month, after depreciation',
+    'sales.commissionModel':'Commission Model', 'sales.configurableInSettings':'Configurable in Settings',
+    'sales.pendingApprovals':'Pending Approvals', 'sales.pendingApprovalsNote':'New procedures sold to a client need office sign-off before commission accrues — accountability check before money is owed.',
+    'sales.soldBy':'Sold by {name}', 'sales.reject':'Reject', 'sales.approve':'Approve', 'sales.nothingPending':'Nothing pending — all sales verified.',
+    'sales.revenueShare':'Revenue Share by Account Originator', 'sales.noRevenueAttributed':'No revenue attributed to any originator yet.',
+    'sales.directory':'Directory', 'sales.thisMonthRevenue':'This Month Revenue', 'sales.allTimeRevenue':'All-Time Revenue', 'sales.projectedNextMo':'Projected Next Mo.',
+    'sales.noStaffAttributed':'No staff with attributed clients yet.',
+    'sales.commissionDisclaimer':"Commission owed is a projection based on logged treatments and the depreciation schedule below — it's a planning figure, not a payroll-ready calculation, and isn't connected to any actual payment.",
+    'teamchat.title':'Team Chat', 'teamchat.loading':'Loading…', 'teamchat.subtitle':'Work-related only — visible to everyone using this CRM',
+    'teamchat.noMessages':'No messages yet — say hello to the team.', 'teamchat.inputPlaceholder':'Work-related message...',
+    'ai.title':'AI Assistant', 'ai.clinicInsights':'Clinic Insights', 'ai.inputPlaceholder':"Ask anything, e.g. 'Which clients need follow-up?'",
+    'ai.yes':'Yes', 'ai.no':'No', 'ai.openBuilder':'Open {type} Builder',
+    'billing.paymentFailed':'Your last payment failed — update billing to avoid interruption.',
+    'billing.canceled':'Your subscription is canceled. Reach out to us to keep using AestheticFlow.',
+    'billing.trialEnded':'Your trial has ended. Reach out to us to pick a plan and keep going.',
+    'billing.trialEndingSoon':'Your trial ends in {days} days — head to Settings to sort out billing.',
+    'billing.goToBilling':'Go to Billing',
+    'campaigns.title':'Campaigns', 'campaigns.contentCreditsLabel':'content credits', 'campaigns.buyMore':'Buy More',
+    'campaigns.emailSmsTab':'Email/SMS Campaigns', 'campaigns.socialTab':'Social Content', 'campaigns.noCampaigns':'No campaigns yet.',
+    'campaigns.createCampaign':'Create Campaign', 'campaigns.audience':'Audience', 'campaigns.status':'Status',
+    'campaigns.noContent':'No message content yet — click edit to add it.', 'campaigns.copyMessage':'Copy Message',
+    'campaignStatus.ACTIVE':'Active', 'campaignStatus.DRAFT':'Draft',
   },
   es: {
     'nav.dashboard':'Panel', 'nav.clients':'Clientes', 'nav.calendar':'Calendario', 'nav.leads':'Embudo de Ventas',
     'nav.inventory':'Inventario', 'nav.invoices':'Facturas', 'nav.sales':'Equipo de Ventas', 'nav.teamchat':'Chat del Equipo',
     'nav.campaigns':'Campañas', 'nav.reports':'Informes', 'nav.settings':'Configuración', 'nav.ai':'Asistente IA',
     'common.save':'Guardar', 'common.cancel':'Cancelar', 'common.close':'Cerrar', 'common.signOut':'Cerrar Sesión', 'common.language':'Idioma',
+    'common.edit':'Editar', 'common.delete':'Eliminar', 'common.send':'Enviar',
     'auth.staffSignIn':'Acceso del Personal', 'auth.staffSignUp':'Registro del Personal', 'auth.email':'Correo electrónico', 'auth.password':'Contraseña',
     'auth.signIn':'Iniciar Sesión', 'auth.signUp':'Registrarse', 'auth.newStaffSignUp':'¿Nuevo miembro del personal? Regístrate',
     'auth.alreadyHaveAccount':'¿Ya tienes una cuenta? Inicia sesión', 'auth.clientPortalLink':'Portal del Cliente →',
@@ -555,12 +633,89 @@ const TRANSLATIONS = {
     'msg.invoiceHeader':'{type} de {clinic}', 'msg.invoiceGreeting':'Hola {name},', 'msg.invoiceTotal':'Total: {total}', 'msg.invoiceThanks':'¡Gracias!',
     'msg.reviewRequest':'Hola {name}, ¡gracias por visitar {clinic}! Nos encantaría saber cómo fue tu tratamiento — ¿te importaría dejarnos una reseña rápida? Ayuda a que otros clientes nos encuentren y significa mucho para nuestro equipo.', 'msg.reviewSubject':'¿Cómo fue tu visita a {clinic}?',
     'invoiceType.Invoice':'Factura', 'invoiceType.Quote':'Presupuesto',
+    'dash.greeting':'Buenos días, {name}', 'dash.aiAssistant':'Asistente de IA:', 'dash.askAI':'Preguntar a la IA',
+    'dash.todaySchedule':'Agenda de Hoy', 'dash.noAppointments':'No hay citas programadas para hoy.',
+    'dash.revenueThisMonth':'Ingresos de Este Mes', 'dash.fromTreatments':'De {n} tratamientos registrados',
+    'dash.newLeads':'Nuevos Clientes Potenciales', 'dash.newLeadsCaption':'Actualmente en la etapa "Nuevos Clientes Potenciales"',
+    'clients.title':'Clientes', 'clients.total':'{n} en Total', 'clients.searchPlaceholder':'Buscar clientes...',
+    'clients.addClient':'Añadir Cliente', 'clients.exportCsv':'Exportar CSV', 'clients.noMatch':'Ningún cliente coincide con tu búsqueda.',
+    'clients.colName':'Nombre', 'clients.colLastVisit':'Última Visita', 'clients.colStatus':'Estado',
+    'clients.statusVip':'VIP', 'clients.statusActive':'Activo', 'clients.statusNew':'Nuevo',
+    'clients.edit':'Editar', 'clients.delete':'Eliminar', 'clients.notFound':'Cliente no encontrado.',
+    'clients.tabOverview':'Resumen', 'clients.tabAssessment':'Evaluación de Piel', 'clients.tabTreatments':'Tratamientos',
+    'clients.tabPhotos':'Fotos', 'clients.tabDocuments':'Documentos', 'clients.tabPayments':'Pagos',
+    'clients.lastTreatment':'Último Tratamiento', 'clients.date':'Fecha', 'clients.practitioner':'Profesional',
+    'clients.nextAction':'Próxima Acción', 'clients.bookAppointment':'Reservar Cita', 'clients.addTreatment':'Añadir Tratamiento',
+    'clients.draftInvoice':'Redactar Factura', 'clients.briefMe':'Resumen Rápido',
+    'clients.skinType':'Tipo de Piel', 'clients.concerns':'Preocupaciones', 'clients.medicalNotes':'Notas Médicas',
+    'clients.medicalNotesPlaceholder':'Alergias, medicamentos, procedimientos previos...', 'clients.uploadPhotos':'Subir Fotos',
+    'clients.before':'Antes', 'clients.after':'Después', 'clients.saveConsultation':'Guardar Consulta',
+    'clients.photoConsentTitle':'Consentimiento de Fotografía Clínica',
+    'clients.photoConsentIntro':'Antes de poder guardar fotos de antes/después de {name}, debe dar su consentimiento para la fotografía clínica. Esto es independiente del consentimiento general de tratamiento — la fotografía tiene su propia base legal en la mayoría de jurisdicciones.',
+    'clients.consentClinical':'He obtenido el consentimiento de {name} para tomar fotos clínicas con fines de documentación del tratamiento',
+    'clients.consentMarketing':'El cliente también ha aceptado por separado que estas fotos se usen con fines de marketing (opcional)',
+    'clients.saveConsent':'Guardar Consentimiento', 'clients.staffOnlyConsent':'Solo el personal clínico puede registrar el consentimiento de fotografía.',
+    'clients.beforeAfter':'Antes y Después', 'clients.consentOnFile':'Consentimiento de fotografía registrado',
+    'clients.marketingApproved':' · uso de marketing aprobado', 'clients.noBeforePhoto':'Sin foto de antes', 'clients.noAfterPhoto':'Sin foto de después',
+    'clients.noPhotosYet':'Aún no hay fotos.', 'clients.addPhotos':'Añadir Fotos de Antes/Después',
+    'clients.treatmentHistory':'Historial de Tratamientos', 'clients.batch':'Lote', 'clients.noTreatments':'Aún no hay historial de tratamientos.',
+    'clients.invoicesQuotes':'Facturas y Presupuestos', 'clients.item':'artículo', 'clients.items':'artículos', 'clients.noInvoices':'Aún no hay facturas ni presupuestos.',
+    'clients.newInvoice':'Nueva Factura', 'clients.documents':'Documentos', 'clients.file':'archivo', 'clients.uploaded':'subido',
+    'clients.tooLarge':'demasiado grande para almacenar — se guarda solo como referencia', 'clients.noDocuments':'Aún no hay documentos.', 'clients.uploadDocument':'Subir Documento',
+    'clients.phone':'Teléfono', 'clients.email':'Correo', 'clients.clientSince':'Cliente Desde', 'clients.editClient':'Editar cliente', 'clients.deleteClient':'Eliminar cliente',
+    'skinType.Normal':'Normal', 'skinType.Oily':'Grasa', 'skinType.Dry':'Seca', 'skinType.Combination':'Mixta', 'skinType.Sensitive':'Sensible',
+    'concern.Wrinkles':'Arrugas', 'concern.Pigmentation':'Pigmentación', 'concern.Acne':'Acné', 'concern.Volume Loss':'Pérdida de Volumen',
+    'cal.title':'Calendario', 'cal.practitioner':'Profesional', 'cal.all':'Todos', 'cal.today':'Hoy', 'cal.noAppointments':'Sin citas', 'cal.newAppointment':'Nueva Cita',
+    'leads.title':'Embudo de Ventas', 'leads.inPipeline':'{n} en el Embudo', 'leads.convertedToClient':'Convertido en cliente', 'leads.move':'Mover →', 'leads.empty':'Vacío', 'leads.addLead':'Añadir Cliente Potencial',
+    'leadStage.New Leads':'Nuevos Clientes Potenciales', 'leadStage.Consultation':'Consulta', 'leadStage.Quote Sent':'Presupuesto Enviado', 'leadStage.Booked':'Reservado', 'leadStage.Completed':'Completado',
+    'inv.title':'Inventario', 'inv.products':'{n} Productos', 'inv.expiresAlert':'{name} caduca en {days} días', 'inv.colProduct':'Producto', 'inv.colStock':'Stock', 'inv.colPrice':'Precio', 'inv.noProducts':'Aún no hay productos.', 'inv.addProduct':'Añadir Producto',
+    'invStatus.Draft':'Borrador', 'invStatus.Sent':'Enviada', 'invStatus.Paid':'Pagada',
+    'invoices.title':'Facturas y Presupuestos', 'invoices.total':'{n} Total', 'invoices.colNumber':'#', 'invoices.colClient':'Cliente', 'invoices.colType':'Tipo',
+    'invoices.colTotal':'Total', 'invoices.colStatus':'Estado', 'invoices.colDate':'Fecha', 'invoices.noInvoices':'Aún no hay facturas ni presupuestos.',
+    'invoices.exportCsv':'Exportar CSV', 'invoices.newQuote':'Nuevo Presupuesto', 'invoices.newInvoice':'Nueva Factura',
+    'invoices.newTypeTitle':'Crear {type}', 'invoices.client':'Cliente', 'invoices.type':'Tipo', 'invoices.lineItems':'Líneas de Detalle', 'invoices.item':'Artículo',
+    'invoices.customService':'Personalizado / Servicio...', 'invoices.inStock':'{n} en stock', 'invoices.description':'Descripción', 'invoices.qty':'Cant.', 'invoices.price':'Precio',
+    'invoices.addLine':'Añadir Línea', 'invoices.notes':'Notas', 'invoices.notesPlaceholder':'Condiciones de pago, nota de agradecimiento, etc.', 'invoices.saveType':'Guardar {type}',
+    'invoices.prototypeNote':'El envío se realiza a través de tu propia app de correo/WhatsApp con la factura pre-rellenada — este prototipo no tiene backend propio para enviarla.',
+    'invoices.email':'Correo', 'invoices.whatsapp':'WhatsApp', 'invoices.printSavePdf':'Imprimir / Guardar PDF', 'invoices.markPaid':'Marcar como Pagada',
+    'sales.title':'Equipo de Ventas', 'sales.clientsAttributed':'{n} Clientes Atribuidos', 'sales.clientsWord':'clientes', 'sales.targetBoard':'Panel de Objetivos de Ventas', 'sales.updateTargets':'Actualizar Objetivos',
+    'sales.orgWideTarget':'Objetivo de Toda la Organización', 'sales.orgMet':'✓ Cumplido — todos reciben +{pct}% de bono', 'sales.orgPending':'+{pct}% de bono para todos si se cumple',
+    'sales.noOrgTarget':'No hay un objetivo general configurado — configúralo en Configuración → Modelo de Comisión de Ventas.',
+    'sales.thisMonth':'{amount} este mes', 'sales.target':'Objetivo: {amount}',
+    'sales.individualMet':'✓ Objetivo cumplido — +{pct}% de bono', 'sales.individualPending':'+{pct}% de bono si se cumple',
+    'sales.noIndividualTargets':'Aún no hay objetivos individuales — añádelos por persona en Configuración → Personal.',
+    'sales.individualBonus':'Bono individual: {amount}', 'sales.orgBonusShare':'Parte del bono de la organización: {amount}',
+    'sales.bonusDisclaimer':'Las cifras de bonos son cálculos de planificación basados en los ingresos de tratamientos registrados — al igual que la comisión, no están conectadas a la nómina real.',
+    'sales.totalClientRevenue':'Ingresos Totales de Clientes', 'sales.allTimeAcrossAttributed':'De todos los tiempos, entre clientes atribuidos',
+    'sales.commissionOwed':'Comisión de Originación Adeudada', 'sales.commissionOwedShort':'Comisión Adeudada', 'sales.thisMonthAfterDep':'Este mes, tras la depreciación',
+    'sales.commissionModel':'Modelo de Comisión', 'sales.configurableInSettings':'Configurable en Ajustes',
+    'sales.pendingApprovals':'Aprobaciones Pendientes', 'sales.pendingApprovalsNote':'Los nuevos procedimientos vendidos a un cliente necesitan la aprobación de la oficina antes de que se acumule la comisión — control de responsabilidad antes de que se deba el dinero.',
+    'sales.soldBy':'Vendido por {name}', 'sales.reject':'Rechazar', 'sales.approve':'Aprobar', 'sales.nothingPending':'Nada pendiente — todas las ventas verificadas.',
+    'sales.revenueShare':'Reparto de Ingresos por Originador de Cuenta', 'sales.noRevenueAttributed':'Aún no hay ingresos atribuidos a ningún originador.',
+    'sales.directory':'Directorio', 'sales.thisMonthRevenue':'Ingresos de Este Mes', 'sales.allTimeRevenue':'Ingresos de Todos los Tiempos', 'sales.projectedNextMo':'Proyección Próximo Mes',
+    'sales.noStaffAttributed':'Aún no hay personal con clientes atribuidos.',
+    'sales.commissionDisclaimer':'La comisión adeudada es una proyección basada en los tratamientos registrados y el calendario de depreciación siguiente — es una cifra de planificación, no un cálculo listo para nómina, y no está conectada a ningún pago real.',
+    'teamchat.title':'Chat del Equipo', 'teamchat.loading':'Cargando…', 'teamchat.subtitle':'Solo temas de trabajo — visible para todos los que usan este CRM',
+    'teamchat.noMessages':'Aún no hay mensajes — saluda al equipo.', 'teamchat.inputPlaceholder':'Mensaje relacionado con el trabajo...',
+    'ai.title':'Asistente de IA', 'ai.clinicInsights':'Información de la Clínica', 'ai.inputPlaceholder':"Pregunta lo que quieras, ej. '¿Qué clientes necesitan seguimiento?'",
+    'ai.yes':'Sí', 'ai.no':'No', 'ai.openBuilder':'Abrir Creador de {type}',
+    'billing.paymentFailed':'Tu último pago falló — actualiza la facturación para evitar interrupciones.',
+    'billing.canceled':'Tu suscripción está cancelada. Contáctanos para seguir usando AestheticFlow.',
+    'billing.trialEnded':'Tu prueba ha terminado. Contáctanos para elegir un plan y continuar.',
+    'billing.trialEndingSoon':'Tu prueba termina en {days} días — ve a Configuración para resolver la facturación.',
+    'billing.goToBilling':'Ir a Facturación',
+    'campaigns.title':'Campañas', 'campaigns.contentCreditsLabel':'créditos de contenido', 'campaigns.buyMore':'Comprar Más',
+    'campaigns.emailSmsTab':'Campañas de Email/SMS', 'campaigns.socialTab':'Contenido Social', 'campaigns.noCampaigns':'Aún no hay campañas.',
+    'campaigns.createCampaign':'Crear Campaña', 'campaigns.audience':'Audiencia', 'campaigns.status':'Estado',
+    'campaigns.noContent':'Aún no hay contenido de mensaje — haz clic en editar para añadirlo.', 'campaigns.copyMessage':'Copiar Mensaje',
+    'campaignStatus.ACTIVE':'Activa', 'campaignStatus.DRAFT':'Borrador',
   },
   fr: {
     'nav.dashboard':'Tableau de bord', 'nav.clients':'Clients', 'nav.calendar':'Calendrier', 'nav.leads':'Pipeline des Ventes',
     'nav.inventory':'Inventaire', 'nav.invoices':'Factures', 'nav.sales':'Équipe Commerciale', 'nav.teamchat':"Chat d'Équipe",
     'nav.campaigns':'Campagnes', 'nav.reports':'Rapports', 'nav.settings':'Paramètres', 'nav.ai':'Assistant IA',
     'common.save':'Enregistrer', 'common.cancel':'Annuler', 'common.close':'Fermer', 'common.signOut':'Déconnexion', 'common.language':'Langue',
+    'common.edit':'Modifier', 'common.delete':'Supprimer', 'common.send':'Envoyer',
     'auth.staffSignIn':'Connexion du Personnel', 'auth.staffSignUp':'Inscription du Personnel', 'auth.email':'E-mail', 'auth.password':'Mot de passe',
     'auth.signIn':'Se connecter', 'auth.signUp':"S'inscrire", 'auth.newStaffSignUp':'Nouveau membre du personnel ? Inscrivez-vous',
     'auth.alreadyHaveAccount':'Vous avez déjà un compte ? Connectez-vous', 'auth.clientPortalLink':'Portail Client →',
@@ -576,12 +731,89 @@ const TRANSLATIONS = {
     'msg.invoiceHeader':'{type} de {clinic}', 'msg.invoiceGreeting':'Bonjour {name},', 'msg.invoiceTotal':'Total : {total}', 'msg.invoiceThanks':'Merci !',
     'msg.reviewRequest':"Bonjour {name}, merci de votre visite chez {clinic} ! Nous aimerions savoir comment s'est passé votre traitement — accepteriez-vous de nous laisser un avis rapide ? Cela aide d'autres clients à nous trouver et compte beaucoup pour notre équipe.", 'msg.reviewSubject':"Comment s'est passée votre visite chez {clinic} ?",
     'invoiceType.Invoice':'Facture', 'invoiceType.Quote':'Devis',
+    'dash.greeting':'Bonjour, {name}', 'dash.aiAssistant':'Assistant IA :', 'dash.askAI':"Demander à l'IA",
+    'dash.todaySchedule':'Programme du Jour', 'dash.noAppointments':"Aucun rendez-vous prévu aujourd'hui.",
+    'dash.revenueThisMonth':'Revenu de Ce Mois', 'dash.fromTreatments':'Basé sur {n} traitements enregistrés',
+    'dash.newLeads':'Nouveaux Prospects', 'dash.newLeadsCaption':"Actuellement à l'étape « Nouveaux Prospects »",
+    'clients.title':'Clients', 'clients.total':'{n} au Total', 'clients.searchPlaceholder':'Rechercher des clients...',
+    'clients.addClient':'Ajouter un Client', 'clients.exportCsv':'Exporter en CSV', 'clients.noMatch':'Aucun client ne correspond à votre recherche.',
+    'clients.colName':'Nom', 'clients.colLastVisit':'Dernière Visite', 'clients.colStatus':'Statut',
+    'clients.statusVip':'VIP', 'clients.statusActive':'Actif', 'clients.statusNew':'Nouveau',
+    'clients.edit':'Modifier', 'clients.delete':'Supprimer', 'clients.notFound':'Client introuvable.',
+    'clients.tabOverview':'Aperçu', 'clients.tabAssessment':'Évaluation de la Peau', 'clients.tabTreatments':'Traitements',
+    'clients.tabPhotos':'Photos', 'clients.tabDocuments':'Documents', 'clients.tabPayments':'Paiements',
+    'clients.lastTreatment':'Dernier Traitement', 'clients.date':'Date', 'clients.practitioner':'Praticien',
+    'clients.nextAction':'Prochaine Action', 'clients.bookAppointment':'Réserver un Rendez-vous', 'clients.addTreatment':'Ajouter un Traitement',
+    'clients.draftInvoice':'Rédiger une Facture', 'clients.briefMe':'Résumé Rapide',
+    'clients.skinType':'Type de Peau', 'clients.concerns':'Préoccupations', 'clients.medicalNotes':'Notes Médicales',
+    'clients.medicalNotesPlaceholder':'Allergies, médicaments, procédures antérieures...', 'clients.uploadPhotos':'Téléverser des Photos',
+    'clients.before':'Avant', 'clients.after':'Après', 'clients.saveConsultation':'Enregistrer la Consultation',
+    'clients.photoConsentTitle':'Consentement de Photographie Clinique',
+    'clients.photoConsentIntro':"Avant que des photos avant/après puissent être conservées pour {name}, un consentement à la photographie clinique est requis. Ceci est distinct du consentement général au traitement — la photographie a sa propre base légale dans la plupart des juridictions.",
+    'clients.consentClinical':"J'ai obtenu le consentement de {name} pour prendre des photos cliniques à des fins de documentation du traitement",
+    'clients.consentMarketing':'Le client a également accepté séparément que ces photos soient utilisées à des fins marketing (facultatif)',
+    'clients.saveConsent':'Enregistrer le Consentement', 'clients.staffOnlyConsent':'Seul le personnel clinique peut enregistrer le consentement de photographie.',
+    'clients.beforeAfter':'Avant/Après', 'clients.consentOnFile':'Consentement de photographie enregistré',
+    'clients.marketingApproved':' · usage marketing approuvé', 'clients.noBeforePhoto':'Pas de photo avant', 'clients.noAfterPhoto':'Pas de photo après',
+    'clients.noPhotosYet':'Aucune photo pour le moment.', 'clients.addPhotos':'Ajouter des Photos Avant/Après',
+    'clients.treatmentHistory':'Historique des Traitements', 'clients.batch':'Lot', 'clients.noTreatments':'Aucun historique de traitement pour le moment.',
+    'clients.invoicesQuotes':'Factures et Devis', 'clients.item':'article', 'clients.items':'articles', 'clients.noInvoices':'Aucune facture ni devis pour le moment.',
+    'clients.newInvoice':'Nouvelle Facture', 'clients.documents':'Documents', 'clients.file':'fichier', 'clients.uploaded':'téléversé le',
+    'clients.tooLarge':'trop volumineux pour être stocké — conservé à titre de référence uniquement', 'clients.noDocuments':'Aucun document pour le moment.', 'clients.uploadDocument':'Téléverser un Document',
+    'clients.phone':'Téléphone', 'clients.email':'E-mail', 'clients.clientSince':'Client Depuis', 'clients.editClient':'Modifier le client', 'clients.deleteClient':'Supprimer le client',
+    'skinType.Normal':'Normale', 'skinType.Oily':'Grasse', 'skinType.Dry':'Sèche', 'skinType.Combination':'Mixte', 'skinType.Sensitive':'Sensible',
+    'concern.Wrinkles':'Rides', 'concern.Pigmentation':'Pigmentation', 'concern.Acne':'Acné', 'concern.Volume Loss':'Perte de Volume',
+    'cal.title':'Calendrier', 'cal.practitioner':'Praticien', 'cal.all':'Tous', 'cal.today':"Aujourd'hui", 'cal.noAppointments':'Aucun rendez-vous', 'cal.newAppointment':'Nouveau Rendez-vous',
+    'leads.title':'Pipeline des Ventes', 'leads.inPipeline':'{n} dans le Pipeline', 'leads.convertedToClient':'Converti en client', 'leads.move':'Déplacer →', 'leads.empty':'Vide', 'leads.addLead':'Ajouter un Prospect',
+    'leadStage.New Leads':'Nouveaux Prospects', 'leadStage.Consultation':'Consultation', 'leadStage.Quote Sent':'Devis Envoyé', 'leadStage.Booked':'Réservé', 'leadStage.Completed':'Terminé',
+    'inv.title':'Inventaire', 'inv.products':'{n} Produits', 'inv.expiresAlert':'{name} expire dans {days} jours', 'inv.colProduct':'Produit', 'inv.colStock':'Stock', 'inv.colPrice':'Prix', 'inv.noProducts':'Aucun produit pour le moment.', 'inv.addProduct':'Ajouter un Produit',
+    'invStatus.Draft':'Brouillon', 'invStatus.Sent':'Envoyée', 'invStatus.Paid':'Payée',
+    'invoices.title':'Factures et Devis', 'invoices.total':'{n} au Total', 'invoices.colNumber':'N°', 'invoices.colClient':'Client', 'invoices.colType':'Type',
+    'invoices.colTotal':'Total', 'invoices.colStatus':'Statut', 'invoices.colDate':'Date', 'invoices.noInvoices':'Aucune facture ni devis pour le moment.',
+    'invoices.exportCsv':'Exporter en CSV', 'invoices.newQuote':'Nouveau Devis', 'invoices.newInvoice':'Nouvelle Facture',
+    'invoices.newTypeTitle':'Créer {type}', 'invoices.client':'Client', 'invoices.type':'Type', 'invoices.lineItems':'Lignes de Détail', 'invoices.item':'Article',
+    'invoices.customService':'Personnalisé / Service...', 'invoices.inStock':'{n} en stock', 'invoices.description':'Description', 'invoices.qty':'Qté', 'invoices.price':'Prix',
+    'invoices.addLine':'Ajouter une Ligne', 'invoices.notes':'Notes', 'invoices.notesPlaceholder':'Conditions de paiement, mot de remerciement, etc.', 'invoices.saveType':'Enregistrer {type}',
+    'invoices.prototypeNote':"L'envoi se fait via votre propre application e-mail/WhatsApp avec la facture pré-remplie — ce prototype n'a pas de backend pour l'envoyer lui-même.",
+    'invoices.email':'E-mail', 'invoices.whatsapp':'WhatsApp', 'invoices.printSavePdf':'Imprimer / Enregistrer en PDF', 'invoices.markPaid':'Marquer comme Payée',
+    'sales.title':'Équipe Commerciale', 'sales.clientsAttributed':'{n} Clients Attribués', 'sales.clientsWord':'clients', 'sales.targetBoard':'Tableau des Objectifs de Vente', 'sales.updateTargets':'Mettre à Jour les Objectifs',
+    'sales.orgWideTarget':"Objectif Global de l'Organisation", 'sales.orgMet':'✓ Atteint — tout le monde reçoit +{pct}% de bonus', 'sales.orgPending':'+{pct}% de bonus pour tous si atteint',
+    'sales.noOrgTarget':"Aucun objectif global défini — configurez-en un dans Paramètres → Modèle de Commission des Ventes.",
+    'sales.thisMonth':'{amount} ce mois-ci', 'sales.target':'Objectif : {amount}',
+    'sales.individualMet':'✓ Objectif atteint — +{pct}% de bonus', 'sales.individualPending':'+{pct}% de bonus si atteint',
+    'sales.noIndividualTargets':'Aucun objectif individuel défini pour le moment — ajoutez-les par personne dans Paramètres → Équipe.',
+    'sales.individualBonus':'Bonus individuel : {amount}', 'sales.orgBonusShare':"Part du bonus d'organisation : {amount}",
+    'sales.bonusDisclaimer':"Les montants de bonus sont des calculs de planification basés sur les revenus de traitements enregistrés — comme la commission, ils ne sont pas connectés à la paie réelle.",
+    'sales.totalClientRevenue':'Revenu Total des Clients', 'sales.allTimeAcrossAttributed':'Depuis toujours, sur les clients attribués',
+    'sales.commissionOwed':"Commission d'Origination Due", 'sales.commissionOwedShort':'Commission Due', 'sales.thisMonthAfterDep':'Ce mois-ci, après dépréciation',
+    'sales.commissionModel':'Modèle de Commission', 'sales.configurableInSettings':'Configurable dans les Paramètres',
+    'sales.pendingApprovals':'Approbations en Attente', 'sales.pendingApprovalsNote':"Les nouvelles procédures vendues à un client nécessitent une validation du bureau avant que la commission ne s'accumule — contrôle de responsabilité avant que l'argent ne soit dû.",
+    'sales.soldBy':'Vendu par {name}', 'sales.reject':'Rejeter', 'sales.approve':'Approuver', 'sales.nothingPending':'Rien en attente — toutes les ventes vérifiées.',
+    'sales.revenueShare':"Répartition des Revenus par Initiateur de Compte", 'sales.noRevenueAttributed':"Aucun revenu attribué à un initiateur pour le moment.",
+    'sales.directory':'Annuaire', 'sales.thisMonthRevenue':'Revenu de Ce Mois', 'sales.allTimeRevenue':'Revenu Total', 'sales.projectedNextMo':'Projection Mois Prochain',
+    'sales.noStaffAttributed':'Aucun membre du personnel avec des clients attribués pour le moment.',
+    'sales.commissionDisclaimer':"La commission due est une projection basée sur les traitements enregistrés et le calendrier de dépréciation ci-dessous — c'est un chiffre de planification, pas un calcul prêt pour la paie, et il n'est connecté à aucun paiement réel.",
+    'teamchat.title':"Chat d'Équipe", 'teamchat.loading':'Chargement…', 'teamchat.subtitle':'Sujets professionnels uniquement — visible par tous les utilisateurs de ce CRM',
+    'teamchat.noMessages':"Aucun message pour le moment — dites bonjour à l'équipe.", 'teamchat.inputPlaceholder':'Message professionnel...',
+    'ai.title':'Assistant IA', 'ai.clinicInsights':'Aperçus de la Clinique', 'ai.inputPlaceholder':"Posez n'importe quelle question, ex. « Quels clients ont besoin d'un suivi ? »",
+    'ai.yes':'Oui', 'ai.no':'Non', 'ai.openBuilder':'Ouvrir le Créateur de {type}',
+    'billing.paymentFailed':'Votre dernier paiement a échoué — mettez à jour la facturation pour éviter toute interruption.',
+    'billing.canceled':'Votre abonnement est annulé. Contactez-nous pour continuer à utiliser AestheticFlow.',
+    'billing.trialEnded':"Votre période d'essai est terminée. Contactez-nous pour choisir un forfait et continuer.",
+    'billing.trialEndingSoon':"Votre essai se termine dans {days} jours — rendez-vous dans Paramètres pour régler la facturation.",
+    'billing.goToBilling':'Aller à la Facturation',
+    'campaigns.title':'Campagnes', 'campaigns.contentCreditsLabel':'crédits de contenu', 'campaigns.buyMore':'Acheter Plus',
+    'campaigns.emailSmsTab':'Campagnes E-mail/SMS', 'campaigns.socialTab':'Contenu Social', 'campaigns.noCampaigns':'Aucune campagne pour le moment.',
+    'campaigns.createCampaign':'Créer une Campagne', 'campaigns.audience':'Audience', 'campaigns.status':'Statut',
+    'campaigns.noContent':"Aucun contenu de message pour le moment — cliquez sur modifier pour l'ajouter.", 'campaigns.copyMessage':'Copier le Message',
+    'campaignStatus.ACTIVE':'Active', 'campaignStatus.DRAFT':'Brouillon',
   },
   pt: {
     'nav.dashboard':'Painel', 'nav.clients':'Clientes', 'nav.calendar':'Calendário', 'nav.leads':'Funil de Vendas',
     'nav.inventory':'Inventário', 'nav.invoices':'Faturas', 'nav.sales':'Equipa de Vendas', 'nav.teamchat':'Chat da Equipa',
     'nav.campaigns':'Campanhas', 'nav.reports':'Relatórios', 'nav.settings':'Configurações', 'nav.ai':'Assistente IA',
     'common.save':'Guardar', 'common.cancel':'Cancelar', 'common.close':'Fechar', 'common.signOut':'Terminar Sessão', 'common.language':'Idioma',
+    'common.edit':'Editar', 'common.delete':'Eliminar', 'common.send':'Enviar',
     'auth.staffSignIn':'Acesso da Equipa', 'auth.staffSignUp':'Registo da Equipa', 'auth.email':'E-mail', 'auth.password':'Palavra-passe',
     'auth.signIn':'Iniciar Sessão', 'auth.signUp':'Registar', 'auth.newStaffSignUp':'Novo membro da equipa? Registe-se',
     'auth.alreadyHaveAccount':'Já tem uma conta? Inicie sessão', 'auth.clientPortalLink':'Portal do Cliente →',
@@ -597,12 +829,89 @@ const TRANSLATIONS = {
     'msg.invoiceHeader':'{type} de {clinic}', 'msg.invoiceGreeting':'Olá {name},', 'msg.invoiceTotal':'Total: {total}', 'msg.invoiceThanks':'Obrigado!',
     'msg.reviewRequest':'Olá {name}, obrigado por visitar {clinic}! Gostaríamos de saber como foi o seu tratamento — importa-se de nos deixar uma avaliação rápida? Ajuda outros clientes a encontrar-nos e significa muito para a nossa equipa.', 'msg.reviewSubject':'Como foi a sua visita à {clinic}?',
     'invoiceType.Invoice':'Fatura', 'invoiceType.Quote':'Orçamento',
+    'dash.greeting':'Bom dia, {name}', 'dash.aiAssistant':'Assistente de IA:', 'dash.askAI':'Perguntar à IA',
+    'dash.todaySchedule':'Agenda de Hoje', 'dash.noAppointments':'Nenhuma consulta agendada para hoje.',
+    'dash.revenueThisMonth':'Receita Deste Mês', 'dash.fromTreatments':'De {n} tratamentos registados',
+    'dash.newLeads':'Novos Contactos', 'dash.newLeadsCaption':'Atualmente na fase "Novos Contactos"',
+    'clients.title':'Clientes', 'clients.total':'{n} no Total', 'clients.searchPlaceholder':'Pesquisar clientes...',
+    'clients.addClient':'Adicionar Cliente', 'clients.exportCsv':'Exportar CSV', 'clients.noMatch':'Nenhum cliente corresponde à sua pesquisa.',
+    'clients.colName':'Nome', 'clients.colLastVisit':'Última Visita', 'clients.colStatus':'Estado',
+    'clients.statusVip':'VIP', 'clients.statusActive':'Ativo', 'clients.statusNew':'Novo',
+    'clients.edit':'Editar', 'clients.delete':'Eliminar', 'clients.notFound':'Cliente não encontrado.',
+    'clients.tabOverview':'Resumo', 'clients.tabAssessment':'Avaliação de Pele', 'clients.tabTreatments':'Tratamentos',
+    'clients.tabPhotos':'Fotos', 'clients.tabDocuments':'Documentos', 'clients.tabPayments':'Pagamentos',
+    'clients.lastTreatment':'Último Tratamento', 'clients.date':'Data', 'clients.practitioner':'Profissional',
+    'clients.nextAction':'Próxima Ação', 'clients.bookAppointment':'Marcar Consulta', 'clients.addTreatment':'Adicionar Tratamento',
+    'clients.draftInvoice':'Rascunhar Fatura', 'clients.briefMe':'Resumo Rápido',
+    'clients.skinType':'Tipo de Pele', 'clients.concerns':'Preocupações', 'clients.medicalNotes':'Notas Médicas',
+    'clients.medicalNotesPlaceholder':'Alergias, medicamentos, procedimentos anteriores...', 'clients.uploadPhotos':'Carregar Fotos',
+    'clients.before':'Antes', 'clients.after':'Depois', 'clients.saveConsultation':'Guardar Consulta',
+    'clients.photoConsentTitle':'Consentimento de Fotografia Clínica',
+    'clients.photoConsentIntro':'Antes de guardar fotos de antes/depois para {name}, é necessário o consentimento para fotografia clínica. Isto é separado do consentimento geral de tratamento — a fotografia tem a sua própria base legal na maioria das jurisdições.',
+    'clients.consentClinical':'Obtive o consentimento de {name} para tirar fotos clínicas para fins de documentação do tratamento',
+    'clients.consentMarketing':'O cliente também concordou separadamente que estas fotos possam ser usadas para marketing (opcional)',
+    'clients.saveConsent':'Guardar Consentimento', 'clients.staffOnlyConsent':'Apenas a equipa clínica pode registar o consentimento de fotografia.',
+    'clients.beforeAfter':'Antes e Depois', 'clients.consentOnFile':'Consentimento de fotografia registado',
+    'clients.marketingApproved':' · uso de marketing aprovado', 'clients.noBeforePhoto':'Sem foto de antes', 'clients.noAfterPhoto':'Sem foto de depois',
+    'clients.noPhotosYet':'Ainda sem fotos.', 'clients.addPhotos':'Adicionar Fotos de Antes/Depois',
+    'clients.treatmentHistory':'Histórico de Tratamentos', 'clients.batch':'Lote', 'clients.noTreatments':'Ainda sem histórico de tratamentos.',
+    'clients.invoicesQuotes':'Faturas e Orçamentos', 'clients.item':'item', 'clients.items':'itens', 'clients.noInvoices':'Ainda sem faturas ou orçamentos.',
+    'clients.newInvoice':'Nova Fatura', 'clients.documents':'Documentos', 'clients.file':'ficheiro', 'clients.uploaded':'carregado em',
+    'clients.tooLarge':'demasiado grande para armazenar — mantido apenas como referência', 'clients.noDocuments':'Ainda sem documentos.', 'clients.uploadDocument':'Carregar Documento',
+    'clients.phone':'Telefone', 'clients.email':'E-mail', 'clients.clientSince':'Cliente Desde', 'clients.editClient':'Editar cliente', 'clients.deleteClient':'Eliminar cliente',
+    'skinType.Normal':'Normal', 'skinType.Oily':'Oleosa', 'skinType.Dry':'Seca', 'skinType.Combination':'Mista', 'skinType.Sensitive':'Sensível',
+    'concern.Wrinkles':'Rugas', 'concern.Pigmentation':'Pigmentação', 'concern.Acne':'Acne', 'concern.Volume Loss':'Perda de Volume',
+    'cal.title':'Calendário', 'cal.practitioner':'Profissional', 'cal.all':'Todos', 'cal.today':'Hoje', 'cal.noAppointments':'Sem consultas', 'cal.newAppointment':'Nova Consulta',
+    'leads.title':'Funil de Vendas', 'leads.inPipeline':'{n} no Funil', 'leads.convertedToClient':'Convertido em cliente', 'leads.move':'Mover →', 'leads.empty':'Vazio', 'leads.addLead':'Adicionar Contacto',
+    'leadStage.New Leads':'Novos Contactos', 'leadStage.Consultation':'Consulta', 'leadStage.Quote Sent':'Orçamento Enviado', 'leadStage.Booked':'Marcado', 'leadStage.Completed':'Concluído',
+    'inv.title':'Inventário', 'inv.products':'{n} Produtos', 'inv.expiresAlert':'{name} expira em {days} dias', 'inv.colProduct':'Produto', 'inv.colStock':'Stock', 'inv.colPrice':'Preço', 'inv.noProducts':'Ainda sem produtos.', 'inv.addProduct':'Adicionar Produto',
+    'invStatus.Draft':'Rascunho', 'invStatus.Sent':'Enviada', 'invStatus.Paid':'Paga',
+    'invoices.title':'Faturas e Orçamentos', 'invoices.total':'{n} no Total', 'invoices.colNumber':'#', 'invoices.colClient':'Cliente', 'invoices.colType':'Tipo',
+    'invoices.colTotal':'Total', 'invoices.colStatus':'Estado', 'invoices.colDate':'Data', 'invoices.noInvoices':'Ainda sem faturas ou orçamentos.',
+    'invoices.exportCsv':'Exportar CSV', 'invoices.newQuote':'Novo Orçamento', 'invoices.newInvoice':'Nova Fatura',
+    'invoices.newTypeTitle':'Criar {type}', 'invoices.client':'Cliente', 'invoices.type':'Tipo', 'invoices.lineItems':'Linhas de Detalhe', 'invoices.item':'Item',
+    'invoices.customService':'Personalizado / Serviço...', 'invoices.inStock':'{n} em stock', 'invoices.description':'Descrição', 'invoices.qty':'Qtd.', 'invoices.price':'Preço',
+    'invoices.addLine':'Adicionar Linha', 'invoices.notes':'Notas', 'invoices.notesPlaceholder':'Condições de pagamento, nota de agradecimento, etc.', 'invoices.saveType':'Guardar {type}',
+    'invoices.prototypeNote':'O envio é feito através da sua própria aplicação de e-mail/WhatsApp com a fatura pré-preenchida — este protótipo não tem backend próprio para enviar.',
+    'invoices.email':'E-mail', 'invoices.whatsapp':'WhatsApp', 'invoices.printSavePdf':'Imprimir / Guardar PDF', 'invoices.markPaid':'Marcar como Paga',
+    'sales.title':'Equipa de Vendas', 'sales.clientsAttributed':'{n} Clientes Atribuídos', 'sales.clientsWord':'clientes', 'sales.targetBoard':'Painel de Objetivos de Vendas', 'sales.updateTargets':'Atualizar Objetivos',
+    'sales.orgWideTarget':'Objetivo Geral da Organização', 'sales.orgMet':'✓ Atingido — todos recebem +{pct}% de bónus', 'sales.orgPending':'+{pct}% de bónus para todos se atingido',
+    'sales.noOrgTarget':'Nenhum objetivo geral definido — configure um em Definições → Modelo de Comissão de Vendas.',
+    'sales.thisMonth':'{amount} este mês', 'sales.target':'Objetivo: {amount}',
+    'sales.individualMet':'✓ Objetivo atingido — +{pct}% de bónus', 'sales.individualPending':'+{pct}% de bónus se atingido',
+    'sales.noIndividualTargets':'Ainda sem objetivos individuais — adicione-os por pessoa em Definições → Equipa.',
+    'sales.individualBonus':'Bónus individual: {amount}', 'sales.orgBonusShare':'Parte do bónus da organização: {amount}',
+    'sales.bonusDisclaimer':'Os valores de bónus são cálculos de planeamento com base na receita de tratamentos registados — tal como a comissão, não estão ligados à folha de pagamento real.',
+    'sales.totalClientRevenue':'Receita Total de Clientes', 'sales.allTimeAcrossAttributed':'Desde sempre, entre clientes atribuídos',
+    'sales.commissionOwed':'Comissão de Originação Devida', 'sales.commissionOwedShort':'Comissão Devida', 'sales.thisMonthAfterDep':'Este mês, após depreciação',
+    'sales.commissionModel':'Modelo de Comissão', 'sales.configurableInSettings':'Configurável em Definições',
+    'sales.pendingApprovals':'Aprovações Pendentes', 'sales.pendingApprovalsNote':'Novos procedimentos vendidos a um cliente precisam de aprovação do escritório antes de a comissão ser acumulada — verificação de responsabilidade antes de o dinheiro ser devido.',
+    'sales.soldBy':'Vendido por {name}', 'sales.reject':'Rejeitar', 'sales.approve':'Aprovar', 'sales.nothingPending':'Nada pendente — todas as vendas verificadas.',
+    'sales.revenueShare':'Repartição de Receita por Originador de Conta', 'sales.noRevenueAttributed':'Ainda sem receita atribuída a nenhum originador.',
+    'sales.directory':'Diretório', 'sales.thisMonthRevenue':'Receita Deste Mês', 'sales.allTimeRevenue':'Receita Total', 'sales.projectedNextMo':'Projeção Próx. Mês',
+    'sales.noStaffAttributed':'Ainda sem equipa com clientes atribuídos.',
+    'sales.commissionDisclaimer':'A comissão devida é uma projeção baseada nos tratamentos registados e no calendário de depreciação abaixo — é um valor de planeamento, não um cálculo pronto para folha de pagamento, e não está ligado a nenhum pagamento real.',
+    'teamchat.title':'Chat da Equipa', 'teamchat.loading':'A carregar…', 'teamchat.subtitle':'Apenas assuntos de trabalho — visível para todos os que usam este CRM',
+    'teamchat.noMessages':'Ainda sem mensagens — cumprimente a equipa.', 'teamchat.inputPlaceholder':'Mensagem relacionada com o trabalho...',
+    'ai.title':'Assistente de IA', 'ai.clinicInsights':'Informações da Clínica', 'ai.inputPlaceholder':"Pergunte o que quiser, ex. 'Que clientes precisam de acompanhamento?'",
+    'ai.yes':'Sim', 'ai.no':'Não', 'ai.openBuilder':'Abrir Criador de {type}',
+    'billing.paymentFailed':'O seu último pagamento falhou — atualize a faturação para evitar interrupções.',
+    'billing.canceled':'A sua subscrição foi cancelada. Contacte-nos para continuar a usar o AestheticFlow.',
+    'billing.trialEnded':'O seu período de avaliação terminou. Contacte-nos para escolher um plano e continuar.',
+    'billing.trialEndingSoon':'O seu período de avaliação termina em {days} dias — vá a Definições para tratar da faturação.',
+    'billing.goToBilling':'Ir para Faturação',
+    'campaigns.title':'Campanhas', 'campaigns.contentCreditsLabel':'créditos de conteúdo', 'campaigns.buyMore':'Comprar Mais',
+    'campaigns.emailSmsTab':'Campanhas de Email/SMS', 'campaigns.socialTab':'Conteúdo Social', 'campaigns.noCampaigns':'Ainda sem campanhas.',
+    'campaigns.createCampaign':'Criar Campanha', 'campaigns.audience':'Audiência', 'campaigns.status':'Estado',
+    'campaigns.noContent':'Ainda sem conteúdo de mensagem — clique em editar para o adicionar.', 'campaigns.copyMessage':'Copiar Mensagem',
+    'campaignStatus.ACTIVE':'Ativa', 'campaignStatus.DRAFT':'Rascunho',
   },
   ar: {
     'nav.dashboard':'لوحة التحكم', 'nav.clients':'العملاء', 'nav.calendar':'التقويم', 'nav.leads':'مسار المبيعات',
     'nav.inventory':'المخزون', 'nav.invoices':'الفواتير', 'nav.sales':'فريق المبيعات', 'nav.teamchat':'دردشة الفريق',
     'nav.campaigns':'الحملات', 'nav.reports':'التقارير', 'nav.settings':'الإعدادات', 'nav.ai':'المساعد الذكي',
     'common.save':'حفظ', 'common.cancel':'إلغاء', 'common.close':'إغلاق', 'common.signOut':'تسجيل الخروج', 'common.language':'اللغة',
+    'common.edit':'تعديل', 'common.delete':'حذف', 'common.send':'إرسال',
     'auth.staffSignIn':'تسجيل دخول الموظفين', 'auth.staffSignUp':'تسجيل الموظفين', 'auth.email':'البريد الإلكتروني', 'auth.password':'كلمة المرور',
     'auth.signIn':'تسجيل الدخول', 'auth.signUp':'إنشاء حساب', 'auth.newStaffSignUp':'موظف جديد؟ سجّل الآن',
     'auth.alreadyHaveAccount':'لديك حساب بالفعل؟ سجّل الدخول', 'auth.clientPortalLink':'→ بوابة العميل',
@@ -618,6 +927,82 @@ const TRANSLATIONS = {
     'msg.invoiceHeader':'{type} من {clinic}', 'msg.invoiceGreeting':'مرحباً {name}،', 'msg.invoiceTotal':'الإجمالي: {total}', 'msg.invoiceThanks':'شكراً لك!',
     'msg.reviewRequest':'مرحباً {name}، شكراً لزيارتك {clinic}! يسعدنا معرفة رأيك في علاجك — هل يمكنك ترك تقييم سريع لنا؟ هذا يساعد عملاء آخرين على إيجادنا ويعني الكثير لفريقنا.', 'msg.reviewSubject':'كيف كانت زيارتك إلى {clinic}؟',
     'invoiceType.Invoice':'فاتورة', 'invoiceType.Quote':'عرض سعر',
+    'dash.greeting':'صباح الخير، {name}', 'dash.aiAssistant':'مساعد الذكاء الاصطناعي:', 'dash.askAI':'اسأل الذكاء الاصطناعي',
+    'dash.todaySchedule':'جدول اليوم', 'dash.noAppointments':'لا توجد مواعيد مجدولة اليوم.',
+    'dash.revenueThisMonth':'إيرادات هذا الشهر', 'dash.fromTreatments':'من {n} علاج مسجل',
+    'dash.newLeads':'عملاء محتملون جدد', 'dash.newLeadsCaption':'حالياً في مرحلة "عملاء محتملون جدد"',
+    'clients.title':'العملاء', 'clients.total':'{n} إجمالي', 'clients.searchPlaceholder':'ابحث عن عملاء...',
+    'clients.addClient':'إضافة عميل', 'clients.exportCsv':'تصدير CSV', 'clients.noMatch':'لا يوجد عملاء يطابقون بحثك.',
+    'clients.colName':'الاسم', 'clients.colLastVisit':'آخر زيارة', 'clients.colStatus':'الحالة',
+    'clients.statusVip':'VIP', 'clients.statusActive':'نشط', 'clients.statusNew':'جديد',
+    'clients.edit':'تعديل', 'clients.delete':'حذف', 'clients.notFound':'العميل غير موجود.',
+    'clients.tabOverview':'نظرة عامة', 'clients.tabAssessment':'تقييم البشرة', 'clients.tabTreatments':'العلاجات',
+    'clients.tabPhotos':'الصور', 'clients.tabDocuments':'المستندات', 'clients.tabPayments':'المدفوعات',
+    'clients.lastTreatment':'آخر علاج', 'clients.date':'التاريخ', 'clients.practitioner':'الممارس',
+    'clients.nextAction':'الإجراء التالي', 'clients.bookAppointment':'حجز موعد', 'clients.addTreatment':'إضافة علاج',
+    'clients.draftInvoice':'إعداد فاتورة', 'clients.briefMe':'ملخص سريع',
+    'clients.skinType':'نوع البشرة', 'clients.concerns':'المخاوف', 'clients.medicalNotes':'ملاحظات طبية',
+    'clients.medicalNotesPlaceholder':'الحساسية، الأدوية، الإجراءات السابقة...', 'clients.uploadPhotos':'رفع الصور',
+    'clients.before':'قبل', 'clients.after':'بعد', 'clients.saveConsultation':'حفظ الاستشارة',
+    'clients.photoConsentTitle':'موافقة التصوير السريري',
+    'clients.photoConsentIntro':'قبل تخزين أي صور قبل/بعد لـ {name}، يجب الحصول على موافقتهم على التصوير السريري. هذا منفصل عن موافقة العلاج العامة — للتصوير أساسه القانوني الخاص في معظم الولايات القضائية.',
+    'clients.consentClinical':'لقد حصلت على موافقة {name} لالتقاط صور سريرية لأغراض توثيق العلاج',
+    'clients.consentMarketing':'وافق العميل أيضاً بشكل منفصل على استخدام هذه الصور لأغراض التسويق (اختياري)',
+    'clients.saveConsent':'حفظ الموافقة', 'clients.staffOnlyConsent':'يمكن فقط للطاقم السريري تسجيل موافقة التصوير.',
+    'clients.beforeAfter':'قبل وبعد', 'clients.consentOnFile':'موافقة التصوير مسجلة',
+    'clients.marketingApproved':' · تمت الموافقة على الاستخدام التسويقي', 'clients.noBeforePhoto':'لا توجد صورة قبل', 'clients.noAfterPhoto':'لا توجد صورة بعد',
+    'clients.noPhotosYet':'لا توجد صور بعد.', 'clients.addPhotos':'إضافة صور قبل/بعد',
+    'clients.treatmentHistory':'سجل العلاجات', 'clients.batch':'الدفعة', 'clients.noTreatments':'لا يوجد سجل علاجات بعد.',
+    'clients.invoicesQuotes':'الفواتير والعروض', 'clients.item':'عنصر', 'clients.items':'عناصر', 'clients.noInvoices':'لا توجد فواتير أو عروض بعد.',
+    'clients.newInvoice':'فاتورة جديدة', 'clients.documents':'المستندات', 'clients.file':'ملف', 'clients.uploaded':'تم الرفع في',
+    'clients.tooLarge':'كبير جداً للتخزين — تم الاحتفاظ به كمرجع فقط', 'clients.noDocuments':'لا توجد مستندات بعد.', 'clients.uploadDocument':'رفع مستند',
+    'clients.phone':'الهاتف', 'clients.email':'البريد الإلكتروني', 'clients.clientSince':'عميل منذ', 'clients.editClient':'تعديل العميل', 'clients.deleteClient':'حذف العميل',
+    'skinType.Normal':'عادية', 'skinType.Oily':'دهنية', 'skinType.Dry':'جافة', 'skinType.Combination':'مختلطة', 'skinType.Sensitive':'حساسة',
+    'concern.Wrinkles':'التجاعيد', 'concern.Pigmentation':'التصبغ', 'concern.Acne':'حب الشباب', 'concern.Volume Loss':'فقدان الحجم',
+    'cal.title':'التقويم', 'cal.practitioner':'الممارس', 'cal.all':'الكل', 'cal.today':'اليوم', 'cal.noAppointments':'لا توجد مواعيد', 'cal.newAppointment':'موعد جديد',
+    'leads.title':'مسار المبيعات', 'leads.inPipeline':'{n} في المسار', 'leads.convertedToClient':'تم التحويل إلى عميل', 'leads.move':'نقل ←', 'leads.empty':'فارغ', 'leads.addLead':'إضافة عميل محتمل',
+    'leadStage.New Leads':'عملاء محتملون جدد', 'leadStage.Consultation':'استشارة', 'leadStage.Quote Sent':'تم إرسال عرض السعر', 'leadStage.Booked':'محجوز', 'leadStage.Completed':'مكتمل',
+    'inv.title':'المخزون', 'inv.products':'{n} منتج', 'inv.expiresAlert':'{name} تنتهي صلاحيته خلال {days} يوم', 'inv.colProduct':'المنتج', 'inv.colStock':'المخزون', 'inv.colPrice':'السعر', 'inv.noProducts':'لا توجد منتجات بعد.', 'inv.addProduct':'إضافة منتج',
+    'invStatus.Draft':'مسودة', 'invStatus.Sent':'مرسلة', 'invStatus.Paid':'مدفوعة',
+    'invoices.title':'الفواتير والعروض', 'invoices.total':'{n} إجمالي', 'invoices.colNumber':'#', 'invoices.colClient':'العميل', 'invoices.colType':'النوع',
+    'invoices.colTotal':'الإجمالي', 'invoices.colStatus':'الحالة', 'invoices.colDate':'التاريخ', 'invoices.noInvoices':'لا توجد فواتير أو عروض بعد.',
+    'invoices.exportCsv':'تصدير CSV', 'invoices.newQuote':'عرض سعر جديد', 'invoices.newInvoice':'فاتورة جديدة',
+    'invoices.newTypeTitle':'إنشاء {type}', 'invoices.client':'العميل', 'invoices.type':'النوع', 'invoices.lineItems':'بنود الفاتورة', 'invoices.item':'عنصر',
+    'invoices.customService':'مخصص / خدمة...', 'invoices.inStock':'{n} متوفر بالمخزون', 'invoices.description':'الوصف', 'invoices.qty':'الكمية', 'invoices.price':'السعر',
+    'invoices.addLine':'إضافة بند', 'invoices.notes':'ملاحظات', 'invoices.notesPlaceholder':'شروط الدفع، رسالة شكر، إلخ.', 'invoices.saveType':'حفظ {type}',
+    'invoices.prototypeNote':'يتم الإرسال عبر تطبيق البريد الإلكتروني/واتساب الخاص بك مع تعبئة الفاتورة مسبقاً — هذا النموذج الأولي لا يحتوي على خادم خلفي للإرسال بنفسه.',
+    'invoices.email':'البريد الإلكتروني', 'invoices.whatsapp':'واتساب', 'invoices.printSavePdf':'طباعة / حفظ PDF', 'invoices.markPaid':'وضع علامة كمدفوعة',
+    'sales.title':'فريق المبيعات', 'sales.clientsAttributed':'{n} عميل منسوب', 'sales.clientsWord':'عملاء', 'sales.targetBoard':'لوحة أهداف المبيعات', 'sales.updateTargets':'تحديث الأهداف',
+    'sales.orgWideTarget':'الهدف العام للمؤسسة', 'sales.orgMet':'✓ تم التحقيق — يحصل الجميع على مكافأة +{pct}%', 'sales.orgPending':'مكافأة +{pct}% للجميع عند التحقيق',
+    'sales.noOrgTarget':'لم يتم تحديد هدف عام للمؤسسة — قم بإعداد واحد في الإعدادات ← نموذج عمولة المبيعات.',
+    'sales.thisMonth':'{amount} هذا الشهر', 'sales.target':'الهدف: {amount}',
+    'sales.individualMet':'✓ تم تحقيق الهدف — مكافأة +{pct}%', 'sales.individualPending':'مكافأة +{pct}% عند التحقيق',
+    'sales.noIndividualTargets':'لا توجد أهداف فردية بعد — أضفها لكل شخص ضمن الإعدادات ← الموظفون.',
+    'sales.individualBonus':'المكافأة الفردية: {amount}', 'sales.orgBonusShare':'حصة مكافأة المؤسسة: {amount}',
+    'sales.bonusDisclaimer':'أرقام المكافآت هي حسابات تخطيطية من إيرادات العلاجات المسجلة — مثل العمولة تماماً، فهي غير مرتبطة بكشوف المرتبات الفعلية.',
+    'sales.totalClientRevenue':'إجمالي إيرادات العملاء', 'sales.allTimeAcrossAttributed':'منذ البداية، عبر العملاء المنسوبين',
+    'sales.commissionOwed':'عمولة الإنشاء المستحقة', 'sales.commissionOwedShort':'العمولة المستحقة', 'sales.thisMonthAfterDep':'هذا الشهر، بعد الإهلاك',
+    'sales.commissionModel':'نموذج العمولة', 'sales.configurableInSettings':'قابل للتخصيص في الإعدادات',
+    'sales.pendingApprovals':'الموافقات المعلقة', 'sales.pendingApprovalsNote':'تحتاج الإجراءات الجديدة المباعة للعميل إلى موافقة المكتب قبل استحقاق العمولة — فحص للمساءلة قبل استحقاق المال.',
+    'sales.soldBy':'تم البيع بواسطة {name}', 'sales.reject':'رفض', 'sales.approve':'موافقة', 'sales.nothingPending':'لا يوجد شيء معلق — تم التحقق من جميع المبيعات.',
+    'sales.revenueShare':'توزيع الإيرادات حسب منشئ الحساب', 'sales.noRevenueAttributed':'لا توجد إيرادات منسوبة لأي منشئ بعد.',
+    'sales.directory':'الدليل', 'sales.thisMonthRevenue':'إيرادات هذا الشهر', 'sales.allTimeRevenue':'إجمالي الإيرادات', 'sales.projectedNextMo':'المتوقع للشهر القادم',
+    'sales.noStaffAttributed':'لا يوجد موظفون لديهم عملاء منسوبون بعد.',
+    'sales.commissionDisclaimer':'العمولة المستحقة هي توقع مبني على العلاجات المسجلة وجدول الإهلاك أدناه — إنها رقم تخطيطي وليست حساباً جاهزاً لكشوف المرتبات، وغير مرتبطة بأي دفعة فعلية.',
+    'teamchat.title':'دردشة الفريق', 'teamchat.loading':'جارٍ التحميل…', 'teamchat.subtitle':'للمواضيع المتعلقة بالعمل فقط — مرئية لجميع مستخدمي هذا النظام',
+    'teamchat.noMessages':'لا توجد رسائل بعد — رحّب بالفريق.', 'teamchat.inputPlaceholder':'رسالة متعلقة بالعمل...',
+    'ai.title':'مساعد الذكاء الاصطناعي', 'ai.clinicInsights':'رؤى العيادة', 'ai.inputPlaceholder':"اسأل أي شيء، مثلاً 'ما هم العملاء الذين يحتاجون متابعة؟'",
+    'ai.yes':'نعم', 'ai.no':'لا', 'ai.openBuilder':'فتح منشئ {type}',
+    'billing.paymentFailed':'فشلت آخر عملية دفع — يرجى تحديث الفوترة لتجنب الانقطاع.',
+    'billing.canceled':'تم إلغاء اشتراكك. تواصل معنا لمواصلة استخدام AestheticFlow.',
+    'billing.trialEnded':'انتهت فترتك التجريبية. تواصل معنا لاختيار خطة والمتابعة.',
+    'billing.trialEndingSoon':'تنتهي فترتك التجريبية خلال {days} يوم — توجه إلى الإعدادات لترتيب الفوترة.',
+    'billing.goToBilling':'الذهاب إلى الفوترة',
+    'campaigns.title':'الحملات', 'campaigns.contentCreditsLabel':'رصيد محتوى', 'campaigns.buyMore':'شراء المزيد',
+    'campaigns.emailSmsTab':'حملات البريد الإلكتروني/الرسائل النصية', 'campaigns.socialTab':'محتوى التواصل الاجتماعي', 'campaigns.noCampaigns':'لا توجد حملات بعد.',
+    'campaigns.createCampaign':'إنشاء حملة', 'campaigns.audience':'الجمهور', 'campaigns.status':'الحالة',
+    'campaigns.noContent':'لا يوجد محتوى رسالة بعد — انقر على تعديل لإضافته.', 'campaigns.copyMessage':'نسخ الرسالة',
+    'campaignStatus.ACTIVE':'نشطة', 'campaignStatus.DRAFT':'مسودة',
   },
 };
 // Language is a browser/device preference (auth screens render before any
@@ -1299,16 +1684,16 @@ function renderDashboard(){
   const insight = generateAIInsight();
   return `
     <div class="topbar">
-      <div class="page-title">Good Morning, ${esc(me ? me.name : state.clinic.practitionerName)}</div>
+      <div class="page-title">${esc(tf('dash.greeting', {name: me ? me.name : state.clinic.practitionerName}))}</div>
       <div class="eyebrow">${esc(currentLocation ? currentLocation.name : '')} · ${todayLabel}</div>
     </div>
     <div class="ai-insight">
-      <div class="ai-insight-text">${ICONS.ai} <strong>AI Assistant:</strong> ${esc(insight.text)}</div>
-      <button class="btn btn-secondary btn-sm" id="goToAI">Ask AI</button>
+      <div class="ai-insight-text">${ICONS.ai} <strong>${t('dash.aiAssistant')}</strong> ${esc(insight.text)}</div>
+      <button class="btn btn-secondary btn-sm" id="goToAI">${t('dash.askAI')}</button>
     </div>
     <div class="grid2">
       <div class="card">
-        <div class="card-title">Today's Schedule</div>
+        <div class="card-title">${t('dash.todaySchedule')}</div>
         ${today.length ? today.map(a=>`
           <div class="schedule-item">
             <div class="schedule-time">${esc(a.time)}</div>
@@ -1316,18 +1701,18 @@ function renderDashboard(){
               <div class="type">${esc(a.service)}</div>
               <div class="client">${esc(a.clientName)} · ${esc(a.practitioner||'—')}</div>
             </div>
-          </div>`).join('') : `<p class="empty-state">No appointments scheduled today.</p>`}
+          </div>`).join('') : `<p class="empty-state">${t('dash.noAppointments')}</p>`}
       </div>
       <div class="stat-stack">
         <div class="card">
-          <div class="card-title">Revenue This Month</div>
+          <div class="card-title">${t('dash.revenueThisMonth')}</div>
           <div class="stat-value accent">${fmtMoney(revenue)}</div>
-          <div class="stat-caption">From ${allTreatments().length} logged treatments</div>
+          <div class="stat-caption">${esc(tf('dash.fromTreatments', {n: allTreatments().length}))}</div>
         </div>
         <div class="card">
-          <div class="card-title">New Leads</div>
+          <div class="card-title">${t('dash.newLeads')}</div>
           <div class="stat-value">${newLeadsCount}</div>
-          <div class="stat-caption">Currently in "New Leads" stage</div>
+          <div class="stat-caption">${t('dash.newLeadsCaption')}</div>
         </div>
       </div>
     </div>`;
@@ -1350,37 +1735,37 @@ function renderClientsList(){
   const rows = state.clients.filter(c=>c.name.toLowerCase().includes(search));
   return `
     <div class="topbar">
-      <div class="page-title">Clients</div>
-      <div class="eyebrow">${state.clients.length} Total</div>
+      <div class="page-title">${t('clients.title')}</div>
+      <div class="eyebrow">${esc(tf('clients.total', {n: state.clients.length}))}</div>
     </div>
     <div class="search-wrap">
       ${ICONS.search}
-      <input id="clientSearch" type="text" placeholder="Search clients..." value="${esc(search)}">
+      <input id="clientSearch" type="text" placeholder="${esc(t('clients.searchPlaceholder'))}" value="${esc(search)}">
     </div>
     <div class="card" id="clientsTableCard" style="padding:0;">
       ${renderClientsTable(rows)}
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" id="addClientBtn">${ICONS.plus} Add Client</button>
-      <button class="btn btn-secondary" id="exportClientsCsv">${ICONS.reports} Export CSV</button>
+      <button class="btn btn-secondary" id="addClientBtn">${ICONS.plus} ${t('clients.addClient')}</button>
+      <button class="btn btn-secondary" id="exportClientsCsv">${ICONS.reports} ${t('clients.exportCsv')}</button>
     </div>`;
 }
 function renderClientsTable(rows){
-  if(!rows.length) return `<p class="empty-state" style="padding:24px 26px;">No clients match your search.</p>`;
+  if(!rows.length) return `<p class="empty-state" style="padding:24px 26px;">${t('clients.noMatch')}</p>`;
   const perms = currentPerms();
   return `
     <table class="responsive-table">
-      <thead><tr><th>Name</th><th>Last Visit</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>${t('clients.colName')}</th><th>${t('clients.colLastVisit')}</th><th>${t('clients.colStatus')}</th><th></th></tr></thead>
       <tbody id="clientRows">
         ${rows.map(c=>`
           <tr data-id="${c.id}">
-            <td data-label="Name" class="name-cell" data-open="${c.id}">${esc(c.name)}</td>
-            <td data-label="Last Visit" class="muted">${fmtDate(c.lastTreatment.date)}</td>
-            <td data-label="Status"><span class="status ${c.status}">${c.status==='vip'?'VIP':c.status==='active'?'Active':'New'}</span></td>
+            <td data-label="${esc(t('clients.colName'))}" class="name-cell" data-open="${c.id}">${esc(c.name)}</td>
+            <td data-label="${esc(t('clients.colLastVisit'))}" class="muted">${fmtDate(c.lastTreatment.date)}</td>
+            <td data-label="${esc(t('clients.colStatus'))}"><span class="status ${c.status}">${c.status==='vip'?t('clients.statusVip'):c.status==='active'?t('clients.statusActive'):t('clients.statusNew')}</span></td>
             <td data-label="">
               <div class="row-actions">
-                <button class="icon-btn" data-edit="${c.id}" title="Edit">${ICONS.edit}</button>
-                ${perms.canDelete ? `<button class="icon-btn danger" data-del="${c.id}" title="Delete">${ICONS.trash}</button>` : ''}
+                <button class="icon-btn" data-edit="${c.id}" title="${esc(t('clients.edit'))}">${ICONS.edit}</button>
+                ${perms.canDelete ? `<button class="icon-btn danger" data-del="${c.id}" title="${esc(t('clients.delete'))}">${ICONS.trash}</button>` : ''}
               </div>
             </td>
           </tr>`).join('')}
@@ -1390,10 +1775,10 @@ function renderClientsTable(rows){
 
 function renderClientDetail(){
   const c = state.clients.find(x=>x.id===activeClientId);
-  if(!c) return `<div class="card">Client not found.</div>`;
+  if(!c) return `<div class="card">${t('clients.notFound')}</div>`;
   const perms = currentPerms();
   const allTabs = [
-    ['overview','Overview'],['assessment','Skin Assessment'],['treatments','Treatments'],['photos','Photos'],['documents','Documents'],['payments','Payments']
+    ['overview',t('clients.tabOverview')],['assessment',t('clients.tabAssessment')],['treatments',t('clients.tabTreatments')],['photos',t('clients.tabPhotos')],['documents',t('clients.tabDocuments')],['payments',t('clients.tabPayments')]
   ];
   const tabs = perms.canEditMedical ? allTabs : allTabs.filter(t=>t[0]!=='assessment');
   if(!tabs.find(t=>t[0]===activeClientTab)) activeClientTab = 'overview';
@@ -1402,55 +1787,55 @@ function renderClientDetail(){
     body = `
       <div class="grid2b">
         <div class="card">
-          <div class="card-title">Last Treatment</div>
+          <div class="card-title">${t('clients.lastTreatment')}</div>
           <div class="profile-name" style="font-size:19px; margin-bottom:16px;">${esc(c.lastTreatment.name)}</div>
-          <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${fmtDate(c.lastTreatment.date)}</span></div>
-          <div class="detail-row"><span class="detail-label">Practitioner</span><span class="detail-value">${esc(c.lastTreatment.practitioner)}</span></div>
+          <div class="detail-row"><span class="detail-label">${t('clients.date')}</span><span class="detail-value">${fmtDate(c.lastTreatment.date)}</span></div>
+          <div class="detail-row"><span class="detail-label">${t('clients.practitioner')}</span><span class="detail-value">${esc(c.lastTreatment.practitioner)}</span></div>
         </div>
         <div class="card">
-          <div class="card-title">Next Action</div>
+          <div class="card-title">${t('clients.nextAction')}</div>
           <div class="status active" style="margin-bottom:16px;">${esc(c.nextAction.label)}</div>
-          <div class="detail-row" style="border-top:none;"><span class="detail-label">Date</span><span class="detail-value" style="font-family:'Fraunces',serif; font-size:18px;">${fmtDate(c.nextAction.date)}</span></div>
+          <div class="detail-row" style="border-top:none;"><span class="detail-label">${t('clients.date')}</span><span class="detail-value" style="font-family:'Fraunces',serif; font-size:18px;">${fmtDate(c.nextAction.date)}</span></div>
         </div>
       </div>
       <div class="actions">
-        <button class="btn btn-primary" id="bookAppt">Book Appointment</button>
-        ${perms.canEditMedical ? `<button class="btn btn-secondary" id="addTreatment">Add Treatment</button>` : ''}
-        ${perms.nav.includes('invoices') ? `<button class="btn btn-secondary" id="draftInvoiceBtn">${ICONS.invoices} Draft Invoice</button>` : ''}
-        <button class="btn btn-secondary" id="briefMeBtn">${ICONS.ai} Brief Me</button>
+        <button class="btn btn-primary" id="bookAppt">${t('clients.bookAppointment')}</button>
+        ${perms.canEditMedical ? `<button class="btn btn-secondary" id="addTreatment">${t('clients.addTreatment')}</button>` : ''}
+        ${perms.nav.includes('invoices') ? `<button class="btn btn-secondary" id="draftInvoiceBtn">${ICONS.invoices} ${t('clients.draftInvoice')}</button>` : ''}
+        <button class="btn btn-secondary" id="briefMeBtn">${ICONS.ai} ${t('clients.briefMe')}</button>
       </div>`;
   } else if(activeClientTab==='assessment'){
     const concernsList = ['Wrinkles','Pigmentation','Acne','Volume Loss'];
     body = `
       <div class="card">
         <div class="field-group">
-          <label>Skin Type</label>
+          <label>${t('clients.skinType')}</label>
           <div class="field-line"><select id="skinType">
-            ${['Normal','Oily','Dry','Combination','Sensitive'].map(t=>`<option ${c.skinType===t?'selected':''}>${t}</option>`).join('')}
+            ${['Normal','Oily','Dry','Combination','Sensitive'].map(st=>`<option value="${st}" ${c.skinType===st?'selected':''}>${t('skinType.'+st)}</option>`).join('')}
           </select></div>
         </div>
         <div class="field-group">
-          <label>Concerns</label>
+          <label>${t('clients.concerns')}</label>
           <div class="checkbox-row">
             ${concernsList.map(cc=>`
               <label class="checkbox-item">
-                <input type="checkbox" data-concern="${cc}" ${c.concerns.includes(cc)?'checked':''}> ${cc}
+                <input type="checkbox" data-concern="${cc}" ${c.concerns.includes(cc)?'checked':''}> ${t('concern.'+cc)}
               </label>`).join('')}
           </div>
         </div>
         <div class="field-group">
-          <label>Medical Notes</label>
-          <textarea id="medicalNotes" placeholder="Allergies, medications, prior procedures...">${esc(c.medicalNotes)}</textarea>
+          <label>${t('clients.medicalNotes')}</label>
+          <textarea id="medicalNotes" placeholder="${esc(t('clients.medicalNotesPlaceholder'))}">${esc(c.medicalNotes)}</textarea>
         </div>
         <div class="field-group">
-          <label>Upload Photos</label>
+          <label>${t('clients.uploadPhotos')}</label>
           <div class="upload-row">
-            <label class="upload-box">Before<input type="file" accept="image/*"></label>
-            <label class="upload-box">After<input type="file" accept="image/*"></label>
+            <label class="upload-box">${t('clients.before')}<input type="file" accept="image/*"></label>
+            <label class="upload-box">${t('clients.after')}<input type="file" accept="image/*"></label>
           </div>
         </div>
         <div class="actions" style="margin-top:8px;">
-          <button class="btn btn-primary" id="saveConsultation">Save Consultation</button>
+          <button class="btn btn-primary" id="saveConsultation">${t('clients.saveConsultation')}</button>
         </div>
       </div>`;
   } else if(activeClientTab==='photos'){
@@ -1458,116 +1843,115 @@ function renderClientDetail(){
     if(!hasConsent){
       body = `
         <div class="card">
-          <div class="card-title">Clinical Photography Consent</div>
-          <p class="muted" style="font-size:13.5px; margin-bottom:18px; line-height:1.6;">Before any before/after photos can be stored for ${esc(c.name)}, they need to consent to clinical photography. This is separate from general treatment consent — photography has its own legal basis in most jurisdictions.</p>
+          <div class="card-title">${t('clients.photoConsentTitle')}</div>
+          <p class="muted" style="font-size:13.5px; margin-bottom:18px; line-height:1.6;">${esc(tf('clients.photoConsentIntro', {name: c.name}))}</p>
           <label class="checkbox-item" style="margin-bottom:12px;">
-            <input type="checkbox" id="consentClinical"> I have obtained ${esc(c.name)}'s consent to take clinical photos for treatment documentation
+            <input type="checkbox" id="consentClinical"> ${esc(tf('clients.consentClinical', {name: c.name}))}
           </label>
           <label class="checkbox-item" style="margin-bottom:20px;">
-            <input type="checkbox" id="consentMarketing"> Client has also separately agreed these photos may be used for marketing (optional)
+            <input type="checkbox" id="consentMarketing"> ${t('clients.consentMarketing')}
           </label>
-          ${perms.canEditMedical ? `<button class="btn btn-primary" id="saveConsentBtn">Save Consent</button>` : `<p class="empty-state">Only clinical staff can record photography consent.</p>`}
+          ${perms.canEditMedical ? `<button class="btn btn-primary" id="saveConsentBtn">${t('clients.saveConsent')}</button>` : `<p class="empty-state">${t('clients.staffOnlyConsent')}</p>`}
         </div>`;
     } else {
       const sets = c.photoSets || [];
       body = `
         <div class="card">
-          <div class="card-title">Before &amp; After</div>
-          <div class="status active" style="margin-bottom:18px; display:inline-flex;">Photography consent on file${c.photoConsent.marketingConsent ? ' · marketing use approved' : ''}</div>
+          <div class="card-title">${t('clients.beforeAfter')}</div>
+          <div class="status active" style="margin-bottom:18px; display:inline-flex;">${t('clients.consentOnFile')}${c.photoConsent.marketingConsent ? t('clients.marketingApproved') : ''}</div>
           ${sets.length ? sets.map(s=>`
             <div class="photo-set">
               <div class="photo-set-meta">
                 <span>${fmtDate(s.date)}</span>${s.caption?` · ${esc(s.caption)}`:''}
-                ${perms.canDelete ? `<button class="icon-btn danger" data-del-photoset="${s.id}" title="Delete" style="float:right;">${ICONS.trash}</button>` : ''}
+                ${perms.canDelete ? `<button class="icon-btn danger" data-del-photoset="${s.id}" title="${esc(t('clients.delete'))}" style="float:right;">${ICONS.trash}</button>` : ''}
               </div>
               <div class="photo-pair">
-                <div class="photo-slot">${s.beforeUrl ? `<img src="${s.beforeUrl}" data-lightbox="${s.beforeUrl}"><span class="photo-tag">Before</span>` : `<div class="photo-empty">No before photo</div>`}</div>
-                <div class="photo-slot">${s.afterUrl ? `<img src="${s.afterUrl}" data-lightbox="${s.afterUrl}"><span class="photo-tag">After</span>` : `<div class="photo-empty">No after photo</div>`}</div>
+                <div class="photo-slot">${s.beforeUrl ? `<img src="${s.beforeUrl}" data-lightbox="${s.beforeUrl}"><span class="photo-tag">${t('clients.before')}</span>` : `<div class="photo-empty">${t('clients.noBeforePhoto')}</div>`}</div>
+                <div class="photo-slot">${s.afterUrl ? `<img src="${s.afterUrl}" data-lightbox="${s.afterUrl}"><span class="photo-tag">${t('clients.after')}</span>` : `<div class="photo-empty">${t('clients.noAfterPhoto')}</div>`}</div>
               </div>
-            </div>`).join('') : `<p class="empty-state">No photos yet.</p>`}
+            </div>`).join('') : `<p class="empty-state">${t('clients.noPhotosYet')}</p>`}
         </div>
-        ${perms.canEditMedical ? `<div class="actions"><button class="btn btn-secondary" id="addPhotoSetBtn">${ICONS.plus} Add Before/After Photos</button></div>` : ''}`;
+        ${perms.canEditMedical ? `<div class="actions"><button class="btn btn-secondary" id="addPhotoSetBtn">${ICONS.plus} ${t('clients.addPhotos')}</button></div>` : ''}`;
     }
   } else if(activeClientTab==='treatments'){
     body = `
       <div class="card">
-        <div class="card-title">Treatment History</div>
-        ${c.treatments.length ? c.treatments.map(t=>`
+        <div class="card-title">${t('clients.treatmentHistory')}</div>
+        ${c.treatments.length ? c.treatments.map(t2=>`
           <div class="treatment-row">
             <div>
-              <div class="t-name">${esc(t.name)}</div>
-              <div class="t-meta">${t.area && t.area.length ? esc(t.area.join(', '))+' · ' : ''}${esc(t.product||'—')}${t.batch?' · Batch '+esc(t.batch):''}</div>
-              ${t.notes?`<div class="t-meta">${esc(t.notes)}</div>`:''}
+              <div class="t-name">${esc(t2.name)}</div>
+              <div class="t-meta">${t2.area && t2.area.length ? esc(t2.area.join(', '))+' · ' : ''}${esc(t2.product||'—')}${t2.batch?' · '+t('clients.batch')+' '+esc(t2.batch):''}</div>
+              ${t2.notes?`<div class="t-meta">${esc(t2.notes)}</div>`:''}
             </div>
             <div class="t-right">
-              <div class="t-date">${fmtDate(t.date)}</div>
-              ${t.price?`<div class="t-price">${fmtMoney(t.price)}</div>`:''}
+              <div class="t-date">${fmtDate(t2.date)}</div>
+              ${t2.price?`<div class="t-price">${fmtMoney(t2.price)}</div>`:''}
             </div>
-          </div>`).join('') : `<p class="empty-state">No treatment history recorded yet.</p>`}
+          </div>`).join('') : `<p class="empty-state">${t('clients.noTreatments')}</p>`}
       </div>
       <div class="actions">
-        ${perms.canEditMedical ? `<button class="btn btn-secondary" id="addTreatmentFromTab">${ICONS.plus} Add Treatment</button>` : ''}
+        ${perms.canEditMedical ? `<button class="btn btn-secondary" id="addTreatmentFromTab">${ICONS.plus} ${t('clients.addTreatment')}</button>` : ''}
       </div>`;
   } else if(activeClientTab==='payments'){
     const clientInvoices = state.invoices.filter(i=>i.clientId===c.id).sort((a,b)=>b.createdDate.localeCompare(a.createdDate));
     body = `
       <div class="card">
-        <div class="card-title">Invoices &amp; Quotes</div>
+        <div class="card-title">${t('clients.invoicesQuotes')}</div>
         ${clientInvoices.length ? clientInvoices.map(inv=>`
           <div class="treatment-row" data-open-invoice-from-profile="${inv.id}" style="cursor:pointer;">
             <div>
-              <div class="t-name">${inv.type} <span class="status ${inv.status}" style="margin-left:6px;">${inv.status}</span></div>
-              <div class="t-meta">${inv.lineItems.length} item${inv.lineItems.length===1?'':'s'}</div>
+              <div class="t-name">${t('invoiceType.'+inv.type)} <span class="status ${inv.status}" style="margin-left:6px;">${t('invStatus.'+inv.status)}</span></div>
+              <div class="t-meta">${inv.lineItems.length} ${inv.lineItems.length===1?t('clients.item'):t('clients.items')}</div>
             </div>
             <div class="t-right">
               <div class="t-date">${fmtDate(inv.createdDate)}</div>
               <div class="t-price">${fmtMoney(invoiceTotal(inv))}</div>
             </div>
-          </div>`).join('') : `<p class="empty-state">No invoices or quotes yet.</p>`}
+          </div>`).join('') : `<p class="empty-state">${t('clients.noInvoices')}</p>`}
       </div>
-      ${perms.nav.includes('invoices') ? `<div class="actions"><button class="btn btn-secondary" id="draftInvoiceFromPayments">${ICONS.plus} New Invoice</button></div>` : ''}`;
+      ${perms.nav.includes('invoices') ? `<div class="actions"><button class="btn btn-secondary" id="draftInvoiceFromPayments">${ICONS.plus} ${t('clients.newInvoice')}</button></div>` : ''}`;
   } else if(activeClientTab==='documents'){
     const docs = c.documents || [];
     body = `
       <div class="card">
-        <div class="card-title">Documents</div>
+        <div class="card-title">${t('clients.documents')}</div>
         ${docs.length ? docs.map(d=>`
           <div class="treatment-row">
             <div>
               <div class="t-name">${esc(d.filename)}</div>
-              <div class="t-meta">${esc(d.fileType||'file')} · uploaded ${fmtDate(d.uploadedDate)}${!d.dataUrl ? ' · <span style="color:var(--danger);">too large to store — kept as a reference only</span>' : ''}</div>
+              <div class="t-meta">${esc(d.fileType||t('clients.file'))} · ${t('clients.uploaded')} ${fmtDate(d.uploadedDate)}${!d.dataUrl ? ' · <span style="color:var(--danger);">'+esc(t('clients.tooLarge'))+'</span>' : ''}</div>
             </div>
             <div class="row-actions">
               ${d.dataUrl ? `<button class="icon-btn" data-download-doc="${d.id}" title="Download">${ICONS.reports}</button>` : ''}
-              ${perms.canDelete ? `<button class="icon-btn danger" data-del-doc="${d.id}" title="Delete">${ICONS.trash}</button>` : ''}
+              ${perms.canDelete ? `<button class="icon-btn danger" data-del-doc="${d.id}" title="${esc(t('clients.delete'))}">${ICONS.trash}</button>` : ''}
             </div>
-          </div>`).join('') : `<p class="empty-state">No documents yet.</p>`}
+          </div>`).join('') : `<p class="empty-state">${t('clients.noDocuments')}</p>`}
       </div>
       <div class="actions">
-        <label class="btn btn-secondary" style="cursor:pointer;">${ICONS.plus} Upload Document<input type="file" id="docUploadInput" style="display:none;"></label>
+        <label class="btn btn-secondary" style="cursor:pointer;">${ICONS.plus} ${t('clients.uploadDocument')}<input type="file" id="docUploadInput" style="display:none;"></label>
       </div>`;
   } else {
-    const labelMap = {};
-    body = `<div class="card"><div class="card-title">${tabs.find(t=>t[0]===activeClientTab)[1]}</div><p class="empty-state">No ${labelMap[activeClientTab]} recorded yet.</p></div>`;
+    body = `<div class="card"><div class="card-title">${tabs.find(t=>t[0]===activeClientTab)[1]}</div></div>`;
   }
 
   return `
-    <div class="breadcrumb" id="backToClients"><span>Clients</span> &nbsp;/&nbsp; ${esc(c.name)}</div>
+    <div class="breadcrumb" id="backToClients"><span>${t('clients.title')}</span> &nbsp;/&nbsp; ${esc(c.name)}</div>
     <div class="profile-header">
       <div class="profile-left">
         <div class="avatar">${initials(c.name)}</div>
         <div>
           <div class="profile-name">${esc(c.name)}</div>
           <div class="profile-meta">
-            <div class="meta-item"><span class="meta-label">Phone</span>${esc(c.phone||'—')}</div>
-            <div class="meta-item"><span class="meta-label">Email</span>${esc(c.email||'—')}</div>
-            <div class="meta-item"><span class="meta-label">Client Since</span>${esc(c.clientSince)}</div>
+            <div class="meta-item"><span class="meta-label">${t('clients.phone')}</span>${esc(c.phone||'—')}</div>
+            <div class="meta-item"><span class="meta-label">${t('clients.email')}</span>${esc(c.email||'—')}</div>
+            <div class="meta-item"><span class="meta-label">${t('clients.clientSince')}</span>${esc(c.clientSince)}</div>
           </div>
         </div>
       </div>
       <div class="profile-actions">
-        <button class="icon-btn" id="editClientBtn" title="Edit client">${ICONS.edit}</button>
-        ${perms.canDelete ? `<button class="icon-btn danger" id="deleteClientBtn" title="Delete client">${ICONS.trash}</button>` : ''}
+        <button class="icon-btn" id="editClientBtn" title="${esc(t('clients.editClient'))}">${ICONS.edit}</button>
+        ${perms.canDelete ? `<button class="icon-btn danger" id="deleteClientBtn" title="${esc(t('clients.deleteClient'))}">${ICONS.trash}</button>` : ''}
       </div>
     </div>
     <div class="tabs">
@@ -1584,15 +1968,15 @@ function renderCalendar(){
   const practitioners = Array.from(new Set(locationAppointments.map(a=>a.practitioner).filter(Boolean)));
   return `
     <div class="topbar">
-      <div class="page-title">Calendar</div>
+      <div class="page-title">${t('cal.title')}</div>
       <div class="eyebrow">${esc(currentLocation ? currentLocation.name : '')} · ${new Date().toLocaleDateString(getLocale(),{month:'long', year:'numeric'})}</div>
     </div>
     <div class="cal-filters">
       <div>
-        <label style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:rgba(242,236,221,0.5); margin-bottom:8px;">Practitioner</label>
+        <label style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:rgba(242,236,221,0.5); margin-bottom:8px;">${t('cal.practitioner')}</label>
         <div class="field-line"><select id="calPractitioner">
-          <option ${calPractitionerFilter==='All'?'selected':''}>All</option>
-          ${practitioners.map(p=>`<option ${calPractitionerFilter===p?'selected':''}>${esc(p)}</option>`).join('')}
+          <option value="All" ${calPractitionerFilter==='All'?'selected':''}>${t('cal.all')}</option>
+          ${practitioners.map(p=>`<option value="${esc(p)}" ${calPractitionerFilter===p?'selected':''}>${esc(p)}</option>`).join('')}
         </select></div>
       </div>
     </div>
@@ -1604,19 +1988,19 @@ function renderCalendar(){
         const isToday = d.iso===todayISO();
         return `
         <div class="cal-day ${isToday?'is-today':''}">
-          <div class="cal-day-title"><span>${d.label}</span>${isToday?'<span>Today</span>':''}</div>
+          <div class="cal-day-title"><span>${d.label}</span>${isToday?`<span>${t('cal.today')}</span>`:''}</div>
           ${slots.length? slots.map(a=>`
             <div class="cal-slot">
               ${perms.canDelete ? `<button class="icon-btn danger cal-slot-del" data-del-appt="${a.id}" title="Remove">${ICONS.trash}</button>` : ''}
               <div class="cal-slot-time">${esc(a.time)}</div>
               <div class="cal-slot-title">${esc(a.service)}</div>
               <div class="cal-slot-meta">${esc(a.clientName)} · ${esc(a.practitioner||'—')}</div>
-            </div>`).join('') : `<div class="cal-empty">No appointments</div>`}
+            </div>`).join('') : `<div class="cal-empty">${t('cal.noAppointments')}</div>`}
         </div>`;
       }).join('')}
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" id="newApptBtn">${ICONS.plus} New Appointment</button>
+      <button class="btn btn-secondary" id="newApptBtn">${ICONS.plus} ${t('cal.newAppointment')}</button>
     </div>`;
 }
 
@@ -1625,8 +2009,8 @@ function renderLeads(){
   const perms = currentPerms();
   return `
     <div class="topbar">
-      <div class="page-title">Sales Pipeline</div>
-      <div class="eyebrow">${state.leads.length} In Pipeline</div>
+      <div class="page-title">${t('leads.title')}</div>
+      <div class="eyebrow">${esc(tf('leads.inPipeline', {n: state.leads.length}))}</div>
     </div>
     <div class="kanban">
       ${stages.map(stage=>{
@@ -1634,22 +2018,22 @@ function renderLeads(){
         const idx = stages.indexOf(stage);
         return `
         <div class="kanban-col">
-          <div class="kanban-col-title">${stage}</div>
+          <div class="kanban-col-title">${t('leadStage.'+stage)}</div>
           ${cards.length ? cards.map(l=>`
             <div class="kanban-card">
               <div class="lead-name">${esc(l.name)}</div>
               <div class="lead-source">${esc(l.source)}</div>
-              ${l.convertedClientId ? `<div class="status active" style="margin-top:6px;">Converted to client</div>` : ''}
+              ${l.convertedClientId ? `<div class="status active" style="margin-top:6px;">${t('leads.convertedToClient')}</div>` : ''}
               <div class="kanban-card-actions">
-                ${idx<stages.length-1?`<button class="move" data-lead="${l.id}" data-next="${stages[idx+1]}">Move →</button>`:'<span></span>'}
-                ${perms.canDelete ? `<button class="icon-btn danger" data-del-lead="${l.id}" title="Delete">${ICONS.trash}</button>` : ''}
+                ${idx<stages.length-1?`<button class="move" data-lead="${l.id}" data-next="${stages[idx+1]}">${t('leads.move')}</button>`:'<span></span>'}
+                ${perms.canDelete ? `<button class="icon-btn danger" data-del-lead="${l.id}" title="${esc(t('common.delete'))}">${ICONS.trash}</button>` : ''}
               </div>
-            </div>`).join('') : `<p class="empty-state">Empty</p>`}
+            </div>`).join('') : `<p class="empty-state">${t('leads.empty')}</p>`}
         </div>`;
       }).join('')}
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" id="addLeadBtn">${ICONS.plus} Add Lead</button>
+      <button class="btn btn-secondary" id="addLeadBtn">${ICONS.plus} ${t('leads.addLead')}</button>
     </div>`;
 }
 
@@ -1658,32 +2042,32 @@ function renderInventory(){
   const perms = currentPerms();
   return `
     <div class="topbar">
-      <div class="page-title">Inventory</div>
-      <div class="eyebrow">${state.inventory.length} Products</div>
+      <div class="page-title">${t('inv.title')}</div>
+      <div class="eyebrow">${esc(tf('inv.products', {n: state.inventory.length}))}</div>
     </div>
-    ${alerts.map(a=>`<div class="alert">⚠ ${esc(a.name)} expires in ${esc(a.expiresIn)} days</div>`).join('')}
+    ${alerts.map(a=>`<div class="alert">⚠ ${esc(tf('inv.expiresAlert', {name: a.name, days: a.expiresIn}))}</div>`).join('')}
     <div class="card" style="padding:0;">
       ${state.inventory.length ? `
       <table class="responsive-table">
-        <thead><tr><th>Product</th><th>Stock</th><th>Price</th><th></th></tr></thead>
+        <thead><tr><th>${t('inv.colProduct')}</th><th>${t('inv.colStock')}</th><th>${t('inv.colPrice')}</th><th></th></tr></thead>
         <tbody>
           ${state.inventory.map(i=>`
             <tr>
-              <td data-label="Product" class="name-cell">${esc(i.name)}</td>
-              <td data-label="Stock" class="muted">${esc(i.stock)}</td>
-              <td data-label="Price" class="muted">${i.price ? fmtMoney(i.price) : '—'}</td>
+              <td data-label="${esc(t('inv.colProduct'))}" class="name-cell">${esc(i.name)}</td>
+              <td data-label="${esc(t('inv.colStock'))}" class="muted">${esc(i.stock)}</td>
+              <td data-label="${esc(t('inv.colPrice'))}" class="muted">${i.price ? fmtMoney(i.price) : '—'}</td>
               <td data-label="">
                 <div class="row-actions">
-                  <button class="icon-btn" data-edit-inv="${i.id}" title="Edit">${ICONS.edit}</button>
-                  ${perms.canDelete ? `<button class="icon-btn danger" data-del-inv="${i.id}" title="Delete">${ICONS.trash}</button>` : ''}
+                  <button class="icon-btn" data-edit-inv="${i.id}" title="${esc(t('common.edit'))}">${ICONS.edit}</button>
+                  ${perms.canDelete ? `<button class="icon-btn danger" data-del-inv="${i.id}" title="${esc(t('common.delete'))}">${ICONS.trash}</button>` : ''}
                 </div>
               </td>
             </tr>`).join('')}
         </tbody>
-      </table>` : `<p class="empty-state" style="padding:24px 26px;">No products yet.</p>`}
+      </table>` : `<p class="empty-state" style="padding:24px 26px;">${t('inv.noProducts')}</p>`}
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" id="addProductBtn">${ICONS.plus} Add Product</button>
+      <button class="btn btn-secondary" id="addProductBtn">${ICONS.plus} ${t('inv.addProduct')}</button>
     </div>`;
 }
 
@@ -1703,33 +2087,33 @@ function renderInvoices(){
   const items = [...state.invoices].sort((a,b)=>b.createdDate.localeCompare(a.createdDate));
   return `
     <div class="topbar">
-      <div class="page-title">Invoices &amp; Quotes</div>
-      <div class="eyebrow">${state.invoices.length} Total</div>
+      <div class="page-title">${t('invoices.title')}</div>
+      <div class="eyebrow">${esc(tf('invoices.total', {n: state.invoices.length}))}</div>
     </div>
     <div class="card" style="padding:0;">
       ${items.length ? `
       <table class="responsive-table">
-        <thead><tr><th>#</th><th>Client</th><th>Type</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr></thead>
+        <thead><tr><th>${t('invoices.colNumber')}</th><th>${t('invoices.colClient')}</th><th>${t('invoices.colType')}</th><th>${t('invoices.colTotal')}</th><th>${t('invoices.colStatus')}</th><th>${t('invoices.colDate')}</th><th></th></tr></thead>
         <tbody>
           ${items.map(inv=>`
             <tr data-open-invoice="${inv.id}" style="cursor:pointer;">
-              <td data-label="#" class="muted" style="font-family:'JetBrains Mono', monospace; font-size:12.5px;">${esc(inv.invoiceNumber||'—')}</td>
-              <td data-label="Client" class="name-cell">${esc(inv.clientName)}</td>
-              <td data-label="Type"><span class="invoice-type-pill ${inv.type}">${inv.type}</span></td>
-              <td data-label="Total" class="muted">${fmtMoney(invoiceTotal(inv))}</td>
-              <td data-label="Status"><span class="status ${inv.status}">${inv.status}</span></td>
-              <td data-label="Date" class="muted">${fmtDate(inv.createdDate)}</td>
+              <td data-label="${esc(t('invoices.colNumber'))}" class="muted" style="font-family:'JetBrains Mono', monospace; font-size:12.5px;">${esc(inv.invoiceNumber||'—')}</td>
+              <td data-label="${esc(t('invoices.colClient'))}" class="name-cell">${esc(inv.clientName)}</td>
+              <td data-label="${esc(t('invoices.colType'))}"><span class="invoice-type-pill ${inv.type}">${t('invoiceType.'+inv.type)}</span></td>
+              <td data-label="${esc(t('invoices.colTotal'))}" class="muted">${fmtMoney(invoiceTotal(inv))}</td>
+              <td data-label="${esc(t('invoices.colStatus'))}"><span class="status ${inv.status}">${t('invStatus.'+inv.status)}</span></td>
+              <td data-label="${esc(t('invoices.colDate'))}" class="muted">${fmtDate(inv.createdDate)}</td>
               <td data-label="">
-                ${perms.canDelete ? `<button class="icon-btn danger" data-del-invoice="${inv.id}" title="Delete">${ICONS.trash}</button>` : ''}
+                ${perms.canDelete ? `<button class="icon-btn danger" data-del-invoice="${inv.id}" title="${esc(t('common.delete'))}">${ICONS.trash}</button>` : ''}
               </td>
             </tr>`).join('')}
         </tbody>
-      </table>` : `<p class="empty-state" style="padding:24px 26px;">No invoices or quotes yet.</p>`}
+      </table>` : `<p class="empty-state" style="padding:24px 26px;">${t('invoices.noInvoices')}</p>`}
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" id="exportInvoicesCsv">${ICONS.reports} Export CSV</button>
-      <button class="btn btn-secondary" id="newQuoteBtn">${ICONS.plus} New Quote</button>
-      <button class="btn btn-primary" id="newInvoiceBtn">${ICONS.plus} New Invoice</button>
+      <button class="btn btn-secondary" id="exportInvoicesCsv">${ICONS.reports} ${t('invoices.exportCsv')}</button>
+      <button class="btn btn-secondary" id="newQuoteBtn">${ICONS.plus} ${t('invoices.newQuote')}</button>
+      <button class="btn btn-primary" id="newInvoiceBtn">${ICONS.plus} ${t('invoices.newInvoice')}</button>
     </div>`;
 }
 
@@ -1881,39 +2265,39 @@ function renderInvoiceBuilderModal(){
   const d = _invoiceDraft;
   const total = d.lineItems.reduce((sum,li)=>sum + (Number(li.quantity)||0)*(Number(li.unitPrice)||0), 0);
   openModal(`
-    <div class="modal-title">New ${d.type}</div>
-    <div class="field-group"><label>Client</label><div class="field-line"><select id="invClient">
+    <div class="modal-title">${esc(tf('invoices.newTypeTitle', {type: t('invoiceType.'+d.type)}))}</div>
+    <div class="field-group"><label>${t('invoices.client')}</label><div class="field-line"><select id="invClient">
       ${state.clients.map(c=>`<option value="${c.id}" ${c.id===d.clientId?'selected':''}>${esc(c.name)}</option>`).join('')}
     </select></div></div>
-    <div class="field-group"><label>Type</label><div class="field-line"><select id="invType">
-      <option ${d.type==='Quote'?'selected':''}>Quote</option>
-      <option ${d.type==='Invoice'?'selected':''}>Invoice</option>
+    <div class="field-group"><label>${t('invoices.type')}</label><div class="field-line"><select id="invType">
+      <option value="Quote" ${d.type==='Quote'?'selected':''}>${t('invoiceType.Quote')}</option>
+      <option value="Invoice" ${d.type==='Invoice'?'selected':''}>${t('invoiceType.Invoice')}</option>
     </select></div></div>
     <div class="field-group">
-      <label>Line Items</label>
+      <label>${t('invoices.lineItems')}</label>
       <div id="lineItemsWrap">
         ${d.lineItems.map((li,idx)=>`
           <div class="line-item-row" data-line="${li.id}">
             <div>
-              <label>Item</label>
+              <label>${t('invoices.item')}</label>
               <select class="li-product" data-line="${li.id}">
-                <option value="" ${!li.productId?'selected':''}>Custom / Service...</option>
-                ${state.inventory.map(p=>`<option value="${p.id}" ${li.productId===p.id?'selected':''}>${esc(p.name)} (${p.stock} in stock)</option>`).join('')}
+                <option value="" ${!li.productId?'selected':''}>${t('invoices.customService')}</option>
+                ${state.inventory.map(p=>`<option value="${p.id}" ${li.productId===p.id?'selected':''}>${esc(p.name)} (${esc(tf('invoices.inStock', {n: p.stock}))})</option>`).join('')}
               </select>
-              ${!li.productId ? `<input class="li-desc" data-line="${li.id}" type="text" value="${esc(li.description)}" placeholder="Description" style="margin-top:8px; width:100%; border:none; border-bottom:1px solid rgba(242,236,221,0.25); padding:6px 2px; font-size:13px;">` : ''}
+              ${!li.productId ? `<input class="li-desc" data-line="${li.id}" type="text" value="${esc(li.description)}" placeholder="${esc(t('invoices.description'))}" style="margin-top:8px; width:100%; border:none; border-bottom:1px solid rgba(242,236,221,0.25); padding:6px 2px; font-size:13px;">` : ''}
             </div>
-            <div><label>Qty</label><input class="li-qty" data-line="${li.id}" type="number" min="1" value="${li.quantity}" style="width:100%; border:none; border-bottom:1px solid rgba(242,236,221,0.25); padding:6px 2px;"></div>
-            <div><label>Price</label><input class="li-price" data-line="${li.id}" type="number" value="${li.unitPrice}" style="width:100%; border:none; border-bottom:1px solid rgba(242,236,221,0.25); padding:6px 2px;"></div>
+            <div><label>${t('invoices.qty')}</label><input class="li-qty" data-line="${li.id}" type="number" min="1" value="${li.quantity}" style="width:100%; border:none; border-bottom:1px solid rgba(242,236,221,0.25); padding:6px 2px;"></div>
+            <div><label>${t('invoices.price')}</label><input class="li-price" data-line="${li.id}" type="number" value="${li.unitPrice}" style="width:100%; border:none; border-bottom:1px solid rgba(242,236,221,0.25); padding:6px 2px;"></div>
             <button class="line-item-remove" data-remove-line="${li.id}" title="Remove">${ICONS.trash}</button>
           </div>`).join('')}
       </div>
-      <button class="btn btn-secondary btn-sm" id="addLineBtn" type="button">${ICONS.plus} Add Line</button>
+      <button class="btn btn-secondary btn-sm" id="addLineBtn" type="button">${ICONS.plus} ${t('invoices.addLine')}</button>
     </div>
-    <div class="invoice-total-row"><span>Total</span><span>${fmtMoney(total)}</span></div>
-    <div class="field-group" style="margin-top:16px;"><label>Notes</label><textarea id="invNotes" placeholder="Payment terms, thank-you note, etc.">${esc(d.notes)}</textarea></div>
+    <div class="invoice-total-row"><span>${t('invoices.colTotal')}</span><span>${fmtMoney(total)}</span></div>
+    <div class="field-group" style="margin-top:16px;"><label>${t('invoices.notes')}</label><textarea id="invNotes" placeholder="${esc(t('invoices.notesPlaceholder'))}">${esc(d.notes)}</textarea></div>
     <div class="modal-actions">
-      <button class="btn btn-secondary" id="cancelModal">Cancel</button>
-      <button class="btn btn-primary" id="saveInvoiceBtn">Save ${d.type}</button>
+      <button class="btn btn-secondary" id="cancelModal">${t('common.cancel')}</button>
+      <button class="btn btn-primary" id="saveInvoiceBtn">${esc(tf('invoices.saveType', {type: t('invoiceType.'+d.type)}))}</button>
     </div>`);
 
   document.getElementById('invClient').addEventListener('change', e=>{ d.clientId = e.target.value; });
@@ -2063,23 +2447,23 @@ function openInvoiceDetailModal(invoice){
   openModal(`
     <div class="modal-title">${esc(invoice.invoiceNumber||'')} — ${esc(invoice.clientName)}</div>
     <div style="margin-bottom:16px;">
-      <span class="invoice-type-pill ${invoice.type}">${invoice.type}</span>
-      <span class="status ${invoice.status}" style="margin-left:8px;">${invoice.status}</span>
+      <span class="invoice-type-pill ${invoice.type}">${t('invoiceType.'+invoice.type)}</span>
+      <span class="status ${invoice.status}" style="margin-left:8px;">${t('invStatus.'+invoice.status)}</span>
     </div>
     ${invoice.lineItems.map(li=>`
       <div class="detail-row"><span class="detail-label">${esc(li.description)} × ${li.quantity}</span><span class="detail-value">${fmtMoney(li.unitPrice*li.quantity)}</span></div>
     `).join('')}
-    <div class="invoice-total-row"><span>Total</span><span>${fmtMoney(invoiceTotal(invoice))}</span></div>
+    <div class="invoice-total-row"><span>${t('invoices.colTotal')}</span><span>${fmtMoney(invoiceTotal(invoice))}</span></div>
     ${invoice.notes ? `<p class="muted" style="font-size:13px; margin-top:12px;">${esc(invoice.notes)}</p>` : ''}
-    <p class="empty-state" style="margin-top:14px;">Sending hands off to your own email/WhatsApp app with the invoice pre-filled — this prototype has no backend to send on its own.</p>
+    <p class="empty-state" style="margin-top:14px;">${t('invoices.prototypeNote')}</p>
     <div class="send-actions">
-      <button class="btn btn-secondary" id="sendEmailBtn">${ICONS.email} Email</button>
-      <button class="btn btn-secondary" id="sendWhatsappBtn">${ICONS.whatsapp} WhatsApp</button>
-      <button class="btn btn-secondary" id="printInvoiceBtn">Print / Save PDF</button>
-      <button class="btn btn-primary" id="markPaidBtn" style="margin-left:auto;">Mark Paid</button>
+      <button class="btn btn-secondary" id="sendEmailBtn">${ICONS.email} ${t('invoices.email')}</button>
+      <button class="btn btn-secondary" id="sendWhatsappBtn">${ICONS.whatsapp} ${t('invoices.whatsapp')}</button>
+      <button class="btn btn-secondary" id="printInvoiceBtn">${t('invoices.printSavePdf')}</button>
+      <button class="btn btn-primary" id="markPaidBtn" style="margin-left:auto;">${t('invoices.markPaid')}</button>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-secondary" id="cancelModal">Close</button>
+      <button class="btn btn-secondary" id="cancelModal">${t('common.close')}</button>
     </div>`);
 
   document.getElementById('printInvoiceBtn').addEventListener('click', ()=>{
@@ -2121,12 +2505,12 @@ function renderCampaigns(){
   const perms = currentPerms();
   return `
     <div class="topbar">
-      <div class="page-title">Campaigns</div>
-      <div class="credit-badge">${ICONS.ai} <strong>${state.contentCredits}</strong> content credits <button class="btn btn-secondary btn-sm" id="buyCreditsBtn" style="margin-left:8px;">Buy More</button></div>
+      <div class="page-title">${t('campaigns.title')}</div>
+      <div class="credit-badge">${ICONS.ai} <strong>${state.contentCredits}</strong> ${t('campaigns.contentCreditsLabel')} <button class="btn btn-secondary btn-sm" id="buyCreditsBtn" style="margin-left:8px;">${t('campaigns.buyMore')}</button></div>
     </div>
     <div class="campaigns-subtabs">
-      <button class="campaigns-subtab ${campaignsSubTab==='campaigns'?'active':''}" data-subtab="campaigns">Email/SMS Campaigns</button>
-      <button class="campaigns-subtab ${campaignsSubTab==='social'?'active':''}" data-subtab="social">Social Content</button>
+      <button class="campaigns-subtab ${campaignsSubTab==='campaigns'?'active':''}" data-subtab="campaigns">${t('campaigns.emailSmsTab')}</button>
+      <button class="campaigns-subtab ${campaignsSubTab==='social'?'active':''}" data-subtab="social">${t('campaigns.socialTab')}</button>
     </div>
     ${campaignsSubTab==='campaigns' ? renderCampaignsList(perms) : renderSocialContent(perms)}`;
 }
@@ -2137,24 +2521,24 @@ function renderCampaignsList(perms){
       ${state.campaigns.length ? state.campaigns.map(k=>`
         <div class="campaign-card">
           <div class="row-actions" style="position:absolute; top:18px; right:18px;">
-            <button class="icon-btn" data-edit-campaign="${k.id}" title="Edit">${ICONS.edit}</button>
-            ${perms.canDelete ? `<button class="icon-btn danger" data-del-campaign="${k.id}" title="Delete">${ICONS.trash}</button>` : ''}
+            <button class="icon-btn" data-edit-campaign="${k.id}" title="${esc(t('common.edit'))}">${ICONS.edit}</button>
+            ${perms.canDelete ? `<button class="icon-btn danger" data-del-campaign="${k.id}" title="${esc(t('common.delete'))}">${ICONS.trash}</button>` : ''}
           </div>
           <div class="campaign-name">${esc(k.name)}</div>
           <div class="content-type-pill" style="margin-bottom:10px;">${esc(k.type||'Email')}</div>
-          <div class="campaign-stat-label">Audience</div>
-          <div class="campaign-stat-value" style="font-size:15px;">${getAudienceClients(k.audience).length} clients</div>
-          <div class="campaign-stat-label">Status</div>
-          <button class="status-pill ${k.status}" data-toggle-campaign="${k.id}">${k.status}</button>
-          ${k.body ? `<p class="muted" style="font-size:12px; margin-top:14px; line-height:1.5;">${esc((k.body||'').slice(0,90))}${(k.body||'').length>90?'…':''}</p>` : `<p class="empty-state" style="margin-top:14px;">No message content yet — click edit to add it.</p>`}
+          <div class="campaign-stat-label">${t('campaigns.audience')}</div>
+          <div class="campaign-stat-value" style="font-size:15px;">${getAudienceClients(k.audience).length} ${t('sales.clientsWord')}</div>
+          <div class="campaign-stat-label">${t('campaigns.status')}</div>
+          <button class="status-pill ${k.status}" data-toggle-campaign="${k.id}">${t('campaignStatus.'+k.status)}</button>
+          ${k.body ? `<p class="muted" style="font-size:12px; margin-top:14px; line-height:1.5;">${esc((k.body||'').slice(0,90))}${(k.body||'').length>90?'…':''}</p>` : `<p class="empty-state" style="margin-top:14px;">${t('campaigns.noContent')}</p>`}
           <div class="actions" style="margin-top:14px;">
-            <button class="btn btn-secondary btn-sm" data-copy-campaign="${k.id}">Copy Message</button>
-            <button class="btn btn-secondary btn-sm" data-send-campaign="${k.id}">Send</button>
+            <button class="btn btn-secondary btn-sm" data-copy-campaign="${k.id}">${t('campaigns.copyMessage')}</button>
+            <button class="btn btn-secondary btn-sm" data-send-campaign="${k.id}">${t('common.send')}</button>
           </div>
-        </div>`).join('') : `<p class="empty-state">No campaigns yet.</p>`}
+        </div>`).join('') : `<p class="empty-state">${t('campaigns.noCampaigns')}</p>`}
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" id="createCampaignBtn">${ICONS.plus} Create Campaign</button>
+      <button class="btn btn-secondary" id="createCampaignBtn">${ICONS.plus} ${t('campaigns.createCampaign')}</button>
     </div>`;
 }
 
@@ -2490,69 +2874,69 @@ function renderSales(){
 
   return `
     <div class="topbar">
-      <div class="page-title">Sales Team</div>
-      <div class="eyebrow">${totalClients} client${totalClients===1?'':'s'} attributed</div>
+      <div class="page-title">${t('sales.title')}</div>
+      <div class="eyebrow">${esc(tf('sales.clientsAttributed', {n: totalClients}))}</div>
     </div>
 
     <div class="topbar" style="margin-bottom:14px;">
-      <div class="eyebrow">Sales Target Board</div>
-      ${perms.canManageStaff ? `<button class="btn btn-secondary btn-sm" id="updateTargetsBtn">${ICONS.edit} Update Targets</button>` : ''}
+      <div class="eyebrow">${t('sales.targetBoard')}</div>
+      ${perms.canManageStaff ? `<button class="btn btn-secondary btn-sm" id="updateTargetsBtn">${ICONS.edit} ${t('sales.updateTargets')}</button>` : ''}
     </div>
     ${targets.org.target > 0 ? `
       <div class="target-card ${targets.org.met ? 'met' : ''}">
         <div class="target-header">
-          <div class="target-name">Organization-Wide Target</div>
+          <div class="target-name">${t('sales.orgWideTarget')}</div>
           ${targets.org.met
-            ? `<span class="target-bonus-badge">✓ Met — everyone gets +${targets.org.bonusPercent}% bonus</span>`
-            : `<span class="target-bonus-badge pending">+${targets.org.bonusPercent}% bonus for everyone if met</span>`}
+            ? `<span class="target-bonus-badge">${esc(tf('sales.orgMet', {pct: targets.org.bonusPercent}))}</span>`
+            : `<span class="target-bonus-badge pending">${esc(tf('sales.orgPending', {pct: targets.org.bonusPercent}))}</span>`}
         </div>
         <div class="target-bar"><div class="target-bar-fill ${targets.org.met?'met':''}" style="width:${targets.org.progress.toFixed(0)}%;"></div></div>
-        <div class="target-meta"><span>${fmtMoney(targets.org.revenue)} this month</span><span>Target: ${fmtMoney(targets.org.target)}</span></div>
-      </div>` : `<p class="empty-state" style="margin-bottom:16px;">No organization-wide target set — configure one in Settings → Sales Commission Model.</p>`}
+        <div class="target-meta"><span>${esc(tf('sales.thisMonth', {amount: fmtMoney(targets.org.revenue)}))}</span><span>${esc(tf('sales.target', {amount: fmtMoney(targets.org.target)}))}</span></div>
+      </div>` : `<p class="empty-state" style="margin-bottom:16px;">${t('sales.noOrgTarget')}</p>`}
 
-    ${targets.individuals.length ? targets.individuals.map(t=>`
-      <div class="target-card ${t.met ? 'met' : ''}">
+    ${targets.individuals.length ? targets.individuals.map(t2=>`
+      <div class="target-card ${t2.met ? 'met' : ''}">
         <div class="target-header">
-          <div class="target-name">${esc(t.name)}</div>
-          ${t.met
-            ? `<span class="target-bonus-badge">✓ Target met — +${t.bonusPercent}% bonus</span>`
-            : `<span class="target-bonus-badge pending">+${t.bonusPercent}% bonus if met</span>`}
+          <div class="target-name">${esc(t2.name)}</div>
+          ${t2.met
+            ? `<span class="target-bonus-badge">${esc(tf('sales.individualMet', {pct: t2.bonusPercent}))}</span>`
+            : `<span class="target-bonus-badge pending">${esc(tf('sales.individualPending', {pct: t2.bonusPercent}))}</span>`}
         </div>
-        <div class="target-bar"><div class="target-bar-fill ${t.met?'met':''}" style="width:${t.progress.toFixed(0)}%;"></div></div>
-        <div class="target-meta"><span>${fmtMoney(t.revenue)} this month</span><span>Target: ${fmtMoney(t.target)}</span></div>
-        ${t.met || targets.org.met ? `<div class="target-meta" style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line);">
-          <span>${t.met ? `Individual bonus: ${fmtMoney(t.individualBonus)}` : ''}</span>
-          <span>${targets.org.met ? `Org bonus share: ${fmtMoney(t.orgBonusShare)}` : ''}</span>
+        <div class="target-bar"><div class="target-bar-fill ${t2.met?'met':''}" style="width:${t2.progress.toFixed(0)}%;"></div></div>
+        <div class="target-meta"><span>${esc(tf('sales.thisMonth', {amount: fmtMoney(t2.revenue)}))}</span><span>${esc(tf('sales.target', {amount: fmtMoney(t2.target)}))}</span></div>
+        ${t2.met || targets.org.met ? `<div class="target-meta" style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line);">
+          <span>${t2.met ? esc(tf('sales.individualBonus', {amount: fmtMoney(t2.individualBonus)})) : ''}</span>
+          <span>${targets.org.met ? esc(tf('sales.orgBonusShare', {amount: fmtMoney(t2.orgBonusShare)})) : ''}</span>
         </div>` : ''}
-      </div>`).join('') : `<p class="empty-state" style="margin-bottom:24px;">No individual targets set yet — add them per person under Settings → Staff.</p>`}
+      </div>`).join('') : `<p class="empty-state" style="margin-bottom:24px;">${t('sales.noIndividualTargets')}</p>`}
 
-    <div class="empty-state" style="margin-bottom:24px; line-height:1.6;">Bonus figures are planning calculations from logged treatment revenue — same as commission, they're not connected to actual payroll.</div>
+    <div class="empty-state" style="margin-bottom:24px; line-height:1.6;">${t('sales.bonusDisclaimer')}</div>
 
     <div class="grid3" style="margin-bottom:24px;">
-      <div class="card"><div class="card-title">Total Client Revenue</div><div class="stat-value accent">${fmtMoney(totalRevenue)}</div><div class="stat-caption">All-time, across attributed clients</div></div>
-      <div class="card"><div class="card-title">Origination Commission Owed</div><div class="stat-value">${fmtMoney(totalCommissionOwed)}</div><div class="stat-caption">This month, after depreciation</div></div>
-      <div class="card"><div class="card-title">Commission Model</div><div class="stat-value" style="font-size:20px;">${state.clinic.originationCommissionRate}% / ${state.clinic.depreciationPeriodYears}yr</div><div class="stat-caption">Configurable in Settings</div></div>
+      <div class="card"><div class="card-title">${t('sales.totalClientRevenue')}</div><div class="stat-value accent">${fmtMoney(totalRevenue)}</div><div class="stat-caption">${t('sales.allTimeAcrossAttributed')}</div></div>
+      <div class="card"><div class="card-title">${t('sales.commissionOwed')}</div><div class="stat-value">${fmtMoney(totalCommissionOwed)}</div><div class="stat-caption">${t('sales.thisMonthAfterDep')}</div></div>
+      <div class="card"><div class="card-title">${t('sales.commissionModel')}</div><div class="stat-value" style="font-size:20px;">${state.clinic.originationCommissionRate}% / ${state.clinic.depreciationPeriodYears}yr</div><div class="stat-caption">${t('sales.configurableInSettings')}</div></div>
     </div>
 
     ${perms.canManageStaff ? `
     <div class="card" style="margin-bottom:24px; ${pending.length ? 'border-color:var(--rose-gold);' : ''}">
-      <div class="card-title">Pending Approvals ${pending.length ? `<span class="status-pill Sent" style="margin-left:8px;">${pending.length}</span>` : ''}</div>
-      <p class="muted" style="font-size:12.5px; margin-bottom:14px;">New procedures sold to a client need office sign-off before commission accrues — accountability check before money is owed.</p>
+      <div class="card-title">${t('sales.pendingApprovals')} ${pending.length ? `<span class="status-pill Sent" style="margin-left:8px;">${pending.length}</span>` : ''}</div>
+      <p class="muted" style="font-size:12.5px; margin-bottom:14px;">${t('sales.pendingApprovalsNote')}</p>
       ${pending.length ? pending.map(p=>`
         <div class="detail-row" style="align-items:flex-start;">
           <div>
             <div class="detail-label" style="color:var(--bone); font-weight:500;">${esc(p.treatment.name)} — ${esc(p.clientName)}</div>
-            <div class="muted" style="font-size:12px; margin-top:2px;">Sold by ${esc((state.staff.find(s=>s.id===p.treatment.soldBy)||{}).name || 'Unknown')} · ${fmtDate(p.treatment.date)} · ${fmtMoney(p.treatment.price)}</div>
+            <div class="muted" style="font-size:12px; margin-top:2px;">${esc(tf('sales.soldBy', {name: (state.staff.find(s=>s.id===p.treatment.soldBy)||{}).name || 'Unknown'}))} · ${fmtDate(p.treatment.date)} · ${fmtMoney(p.treatment.price)}</div>
           </div>
           <div class="row-actions">
-            <button class="btn btn-secondary btn-sm" data-reject-sale="${p.clientId}|${p.treatment.date}|${esc(p.treatment.name)}">Reject</button>
-            <button class="btn btn-primary btn-sm" data-approve-sale="${p.clientId}|${p.treatment.date}|${esc(p.treatment.name)}">Approve</button>
+            <button class="btn btn-secondary btn-sm" data-reject-sale="${p.clientId}|${p.treatment.date}|${esc(p.treatment.name)}">${t('sales.reject')}</button>
+            <button class="btn btn-primary btn-sm" data-approve-sale="${p.clientId}|${p.treatment.date}|${esc(p.treatment.name)}">${t('sales.approve')}</button>
           </div>
-        </div>`).join('') : `<p class="empty-state">Nothing pending — all sales verified.</p>`}
+        </div>`).join('') : `<p class="empty-state">${t('sales.nothingPending')}</p>`}
     </div>` : ''}
 
     <div class="card" style="margin-bottom:24px;">
-      <div class="card-title">Revenue Share by Account Originator</div>
+      <div class="card-title">${t('sales.revenueShare')}</div>
       ${totalRevenue > 0 ? `
         <div class="pie-wrap">
           <div class="pie-chart" style="background: conic-gradient(${gradientStops});"></div>
@@ -2564,28 +2948,28 @@ function renderSales(){
                 <span class="pie-legend-value">${fmtMoney(m.allTimeRevenue)} (${totalRevenue>0?(m.allTimeRevenue/totalRevenue*100).toFixed(0):0}%)</span>
               </div>`).join('')}
           </div>
-        </div>` : `<p class="empty-state">No revenue attributed to any originator yet.</p>`}
+        </div>` : `<p class="empty-state">${t('sales.noRevenueAttributed')}</p>`}
     </div>
 
-    <div class="eyebrow" style="margin-bottom:14px;">Directory</div>
+    <div class="eyebrow" style="margin-bottom:14px;">${t('sales.directory')}</div>
     ${metrics.length ? metrics.map(m=>{
       const depDays = (state.clinic.depreciationPeriodYears||2)*365;
       return `
       <div class="sales-agent-card" data-view-agent="${m.staffId}">
         <div class="sales-agent-header">
           <div class="sales-agent-name">${esc(m.name)} <span class="muted" style="font-size:12px; font-weight:400;">· ${esc(m.role)}</span></div>
-          <span class="status active">${m.clientCount} client${m.clientCount===1?'':'s'}</span>
+          <span class="status active">${m.clientCount} ${t('sales.clientsWord')}</span>
         </div>
         <div class="sales-agent-stats">
-          <div><div class="sales-agent-stat-label">This Month Revenue</div><div class="sales-agent-stat-value">${fmtMoney(m.thisMonthRevenue)}</div></div>
-          <div><div class="sales-agent-stat-label">Commission Owed</div><div class="sales-agent-stat-value" style="color:var(--rose-gold);">${fmtMoney(m.commissionOwed)}</div></div>
-          <div><div class="sales-agent-stat-label">All-Time Revenue</div><div class="sales-agent-stat-value">${fmtMoney(m.allTimeRevenue)}</div></div>
-          <div><div class="sales-agent-stat-label">Projected Next Mo.</div><div class="sales-agent-stat-value">${fmtMoney(m.projectedNextMonth)}</div></div>
+          <div><div class="sales-agent-stat-label">${t('sales.thisMonthRevenue')}</div><div class="sales-agent-stat-value">${fmtMoney(m.thisMonthRevenue)}</div></div>
+          <div><div class="sales-agent-stat-label">${t('sales.commissionOwedShort')}</div><div class="sales-agent-stat-value" style="color:var(--rose-gold);">${fmtMoney(m.commissionOwed)}</div></div>
+          <div><div class="sales-agent-stat-label">${t('sales.allTimeRevenue')}</div><div class="sales-agent-stat-value">${fmtMoney(m.allTimeRevenue)}</div></div>
+          <div><div class="sales-agent-stat-label">${t('sales.projectedNextMo')}</div><div class="sales-agent-stat-value">${fmtMoney(m.projectedNextMonth)}</div></div>
         </div>
       </div>`;
-    }).join('') : `<p class="empty-state">No staff with attributed clients yet.</p>`}
+    }).join('') : `<p class="empty-state">${t('sales.noStaffAttributed')}</p>`}
 
-    <p class="empty-state" style="margin-top:8px; line-height:1.6;">Commission owed is a projection based on logged treatments and the depreciation schedule below — it's a planning figure, not a payroll-ready calculation, and isn't connected to any actual payment.</p>`;
+    <p class="empty-state" style="margin-top:8px; line-height:1.6;">${t('sales.commissionDisclaimer')}</p>`;
 }
 
 function renderReports(){
@@ -2900,14 +3284,14 @@ function renderTeamChat(){
       loadTeamChat().then(()=>{ teamChatLoading = false; if(activeView==='teamchat') render(); });
     }
     return `
-      <div class="topbar"><div class="page-title">Team Chat</div></div>
-      <p class="empty-state">Loading…</p>`;
+      <div class="topbar"><div class="page-title">${t('teamchat.title')}</div></div>
+      <p class="empty-state">${t('teamchat.loading')}</p>`;
   }
   const me = state.staff.find(s=>s.id===state.currentStaffId);
   return `
     <div class="topbar">
-      <div class="page-title">Team Chat</div>
-      <div class="eyebrow">Work-related only — visible to everyone using this CRM</div>
+      <div class="page-title">${t('teamchat.title')}</div>
+      <div class="eyebrow">${t('teamchat.subtitle')}</div>
     </div>
     <div class="chat-window" id="teamChatWindow">
       ${teamChatMessages.length ? teamChatMessages.map(m=>`
@@ -2915,11 +3299,11 @@ function renderTeamChat(){
           <div style="font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--rose-gold); margin-bottom:4px;">${esc(m.staffName)}</div>
           ${esc(m.text).replace(/\n/g,'<br>')}
           <div style="font-size:10.5px; color:rgba(242,236,221,0.35); margin-top:4px;">${fmtDate(m.date)} · ${esc(m.time)}</div>
-        </div>`).join('') : `<p class="empty-state">No messages yet — say hello to the team.</p>`}
+        </div>`).join('') : `<p class="empty-state">${t('teamchat.noMessages')}</p>`}
     </div>
     <div class="chat-input-row">
-      <input id="teamChatInput" type="text" placeholder="Work-related message...">
-      <button class="btn btn-primary" id="teamChatSendBtn">Send</button>
+      <input id="teamChatInput" type="text" placeholder="${esc(t('teamchat.inputPlaceholder'))}">
+      <button class="btn btn-primary" id="teamChatSendBtn">${t('common.send')}</button>
     </div>`;
 }
 
@@ -2951,15 +3335,15 @@ function bindTeamChatEvents(){
 function renderAIAssistant(){
   return `
     <div class="topbar">
-      <div class="page-title">AI Assistant</div>
-      <div class="eyebrow">Clinic Insights</div>
+      <div class="page-title">${t('ai.title')}</div>
+      <div class="eyebrow">${t('ai.clinicInsights')}</div>
     </div>
     <div class="chat-window" id="chatWindow">
       ${state.aiChat.map(renderChatBubble).join('')}
     </div>
     <div class="chat-input-row">
-      <input id="aiInput" type="text" placeholder="Ask anything, e.g. 'Which clients need follow-up?'">
-      <button class="btn btn-primary" id="aiSend">Send</button>
+      <input id="aiInput" type="text" placeholder="${esc(t('ai.inputPlaceholder'))}">
+      <button class="btn btn-primary" id="aiSend">${t('common.send')}</button>
     </div>`;
 }
 function renderChatBubble(m, idx){
@@ -2970,12 +3354,12 @@ function renderChatBubble(m, idx){
       ${safeText}
       ${m.suggestCampaign ? `
         <div class="chat-yesno">
-          <button class="yes" data-idx="${idx}">Yes</button>
-          <button class="no" data-idx="${idx}">No</button>
+          <button class="yes" data-idx="${idx}">${t('ai.yes')}</button>
+          <button class="no" data-idx="${idx}">${t('ai.no')}</button>
         </div>` : ''}
       ${m.suggestInvoiceFor && canInvoice ? `
         <div class="chat-yesno">
-          <button class="yes" data-open-builder="${m.suggestInvoiceFor}" data-invoice-type="${m.suggestInvoiceType||'Invoice'}">${ICONS.invoices} Open ${m.suggestInvoiceType||'Invoice'} Builder</button>
+          <button class="yes" data-open-builder="${m.suggestInvoiceFor}" data-invoice-type="${m.suggestInvoiceType||'Invoice'}">${ICONS.invoices} ${esc(tf('ai.openBuilder', {type: t('invoiceType.'+(m.suggestInvoiceType||'Invoice'))}))}</button>
         </div>` : ''}
     </div>`;
 }
@@ -2988,11 +3372,11 @@ function renderBillingBanner(){
   const daysLeft = state.clinic.trialEndsAt ? Math.ceil((new Date(state.clinic.trialEndsAt) - new Date()) / 86400000) : null;
 
   let text = null, tone = 'warn';
-  if(status === 'past_due'){ text = 'Your last payment failed — update billing to avoid interruption.'; tone = 'danger'; }
-  else if(status === 'canceled'){ text = 'Your subscription is canceled. Reach out to us to keep using AestheticFlow.'; tone = 'danger'; }
+  if(status === 'past_due'){ text = t('billing.paymentFailed'); tone = 'danger'; }
+  else if(status === 'canceled'){ text = t('billing.canceled'); tone = 'danger'; }
   else if(status === 'trialing' && daysLeft !== null){
-    if(daysLeft <= 0){ text = 'Your trial has ended. Reach out to us to pick a plan and keep going.'; tone = 'danger'; }
-    else if(daysLeft <= 3){ text = `Your trial ends in ${daysLeft} day${daysLeft===1?'':'s'} — head to Settings to sort out billing.`; tone = 'warn'; }
+    if(daysLeft <= 0){ text = t('billing.trialEnded'); tone = 'danger'; }
+    else if(daysLeft <= 3){ text = tf('billing.trialEndingSoon', {days: daysLeft}); tone = 'warn'; }
   }
 
   if(!text){ el.innerHTML = ''; return; }
@@ -3001,7 +3385,7 @@ function renderBillingBanner(){
   el.innerHTML = `
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:${bg}; border:1px solid ${border}; border-radius:8px; padding:10px 16px; margin-bottom:18px; font-size:13px;">
       <span>${esc(text)}</span>
-      <button class="btn btn-secondary btn-sm" id="billingBannerSettingsBtn" style="white-space:nowrap;">Go to Billing</button>
+      <button class="btn btn-secondary btn-sm" id="billingBannerSettingsBtn" style="white-space:nowrap;">${t('billing.goToBilling')}</button>
     </div>`;
   document.getElementById('billingBannerSettingsBtn').addEventListener('click', ()=>{ activeView='settings'; activeClientId=null; render(); });
 }
