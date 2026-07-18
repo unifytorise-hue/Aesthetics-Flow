@@ -606,6 +606,11 @@ const TRANSLATIONS = {
     'billing.trialEnded':'Your trial has ended. Reach out to us to pick a plan and keep going.',
     'billing.trialEndingSoon':'Your trial ends in {days} days — head to Settings to sort out billing.',
     'billing.goToBilling':'Go to Billing',
+    'campaigns.title':'Campaigns', 'campaigns.contentCreditsLabel':'content credits', 'campaigns.buyMore':'Buy More',
+    'campaigns.emailSmsTab':'Email/SMS Campaigns', 'campaigns.socialTab':'Social Content', 'campaigns.noCampaigns':'No campaigns yet.',
+    'campaigns.createCampaign':'Create Campaign', 'campaigns.audience':'Audience', 'campaigns.status':'Status',
+    'campaigns.noContent':'No message content yet — click edit to add it.', 'campaigns.copyMessage':'Copy Message',
+    'campaignStatus.ACTIVE':'Active', 'campaignStatus.DRAFT':'Draft',
   },
   es: {
     'nav.dashboard':'Panel', 'nav.clients':'Clientes', 'nav.calendar':'Calendario', 'nav.leads':'Embudo de Ventas',
@@ -699,6 +704,11 @@ const TRANSLATIONS = {
     'billing.trialEnded':'Tu prueba ha terminado. Contáctanos para elegir un plan y continuar.',
     'billing.trialEndingSoon':'Tu prueba termina en {days} días — ve a Configuración para resolver la facturación.',
     'billing.goToBilling':'Ir a Facturación',
+    'campaigns.title':'Campañas', 'campaigns.contentCreditsLabel':'créditos de contenido', 'campaigns.buyMore':'Comprar Más',
+    'campaigns.emailSmsTab':'Campañas de Email/SMS', 'campaigns.socialTab':'Contenido Social', 'campaigns.noCampaigns':'Aún no hay campañas.',
+    'campaigns.createCampaign':'Crear Campaña', 'campaigns.audience':'Audiencia', 'campaigns.status':'Estado',
+    'campaigns.noContent':'Aún no hay contenido de mensaje — haz clic en editar para añadirlo.', 'campaigns.copyMessage':'Copiar Mensaje',
+    'campaignStatus.ACTIVE':'Activa', 'campaignStatus.DRAFT':'Borrador',
   },
   fr: {
     'nav.dashboard':'Tableau de bord', 'nav.clients':'Clients', 'nav.calendar':'Calendrier', 'nav.leads':'Pipeline des Ventes',
@@ -792,6 +802,11 @@ const TRANSLATIONS = {
     'billing.trialEnded':"Votre période d'essai est terminée. Contactez-nous pour choisir un forfait et continuer.",
     'billing.trialEndingSoon':"Votre essai se termine dans {days} jours — rendez-vous dans Paramètres pour régler la facturation.",
     'billing.goToBilling':'Aller à la Facturation',
+    'campaigns.title':'Campagnes', 'campaigns.contentCreditsLabel':'crédits de contenu', 'campaigns.buyMore':'Acheter Plus',
+    'campaigns.emailSmsTab':'Campagnes E-mail/SMS', 'campaigns.socialTab':'Contenu Social', 'campaigns.noCampaigns':'Aucune campagne pour le moment.',
+    'campaigns.createCampaign':'Créer une Campagne', 'campaigns.audience':'Audience', 'campaigns.status':'Statut',
+    'campaigns.noContent':"Aucun contenu de message pour le moment — cliquez sur modifier pour l'ajouter.", 'campaigns.copyMessage':'Copier le Message',
+    'campaignStatus.ACTIVE':'Active', 'campaignStatus.DRAFT':'Brouillon',
   },
   pt: {
     'nav.dashboard':'Painel', 'nav.clients':'Clientes', 'nav.calendar':'Calendário', 'nav.leads':'Funil de Vendas',
@@ -885,6 +900,11 @@ const TRANSLATIONS = {
     'billing.trialEnded':'O seu período de avaliação terminou. Contacte-nos para escolher um plano e continuar.',
     'billing.trialEndingSoon':'O seu período de avaliação termina em {days} dias — vá a Definições para tratar da faturação.',
     'billing.goToBilling':'Ir para Faturação',
+    'campaigns.title':'Campanhas', 'campaigns.contentCreditsLabel':'créditos de conteúdo', 'campaigns.buyMore':'Comprar Mais',
+    'campaigns.emailSmsTab':'Campanhas de Email/SMS', 'campaigns.socialTab':'Conteúdo Social', 'campaigns.noCampaigns':'Ainda sem campanhas.',
+    'campaigns.createCampaign':'Criar Campanha', 'campaigns.audience':'Audiência', 'campaigns.status':'Estado',
+    'campaigns.noContent':'Ainda sem conteúdo de mensagem — clique em editar para o adicionar.', 'campaigns.copyMessage':'Copiar Mensagem',
+    'campaignStatus.ACTIVE':'Ativa', 'campaignStatus.DRAFT':'Rascunho',
   },
   ar: {
     'nav.dashboard':'لوحة التحكم', 'nav.clients':'العملاء', 'nav.calendar':'التقويم', 'nav.leads':'مسار المبيعات',
@@ -978,6 +998,11 @@ const TRANSLATIONS = {
     'billing.trialEnded':'انتهت فترتك التجريبية. تواصل معنا لاختيار خطة والمتابعة.',
     'billing.trialEndingSoon':'تنتهي فترتك التجريبية خلال {days} يوم — توجه إلى الإعدادات لترتيب الفوترة.',
     'billing.goToBilling':'الذهاب إلى الفوترة',
+    'campaigns.title':'الحملات', 'campaigns.contentCreditsLabel':'رصيد محتوى', 'campaigns.buyMore':'شراء المزيد',
+    'campaigns.emailSmsTab':'حملات البريد الإلكتروني/الرسائل النصية', 'campaigns.socialTab':'محتوى التواصل الاجتماعي', 'campaigns.noCampaigns':'لا توجد حملات بعد.',
+    'campaigns.createCampaign':'إنشاء حملة', 'campaigns.audience':'الجمهور', 'campaigns.status':'الحالة',
+    'campaigns.noContent':'لا يوجد محتوى رسالة بعد — انقر على تعديل لإضافته.', 'campaigns.copyMessage':'نسخ الرسالة',
+    'campaignStatus.ACTIVE':'نشطة', 'campaignStatus.DRAFT':'مسودة',
   },
 };
 // Language is a browser/device preference (auth screens render before any
@@ -2480,12 +2505,12 @@ function renderCampaigns(){
   const perms = currentPerms();
   return `
     <div class="topbar">
-      <div class="page-title">Campaigns</div>
-      <div class="credit-badge">${ICONS.ai} <strong>${state.contentCredits}</strong> content credits <button class="btn btn-secondary btn-sm" id="buyCreditsBtn" style="margin-left:8px;">Buy More</button></div>
+      <div class="page-title">${t('campaigns.title')}</div>
+      <div class="credit-badge">${ICONS.ai} <strong>${state.contentCredits}</strong> ${t('campaigns.contentCreditsLabel')} <button class="btn btn-secondary btn-sm" id="buyCreditsBtn" style="margin-left:8px;">${t('campaigns.buyMore')}</button></div>
     </div>
     <div class="campaigns-subtabs">
-      <button class="campaigns-subtab ${campaignsSubTab==='campaigns'?'active':''}" data-subtab="campaigns">Email/SMS Campaigns</button>
-      <button class="campaigns-subtab ${campaignsSubTab==='social'?'active':''}" data-subtab="social">Social Content</button>
+      <button class="campaigns-subtab ${campaignsSubTab==='campaigns'?'active':''}" data-subtab="campaigns">${t('campaigns.emailSmsTab')}</button>
+      <button class="campaigns-subtab ${campaignsSubTab==='social'?'active':''}" data-subtab="social">${t('campaigns.socialTab')}</button>
     </div>
     ${campaignsSubTab==='campaigns' ? renderCampaignsList(perms) : renderSocialContent(perms)}`;
 }
@@ -2496,24 +2521,24 @@ function renderCampaignsList(perms){
       ${state.campaigns.length ? state.campaigns.map(k=>`
         <div class="campaign-card">
           <div class="row-actions" style="position:absolute; top:18px; right:18px;">
-            <button class="icon-btn" data-edit-campaign="${k.id}" title="Edit">${ICONS.edit}</button>
-            ${perms.canDelete ? `<button class="icon-btn danger" data-del-campaign="${k.id}" title="Delete">${ICONS.trash}</button>` : ''}
+            <button class="icon-btn" data-edit-campaign="${k.id}" title="${esc(t('common.edit'))}">${ICONS.edit}</button>
+            ${perms.canDelete ? `<button class="icon-btn danger" data-del-campaign="${k.id}" title="${esc(t('common.delete'))}">${ICONS.trash}</button>` : ''}
           </div>
           <div class="campaign-name">${esc(k.name)}</div>
           <div class="content-type-pill" style="margin-bottom:10px;">${esc(k.type||'Email')}</div>
-          <div class="campaign-stat-label">Audience</div>
-          <div class="campaign-stat-value" style="font-size:15px;">${getAudienceClients(k.audience).length} clients</div>
-          <div class="campaign-stat-label">Status</div>
-          <button class="status-pill ${k.status}" data-toggle-campaign="${k.id}">${k.status}</button>
-          ${k.body ? `<p class="muted" style="font-size:12px; margin-top:14px; line-height:1.5;">${esc((k.body||'').slice(0,90))}${(k.body||'').length>90?'…':''}</p>` : `<p class="empty-state" style="margin-top:14px;">No message content yet — click edit to add it.</p>`}
+          <div class="campaign-stat-label">${t('campaigns.audience')}</div>
+          <div class="campaign-stat-value" style="font-size:15px;">${getAudienceClients(k.audience).length} ${t('sales.clientsWord')}</div>
+          <div class="campaign-stat-label">${t('campaigns.status')}</div>
+          <button class="status-pill ${k.status}" data-toggle-campaign="${k.id}">${t('campaignStatus.'+k.status)}</button>
+          ${k.body ? `<p class="muted" style="font-size:12px; margin-top:14px; line-height:1.5;">${esc((k.body||'').slice(0,90))}${(k.body||'').length>90?'…':''}</p>` : `<p class="empty-state" style="margin-top:14px;">${t('campaigns.noContent')}</p>`}
           <div class="actions" style="margin-top:14px;">
-            <button class="btn btn-secondary btn-sm" data-copy-campaign="${k.id}">Copy Message</button>
-            <button class="btn btn-secondary btn-sm" data-send-campaign="${k.id}">Send</button>
+            <button class="btn btn-secondary btn-sm" data-copy-campaign="${k.id}">${t('campaigns.copyMessage')}</button>
+            <button class="btn btn-secondary btn-sm" data-send-campaign="${k.id}">${t('common.send')}</button>
           </div>
-        </div>`).join('') : `<p class="empty-state">No campaigns yet.</p>`}
+        </div>`).join('') : `<p class="empty-state">${t('campaigns.noCampaigns')}</p>`}
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" id="createCampaignBtn">${ICONS.plus} Create Campaign</button>
+      <button class="btn btn-secondary" id="createCampaignBtn">${ICONS.plus} ${t('campaigns.createCampaign')}</button>
     </div>`;
 }
 
