@@ -496,6 +496,32 @@ function currentRole(){
 }
 function currentPerms(){ return ROLE_PERMISSIONS[currentRole()] || ROLE_PERMISSIONS.Receptionist; }
 
+/* ---------------- Pricing tiers ----------------
+   Solo/Team/Multi gate the two multi-tenant dimensions already in the
+   schema (staff seats, locations) plus the two features with a real
+   per-use cost (SMS via Twilio, public API access) -- everything else
+   (clients, appointments, invoices, inventory) stays unlimited on every
+   tier since that data is cheap to store. Prices are a deliberate launch
+   choice (low end of the originally-discussed range) meant to be raised
+   later for new signups once there's real usage data / case studies --
+   existing subscribers keep whatever price they signed up at, since
+   Paystack subscriptions are tied to a specific Plan they joined. */
+const TIERS = ['solo','team','multi'];
+const TIER_LIMITS = {
+  solo:  { seats:1, locations:1, sms:false, api:false },
+  team:  { seats:5, locations:2, sms:true,  api:false },
+  multi: { seats:Infinity, locations:Infinity, sms:true, api:true },
+};
+const TIER_PRICES = { solo:25, team:60, multi:150 }; // display only -- actual charge amount is whatever the linked Paystack Plan charges
+const TIER_NAMES = { solo:'Solo', team:'Team', multi:'Multi-Location' };
+// Trial clinics get full access to every tier's limits so they can properly
+// evaluate the product; limits only bite once subscription_status is 'active'
+// (or later, once a real subscription lapses into past_due/canceled).
+function currentTierLimits(){
+  if(state.clinic.subscriptionStatus === 'trialing') return { seats:Infinity, locations:Infinity, sms:true, api:true };
+  return TIER_LIMITS[state.clinic.tier] || TIER_LIMITS.solo;
+}
+
 /* ---------------- Language / i18n ----------------
    Scope is deliberately bounded for now: nav labels, the staff and client
    portal auth screens, and the client portal dashboard -- the highest-value,
@@ -1396,6 +1422,7 @@ async function loadState(){
         practitionerName: clinicRow.practitioner_name || 'Dr Sarah',
         logoUrl: clinicRow.logo_url || '',
         plan: clinicBillingRow.plan || 'trial',
+        tier: clinicBillingRow.tier || 'solo',
         subscriptionStatus: clinicBillingRow.subscription_status || 'trialing',
         trialEndsAt: clinicBillingRow.trial_ends_at || null,
         currency: clinicRow.currency || '$',
@@ -3180,7 +3207,8 @@ function renderSettings(){
         <button class="btn btn-secondary" id="exportAllDataBtn">${ICONS.reports} Export Everything (JSON)</button>
       </div>`;
 
-  const apiKeyCard = perms.canManageStaff ? `
+  const apiAllowed = currentTierLimits().api;
+  const apiKeyCard = perms.canManageStaff ? (apiAllowed ? `
       <div class="card">
         <div class="card-title">API Access</div>
         <p class="muted" style="font-size:13px; margin-bottom:16px;">Live keys for external integrations (booking widgets, marketing tools). Each key is shown in full once, at creation — only a hash is stored after that, so lost keys can't be recovered, only replaced.</p>
@@ -3203,19 +3231,41 @@ function renderSettings(){
         <p class="muted" style="font-size:12px; margin-top:14px; line-height:1.6;">Send requests with header <code>Authorization: Bearer &lt;your key&gt;</code> to:<br>
           <code>GET ${esc(SUPABASE_URL)}/functions/v1/public-api/clients</code><br>
           <code>POST ${esc(SUPABASE_URL)}/functions/v1/public-api/appointments</code> (body: client_name, date, time, service, location_id — optional)</p>
-      </div>` : '';
+      </div>` : `
+      <div class="card">
+        <div class="card-title">API Access</div>
+        <p class="empty-state">Live API keys for external integrations are available on the Multi-Location plan. Upgrade under Billing to unlock this.</p>
+      </div>`) : '';
 
   const billingCard = perms.canManageStaff ? (()=>{
     const trialDaysLeft = state.clinic.trialEndsAt ? Math.ceil((new Date(state.clinic.trialEndsAt) - new Date()) / 86400000) : null;
     const statusLabel = { trialing:'Trial', active:'Active', past_due:'Past Due', canceled:'Canceled' }[state.clinic.subscriptionStatus] || state.clinic.subscriptionStatus;
+    const isActive = state.clinic.subscriptionStatus === 'active';
     return `
       <div class="card">
         <div class="card-title">Billing</div>
-        <div class="detail-row" style="border-top:none;"><span class="detail-label">Plan</span><span class="detail-value" style="text-transform:capitalize;">${esc(state.clinic.plan)}</span></div>
+        <div class="detail-row" style="border-top:none;"><span class="detail-label">Plan</span><span class="detail-value">${esc(TIER_NAMES[state.clinic.tier] || state.clinic.tier)}</span></div>
         <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${esc(statusLabel)}</span></div>
         ${state.clinic.subscriptionStatus==='trialing' && trialDaysLeft!==null ? `<div class="detail-row"><span class="detail-label">Trial Ends</span><span class="detail-value">${trialDaysLeft>0?`${trialDaysLeft} day${trialDaysLeft===1?'':'s'} left`:'Trial ended'}</span></div>` : ''}
-        <button class="btn btn-secondary btn-sm" id="upgradePlanBtn" style="margin-top:14px;">Upgrade Plan</button>
-        <p class="empty-state" style="margin-top:10px;">Online payments aren't live yet — this button will connect to real billing soon. Contact us in the meantime to change your plan.</p>
+        <div class="tier-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-top:18px;">
+          ${TIERS.map(tier=>{
+            const limits = TIER_LIMITS[tier];
+            const isCurrent = isActive && state.clinic.tier === tier;
+            return `
+            <div class="card" style="background:rgba(242,236,221,0.03);">
+              <div class="card-title" style="margin-bottom:2px;">${esc(TIER_NAMES[tier])}</div>
+              <div class="stat-value" style="font-size:22px; margin-bottom:10px;">${fmtMoney(TIER_PRICES[tier])}<span class="muted" style="font-size:12px; font-weight:400;">/mo</span></div>
+              <div class="muted" style="font-size:12.5px; line-height:1.9;">
+                ${limits.seats===Infinity?'Unlimited staff':`${limits.seats} staff seat${limits.seats===1?'':'s'}`}<br>
+                ${limits.locations===Infinity?'Unlimited locations':`${limits.locations} location${limits.locations===1?'':'s'}`}<br>
+                ${limits.sms?'Email + SMS campaigns':'Email campaigns only'}<br>
+                ${limits.api?'Public API access':'No API access'}
+              </div>
+              <button class="btn ${isCurrent?'btn-secondary':'btn-primary'} btn-sm" style="margin-top:14px; width:100%;" data-upgrade-tier="${tier}" ${isCurrent?'disabled':''}>${isCurrent?'Current Plan':'Upgrade'}</button>
+            </div>`;
+          }).join('')}
+        </div>
+        <p class="empty-state" style="margin-top:14px;">Prices shown are launch pricing and may rise for new signups later — existing subscribers keep the price they signed up at.</p>
       </div>`;
   })() : '';
 
@@ -4511,7 +4561,14 @@ function bindSettingsEvents(){
   });
 
   const addLocationBtn = document.getElementById('addLocationBtn');
-  if(addLocationBtn) addLocationBtn.addEventListener('click', ()=>openLocationModal(null));
+  if(addLocationBtn) addLocationBtn.addEventListener('click', ()=>{
+    const limits = currentTierLimits();
+    if(state.locations.length >= limits.locations){
+      showToast(`Your ${state.clinic.tier} plan includes ${limits.locations} location${limits.locations===1?'':'s'} — upgrade under Billing to add more.`);
+      return;
+    }
+    openLocationModal(null);
+  });
   document.querySelectorAll('[data-edit-location]').forEach(btn=>{
     btn.addEventListener('click', ()=>openLocationModal(state.locations.find(l=>l.id===btn.dataset.editLocation)));
   });
@@ -4543,19 +4600,21 @@ function bindSettingsEvents(){
     });
   });
 
-  const upgradePlanBtn = document.getElementById('upgradePlanBtn');
-  if(upgradePlanBtn) upgradePlanBtn.addEventListener('click', async ()=>{
-    upgradePlanBtn.disabled = true;
-    try{
-      const { data, error } = await sb.functions.invoke('create-paystack-transaction', { body:{ kind:'subscription' } });
-      if(error) throw error;
-      if(data && data.configured && data.url){ window.location.href = data.url; return; }
-      showToast((data && data.message) || 'Online upgrades are coming soon — reach out to us to change your plan for now');
-    }catch(e){
-      showToast(e.message || 'Could not start checkout');
-    }finally{
-      upgradePlanBtn.disabled = false;
-    }
+  document.querySelectorAll('[data-upgrade-tier]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const tier = btn.dataset.upgradeTier;
+      btn.disabled = true;
+      try{
+        const { data, error } = await sb.functions.invoke('create-paystack-transaction', { body:{ kind:'subscription', tier } });
+        if(error) throw error;
+        if(data && data.configured && data.url){ window.location.href = data.url; return; }
+        showToast((data && data.message) || 'Online upgrades are coming soon — reach out to us to change your plan for now');
+      }catch(e){
+        showToast(e.message || 'Could not start checkout');
+      }finally{
+        btn.disabled = false;
+      }
+    });
   });
   const exportAllDataBtn = document.getElementById('exportAllDataBtn');
   if(exportAllDataBtn) exportAllDataBtn.addEventListener('click', ()=>{
@@ -4579,7 +4638,14 @@ function bindSettingsEvents(){
   });
 
   const addStaffBtn = document.getElementById('addStaffBtn');
-  if(addStaffBtn) addStaffBtn.addEventListener('click', ()=>openStaffModal(null));
+  if(addStaffBtn) addStaffBtn.addEventListener('click', ()=>{
+    const limits = currentTierLimits();
+    if(state.staff.length >= limits.seats){
+      showToast(`Your ${state.clinic.tier} plan includes ${limits.seats} staff seat${limits.seats===1?'':'s'} — upgrade under Billing to add more.`);
+      return;
+    }
+    openStaffModal(null);
+  });
 }
 
 function openStaffModal(staff){
@@ -4637,12 +4703,14 @@ function openCampaignModal(campaign){
 
 function renderCampaignModal(draft, isEdit, originalCampaign){
   const audienceCount = getAudienceClients(draft.audience).length;
+  const smsAllowed = currentTierLimits().sms;
+  if(!smsAllowed && draft.type==='SMS') draft.type = 'Email';
   openModal(`
     <div class="modal-title">${isEdit?'Edit Campaign':'Create Campaign'}</div>
     <div class="field-group"><label>Campaign Name</label><div class="field-line"><input id="kName" type="text" value="${esc(draft.name)}" placeholder="e.g. Summer Skin Refresh"></div></div>
     <div class="field-group"><label>Type</label><div class="field-line"><select id="kType">
       <option value="Email" ${draft.type==='Email'?'selected':''}>Email</option>
-      <option value="SMS" ${draft.type==='SMS'?'selected':''}>SMS</option>
+      <option value="SMS" ${draft.type==='SMS'?'selected':''} ${smsAllowed?'':'disabled'}>SMS${smsAllowed?'':' (upgrade to Team plan)'}</option>
     </select></div></div>
     <div class="field-group"><label>Audience</label><div class="field-line"><select id="kAudience">
       <option value="all" ${draft.audience==='all'?'selected':''}>All Clients</option>
@@ -5560,6 +5628,7 @@ async function renderPlatformAdminDashboard(){
             <th style="text-align:left;">Staff</th>
             <th style="text-align:left;">Clients</th>
             <th style="text-align:left;">Plan</th>
+            <th style="text-align:left;">Tier</th>
             <th style="text-align:left;">Status</th>
             <th></th>
           </tr></thead>
@@ -5573,6 +5642,11 @@ async function renderPlatformAdminDashboard(){
                 <td data-label="Plan">
                   <select data-plan-select="${c.id}">
                     ${PLAN_OPTIONS.map(p=>`<option value="${p}" ${c.plan===p?'selected':''}>${p}</option>`).join('')}
+                  </select>
+                </td>
+                <td data-label="Tier">
+                  <select data-tier-select="${c.id}">
+                    ${TIERS.map(t=>`<option value="${t}" ${(c.tier||'solo')===t?'selected':''}>${TIER_NAMES[t]}</option>`).join('')}
                   </select>
                 </td>
                 <td data-label="Status">
@@ -5593,9 +5667,10 @@ async function renderPlatformAdminDashboard(){
       const clinicId = btn.dataset.saveClinic;
       const plan = document.querySelector(`[data-plan-select="${clinicId}"]`).value;
       const status = document.querySelector(`[data-status-select="${clinicId}"]`).value;
+      const tier = document.querySelector(`[data-tier-select="${clinicId}"]`).value;
       btn.disabled = true;
       try{
-        const { error } = await sb.rpc('admin_set_clinic_plan', { p_clinic_id: clinicId, p_plan: plan, p_status: status });
+        const { error } = await sb.rpc('admin_set_clinic_plan', { p_clinic_id: clinicId, p_plan: plan, p_status: status, p_tier: tier });
         if(error) throw error;
         showToast('Clinic updated');
       }catch(e){

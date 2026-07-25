@@ -14,10 +14,14 @@ Set secrets via the Supabase Dashboard (Edge Functions → Secrets) — there's
 no MCP tool for it, so this always needs the user to do it themselves.
 
 - **`create-paystack-transaction`** + **`paystack-webhook`** (replaced Stripe
-  2026-07-13) — real Paystack Checkout for content-credit purchases and the
-  monthly subscription. Needs `PAYSTACK_SECRET_KEY` and
-  `PAYSTACK_SUBSCRIPTION_PLAN_CODE` (a Plan created in the Paystack
-  Dashboard → Plans — a real pricing decision, deliberately not defaulted).
+  2026-07-13; tiered pricing added 2026-07-18) — real Paystack Checkout for
+  content-credit purchases and the monthly subscription, now split across 3
+  pricing tiers (see "Pricing tiers" below). Needs `PAYSTACK_SECRET_KEY` and
+  one Plan code per tier — `PAYSTACK_PLAN_CODE_SOLO` /
+  `PAYSTACK_PLAN_CODE_TEAM` / `PAYSTACK_PLAN_CODE_MULTI` (each a Plan created
+  in the Paystack Dashboard → Plans — real pricing decisions, deliberately
+  not defaulted; a tier with no plan code set just returns
+  `{configured:false}` for that tier specifically, others still work).
   `PAYSTACK_CURRENCY` is optional — omit it to use the Paystack account's
   default currency. Webhook: Paystack Dashboard → Settings → API Keys &
   Webhooks → Webhook URL, pointed at the `paystack-webhook` function URL —
@@ -50,6 +54,83 @@ no MCP tool for it, so this always needs the user to do it themselves.
 - **`public-api`** — external API (`GET /clients`, `POST /appointments`)
   authenticated with per-clinic hashed keys from Settings → API Access.
   Already fully live, no secret needed.
+
+## Pricing tiers (added 2026-07-18)
+
+Three tiers — **Solo** ($25/mo), **Team** ($60/mo), **Multi-Location**
+($150/mo) — deliberately priced at the low end of what was originally
+discussed, as launch pricing meant to be raised later for new signups once
+there's real usage/case-study data; existing subscribers keep whatever
+price they signed up at (Paystack subscriptions are tied to the specific
+Plan they joined, not a live-updating price). All config lives in
+`index.html` as `TIERS`/`TIER_LIMITS`/`TIER_PRICES`/`TIER_NAMES`, right after
+`ROLE_PERMISSIONS`.
+
+Tiers gate only the two multi-tenant dimensions already in the schema
+(staff seats, locations) plus the two features with a real per-use cost —
+SMS campaigns (Twilio charges per message) and public API access. Everything
+else (clients, appointments, invoices, inventory, AI content credits) stays
+unlimited/unaffected by tier for now — AI credits in particular are **not**
+tier-scaled yet (still the existing flat `content_credits` balance +
+top-up-purchase system); a recurring monthly credit allowance per tier would
+need a scheduled job (pg_cron) and was deliberately left as a follow-up
+rather than bolted on here.
+
+- `clinics.tier` (migration `add_tier_to_clinics`) — `'solo'|'team'|'multi'`,
+  default `'solo'`, check-constrained. Distinct from the pre-existing
+  `clinics.plan` column, which despite the name has always meant billing
+  *status* (`'trial'|'active'|...`, redundant with `subscription_status` —
+  a naming quirk that predates this feature and wasn't touched here).
+- `currentTierLimits()` — the single gating source of truth. Returns
+  unlimited-everything while `subscription_status === 'trialing'` (trial
+  users get full access to evaluate the product, same principle as the
+  billing banner already treating trial as a distinct, non-restricted
+  state), otherwise returns `TIER_LIMITS[clinic.tier]`.
+- **Enforcement points**: Add Staff button (Settings) checks seat count
+  before opening the modal; Add Location button checks location count the
+  same way; the Campaign modal's Type `<select>` disables the SMS `<option>`
+  (with an inline "(upgrade to Team plan)" hint) when `!limits.sms`; the
+  Settings API Access card renders a locked placeholder card instead of the
+  functional key-management UI when `!limits.api`. All of these are
+  client-side UX only — there's no server-side/RLS enforcement of seat or
+  location counts, so a determined user could still insert rows directly;
+  acceptable for now since this mirrors how every other client-side
+  permission check in the app already works (`currentPerms()`), not a new
+  risk class.
+- **Settings → Billing** now renders a 3-card tier comparison (price,
+  seats/locations/SMS/API summary, and an Upgrade/Current-Plan button per
+  tier) instead of the old single "Upgrade Plan" button — also fixed the
+  Plan/Status redundancy that existed before (the "Plan" row used to just
+  echo the same trial/active value as "Status"; it now shows the tier name).
+- **Checkout flow**: each tier's Upgrade button calls
+  `create-paystack-transaction` with `{kind:'subscription', tier:'solo'|
+  'team'|'multi'}`; the function picks the matching `PAYSTACK_PLAN_CODE_*`
+  secret and puts `tier` in the Paystack transaction metadata.
+  `paystack-webhook`'s `charge.success` handler (the only place metadata is
+  available — `subscription.create`'s payload doesn't carry it) reads that
+  back and sets `clinics.tier` alongside the existing status/plan updates.
+  **Known gap**: upgrading tiers while already on an active paid
+  subscription re-runs the same checkout flow (a fresh Paystack transaction
+  tied to the new Plan) rather than modifying the existing subscription in
+  place — Paystack will start billing the new Plan, but the old subscription
+  isn't automatically canceled, which could double-bill a real customer.
+  Fine for launch (nobody's on a paid tier yet), but needs a real
+  cancel-old-subscription step added before tier upgrades are used by an
+  actual paying customer.
+- **Platform Admin** clinics table gained a Tier column/dropdown next to the
+  existing Plan/Status ones, backed by `admin_list_clinics()` (now selects
+  `tier`) and `admin_set_clinic_plan(p_clinic_id, p_plan, p_status, p_tier)`
+  (new optional 4th param, `coalesce`s against the existing value so old
+  callers passing only 3 args still work) — both `SECURITY DEFINER` Postgres
+  functions gated on `is_platform_admin()`.
+- **Not yet translated**: the new Billing tier-comparison cards and the SMS
+  upgrade-hint copy are English-only, consistent with Settings content
+  generally still being outside the i18n pass (see the i18n entries below).
+- Verified via a mocked-network browser E2E test (17/17 checks) covering
+  seat/location gating at and under the limit on Solo/Team/Multi, SMS
+  option disabling, the API Access card's locked/unlocked states, trial
+  bypassing all limits, the Upgrade button's Paystack call payload, and the
+  Platform Admin tier dropdown reading and writing correctly.
 
 ## Outstanding / remember for later
 
