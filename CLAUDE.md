@@ -132,6 +132,63 @@ rather than bolted on here.
   bypassing all limits, the Upgrade button's Paystack call payload, and the
   Platform Admin tier dropdown reading and writing correctly.
 
+## Affiliate referral system (added 2026-07-26)
+
+Lets a clinic generate shareable links for social-media/referral partners;
+anyone who submits their details through one becomes a tagged Lead, and the
+clinic sees referral counts + commission owed once that lead becomes a
+paying client. Two explicit product decisions behind this (confirmed before
+building): the link goes to a **public lead-capture form**, not self-service
+booking (there's no public real-time calendar-availability system to book
+against); and commission is **earned when the referral becomes a paying
+client** (first paid invoice), not merely on booking. A third decision
+(affiliates do **not** get their own login/portal — staff track everything
+internally) keeps this to one new public surface rather than a third
+authentication system alongside staff and client-portal logins.
+
+- **`affiliates` table** (migration `add_affiliates_referral_system`) —
+  `id`, `clinic_id`, `name`, `code` (globally unique, used in the shareable
+  link), `commission_rate`, `contact_email`, `active`. RLS mirrors every
+  other clinic-scoped table (`is_staff() and clinic_id = my_clinic_id()`).
+  `leads.referred_by_affiliate_id` and `clients.referred_by_affiliate_id`
+  (both nullable FKs, `on delete set null`) tag who referred them; the
+  lead→client conversion flow (`bindLeadsEvents`, Sales Pipeline "Completed"
+  stage) copies the reference across so commission calculation only needs
+  to look at `clients`, not join back through `leads`.
+- **`affiliate-referral` edge function** (new, `verify_jwt: false`) — the
+  one deliberately public, unauthenticated surface in the whole app.
+  `GET ?code=X` resolves a code to the affiliate + clinic name (for the
+  landing page's "Referred by X to Y" header); `POST` accepts
+  name/phone/email/note and inserts a Lead scoped to that clinic, service-role
+  bypassing RLS the same way `public-api`/`paystack-webhook` already do.
+  Deliberately narrow blast radius: it can only ever create a Lead, never a
+  client or anything billing-related. No CAPTCHA/rate-limiting yet — fine
+  for launch, worth adding if a real link gets spammed.
+- **Public landing page** (`renderAffiliateReferralPage`, `index.html?ref=
+  <code>`) — checked in `init()` before any session/auth routing, so a
+  stranger with no account lands here regardless of session state. Reuses
+  the `.portal-center-wrap`/`.portal-login-card` auth-screen styling for
+  visual consistency with the rest of the app.
+- **Sales Team page** gained an "Affiliate Partners" card (owner/admin only)
+  — list of affiliates with referred-lead/converted-client counts and
+  commission owed (`computeAffiliateMetrics()`, calculated live from paid
+  invoices exactly like the existing staff origination-commission system —
+  no ledger table, no auto-payout, matching how staff commission already
+  works), a Copy Link button, and Add/Edit/Deactivate/Delete. Codes are
+  client-generated (`crypto.getRandomValues`, 8 base36 chars) — collision
+  risk is negligible at this scale and matches the non-cryptographic
+  `Date.now()`-based IDs used everywhere else in the app.
+- **Not yet translated**: the whole feature (landing page + Sales Team card)
+  is English-only, consistent with Sales Team and Settings generally still
+  being outside the i18n pass.
+- Verified via a mocked-network browser E2E test (11/11 checks, plus a
+  standalone check confirming lead→client conversion propagates the
+  affiliate reference) covering affiliate CRUD, commission math (confirmed
+  it only counts *paid* invoices, not sent/draft ones), the Copy Link
+  button's URL, the public landing page's happy path end-to-end (code
+  resolution → form submit → success message), and the graceful
+  inactive/invalid-code error state.
+
 ## Outstanding / remember for later
 
 - Supabase org is on the **Free plan** — "Leaked Password Protection" (Attack Protection → Prevent use of leaked passwords) is Pro-tier-gated and can't be enabled until upgraded. Revisit before onboarding real customers at scale.

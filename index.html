@@ -1331,7 +1331,8 @@ function seedData(){
     ],
     aiChat:[
       {from:'ai', text:'Good morning. Ask me about follow-ups, revenue, your pipeline, or invoicing any time.'}
-    ]
+    ],
+    affiliates:[]
   };
 }
 
@@ -1369,7 +1370,8 @@ function mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient){
     photoConsent:c.photo_consent,
     photoSets:(photoSetsByClient[c.id]||[]).map(mapPhotoSet),
     documents:(documentsByClient[c.id]||[]).map(mapDocument),
-    authUserId:c.auth_user_id
+    authUserId:c.auth_user_id,
+    referredByAffiliateId:c.referred_by_affiliate_id||null
   };
 }
 function mapInvoice(inv, lineItemsByInvoice){
@@ -1384,7 +1386,7 @@ async function loadState(){
     const [
       clinicIdRes, clinicRowRes, clinicRes, locationsRes, staffRes, clientsRes, treatmentsRes, photoSetsRes, documentsRes,
       appointmentsRes, leadsRes, inventoryRes, invoicesRes, lineItemsRes, campaignsRes,
-      socialPostsRes, creditTxRes, aiChatRes, apiKeysRes
+      socialPostsRes, creditTxRes, aiChatRes, apiKeysRes, affiliatesRes
     ] = await Promise.all([
       sb.rpc('my_clinic_id'),
       sb.from('clinics').select('*').maybeSingle(),
@@ -1404,7 +1406,8 @@ async function loadState(){
       sb.from('social_posts').select('*'),
       sb.from('credit_transactions').select('*'),
       sb.from('ai_chat_messages').select('*').order('id', {ascending:true}),
-      sb.from('api_keys').select('*').order('created_at', {ascending:false})
+      sb.from('api_keys').select('*').order('created_at', {ascending:false}),
+      sb.from('affiliates').select('*')
     ]);
 
     const clinicId = clinicIdRes.data;
@@ -1442,7 +1445,8 @@ async function loadState(){
       currentStaffId: clinicRow.current_staff_id || (staffRes.data[0] && staffRes.data[0].id),
       clients:(clientsRes.data||[]).map(c=>mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient)),
       appointments:(appointmentsRes.data||[]).map(a=>({ id:a.id, clientId:a.client_id, clientName:a.client_name, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, locationId:a.location_id })),
-      leads:(leadsRes.data||[]).map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, ownerId:l.owner_id, convertedClientId:l.converted_client_id })),
+      leads:(leadsRes.data||[]).map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, ownerId:l.owner_id, convertedClientId:l.converted_client_id, referredByAffiliateId:l.referred_by_affiliate_id||null })),
+      affiliates:(affiliatesRes.data||[]).map(a=>({ id:a.id, name:a.name, code:a.code, commissionRate:Number(a.commission_rate), contactEmail:a.contact_email||'', active:a.active })),
       inventory:(inventoryRes.data||[]).map(i=>({ id:i.id, name:i.name, stock:i.stock, expiresIn:i.expires_in, price:Number(i.price)||0 })),
       invoices:(invoicesRes.data||[]).map(inv=>mapInvoice(inv, lineItemsByInvoice)),
       nextInvoiceSeq: clinicRow.next_invoice_seq || 1,
@@ -1477,17 +1481,21 @@ async function persistStateToSupabase(s){
   await sb.from('inventory').delete().neq('id','');
   await sb.from('staff').delete().neq('id','');
   await sb.from('locations').delete().neq('id','');
+  await sb.from('affiliates').delete().neq('id','');
 
   if(s.locations.length) await sb.from('locations').insert(s.locations.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, address:l.address, phone:l.phone })));
   if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, clinic_id:s.clinicId, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent, email:st.email||null, auth_user_id:st.authUserId||null })));
   if(s.inventory.length) await sb.from('inventory').insert(s.inventory.map(i=>({ id:i.id, clinic_id:s.clinicId, name:i.name, stock:i.stock, expires_in:i.expiresIn||null, price:i.price||0 })));
+  // Affiliates must be inserted before clients/leads, which carry a
+  // referred_by_affiliate_id foreign key pointing at these rows.
+  if(s.affiliates && s.affiliates.length) await sb.from('affiliates').insert(s.affiliates.map(a=>({ id:a.id, clinic_id:s.clinicId, name:a.name, code:a.code, commission_rate:a.commissionRate, contact_email:a.contactEmail||null, active:a.active })));
   if(s.clients.length) await sb.from('clients').insert(s.clients.map(c=>({
     id:c.id, clinic_id:s.clinicId, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status, country:c.country||null,
     location_id:c.locationId, captured_by:c.capturedBy, capture_date:c.captureDate||null,
     skin_type:c.skinType, concerns:c.concerns||[], medical_notes:c.medicalNotes||'',
     last_treatment_name:(c.lastTreatment&&c.lastTreatment.name)||'—', last_treatment_date:(c.lastTreatment&&c.lastTreatment.date)||'—', last_treatment_practitioner:(c.lastTreatment&&c.lastTreatment.practitioner)||'—',
     next_action_label:(c.nextAction&&c.nextAction.label)||'Book first visit', next_action_date:(c.nextAction&&c.nextAction.date)||'—',
-    photo_consent:c.photoConsent||null, auth_user_id:c.authUserId||null
+    photo_consent:c.photoConsent||null, auth_user_id:c.authUserId||null, referred_by_affiliate_id:c.referredByAffiliateId||null
   })));
 
   const allTreatments = [], allPhotoSets = [], allDocuments = [];
@@ -1508,7 +1516,7 @@ async function persistStateToSupabase(s){
   if(allDocuments.length) await sb.from('documents').insert(allDocuments);
 
   if(s.appointments.length) await sb.from('appointments').insert(s.appointments.map(a=>({ id:a.id, clinic_id:s.clinicId, client_id:a.clientId||null, client_name:a.clientName, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, location_id:a.locationId||null })));
-  if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null })));
+  if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null, referred_by_affiliate_id:l.referredByAffiliateId||null })));
 
   if(s.invoices.length) await sb.from('invoices').insert(s.invoices.map(inv=>({ id:inv.id, clinic_id:s.clinicId, invoice_number:inv.invoiceNumber, client_id:inv.clientId||null, client_name:inv.clientName, type:inv.type, status:inv.status, notes:inv.notes||'', created_date:inv.createdDate||null, due_date:inv.dueDate||null, stock_deducted:!!inv.stockDeducted })));
   const allLineItems = [];
@@ -2182,6 +2190,58 @@ function bindSalesEvents(){
       });
     });
   });
+
+  const addAffiliateBtn = document.getElementById('addAffiliateBtn');
+  if(addAffiliateBtn) addAffiliateBtn.addEventListener('click', ()=>openAffiliateModal(null));
+  document.querySelectorAll('[data-edit-affiliate]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openAffiliateModal(state.affiliates.find(a=>a.id===btn.dataset.editAffiliate)));
+  });
+  document.querySelectorAll('[data-del-affiliate]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      confirmAction('Remove this affiliate partner? Their past referrals stay on record, but their link will stop working.', async ()=>{
+        state.affiliates = state.affiliates.filter(a=>a.id!==btn.dataset.delAffiliate);
+        await saveState(); render();
+        showToast('Affiliate removed');
+      });
+    });
+  });
+  document.querySelectorAll('[data-copy-affiliate-link]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const link = `${window.location.origin}${window.location.pathname}?ref=${btn.dataset.copyAffiliateLink}`;
+      copyToClipboard(link, 'Referral link copied');
+    });
+  });
+}
+
+function openAffiliateModal(affiliate){
+  const isEdit = !!affiliate;
+  openModal(`
+    <div class="modal-title">${isEdit?'Edit Affiliate':'Add Affiliate'}</div>
+    <div class="field-group"><label>Name</label><div class="field-line"><input id="affName" type="text" value="${isEdit?esc(affiliate.name):''}" placeholder="Partner's name or business"></div></div>
+    <div class="field-group"><label>Commission Rate (%)</label><div class="field-line"><input id="affCommission" type="number" min="0" max="100" value="${isEdit?affiliate.commissionRate:10}"></div></div>
+    <div class="field-group"><label>Contact Email (optional)</label><div class="field-line"><input id="affEmail" type="email" value="${isEdit?esc(affiliate.contactEmail||''):''}" placeholder="partner@example.com"></div></div>
+    ${isEdit ? `<label class="checkbox-item" style="margin-bottom:12px;"><input type="checkbox" id="affActive" ${affiliate.active?'checked':''}> Active (link works while checked)</label>` : ''}
+    ${isEdit ? `<p class="empty-state" style="margin-top:-6px;">Referral link: ${esc(window.location.origin + window.location.pathname)}?ref=${esc(affiliate.code)}</p>` : `<p class="empty-state" style="margin-top:-6px;">A unique shareable link is generated once you save.</p>`}
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancelModal">Cancel</button>
+      <button class="btn btn-primary" id="saveAffiliateBtn">${isEdit?'Save Changes':'Add'}</button>
+    </div>`);
+  document.getElementById('saveAffiliateBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('affName').value.trim();
+    if(!name) return;
+    const commissionRate = Number(document.getElementById('affCommission').value) || 0;
+    const contactEmail = document.getElementById('affEmail').value.trim();
+    if(isEdit){
+      affiliate.name = name; affiliate.commissionRate = commissionRate; affiliate.contactEmail = contactEmail;
+      affiliate.active = document.getElementById('affActive').checked;
+    } else {
+      const code = Array.from(crypto.getRandomValues(new Uint8Array(6))).map(b=>b.toString(36)).join('').slice(0,8);
+      state.affiliates.push({ id:'aff'+Date.now(), name, code, commissionRate, contactEmail, active:true });
+    }
+    await saveState();
+    closeModal(); render();
+    showToast(isEdit ? 'Affiliate updated' : 'Affiliate added — copy their link to share it');
+  });
 }
 
 function openUpdateTargetsModal(){
@@ -2850,6 +2910,27 @@ function computeNotifications(){
   return notifs;
 }
 
+// Commission is calculated live from paid invoices, never stored in a
+// ledger -- same approach as the existing staff origination-commission
+// system (computeSalesMetrics below), and for the same reason: it's a
+// planning figure staff can see and manually pay out, not a payroll-ready
+// balance the app tracks or auto-disburses.
+function computeAffiliateMetrics(){
+  return (state.affiliates||[]).map(a=>{
+    const referredClients = state.clients.filter(c=>c.referredByAffiliateId===a.id);
+    const referredLeadsCount = state.leads.filter(l=>l.referredByAffiliateId===a.id).length;
+    let revenue = 0;
+    referredClients.forEach(c=>{
+      state.invoices.filter(inv=>inv.clientId===c.id && inv.status==='Paid').forEach(inv=>{ revenue += invoiceTotal(inv); });
+    });
+    return {
+      id:a.id, name:a.name, code:a.code, commissionRate:a.commissionRate||0, active:a.active,
+      referredLeadsCount, referredClientsCount:referredClients.length,
+      revenue, commissionOwed: revenue * (a.commissionRate||0) / 100
+    };
+  });
+}
+
 function computeSalesTargets(){
   const orgRevenue = monthlyRevenue();
   const orgTarget = state.clinic.orgSalesTarget || 0;
@@ -2890,6 +2971,7 @@ function renderSales(){
   const totalClients = state.clients.filter(c=>c.capturedBy).length;
   const pending = perms.canManageStaff ? getPendingApprovals() : [];
   const targets = computeSalesTargets();
+  const affiliateMetrics = computeAffiliateMetrics();
 
   let cumulative = 0;
   const gradientStops = metrics.filter(m=>m.allTimeRevenue>0).map((m,i)=>{
@@ -2996,7 +3078,28 @@ function renderSales(){
       </div>`;
     }).join('') : `<p class="empty-state">${t('sales.noStaffAttributed')}</p>`}
 
-    <p class="empty-state" style="margin-top:8px; line-height:1.6;">${t('sales.commissionDisclaimer')}</p>`;
+    <p class="empty-state" style="margin-top:8px; line-height:1.6;">${t('sales.commissionDisclaimer')}</p>
+
+    ${perms.canManageStaff ? `
+    <div class="card" style="margin-top:24px;">
+      <div class="card-title">Affiliate Partners</div>
+      <p class="muted" style="font-size:12.5px; margin-bottom:14px;">Give each partner their own shareable link. Anyone who submits their details through it becomes a Lead here, tagged with who referred them — commission is calculated once they become a paying client.</p>
+      ${affiliateMetrics.length ? affiliateMetrics.map(a=>`
+        <div class="detail-row" style="align-items:flex-start; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div class="detail-label" style="color:var(--bone); font-weight:500;">${esc(a.name)} <span class="muted" style="font-weight:400;">· ${a.commissionRate}% commission${a.active?'':' · inactive'}</span></div>
+            <div class="muted" style="font-size:12px; margin-top:2px;">${a.referredLeadsCount} lead${a.referredLeadsCount===1?'':'s'} referred · ${a.referredClientsCount} became client${a.referredClientsCount===1?'':'s'} · ${fmtMoney(a.commissionOwed)} commission owed</div>
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-secondary btn-sm" data-copy-affiliate-link="${esc(a.code)}">Copy Link</button>
+            <button class="icon-btn" data-edit-affiliate="${a.id}" title="Edit">${ICONS.edit}</button>
+            ${perms.canDelete ? `<button class="icon-btn danger" data-del-affiliate="${a.id}" title="Delete">${ICONS.trash}</button>` : ''}
+          </div>
+        </div>`).join('') : `<p class="empty-state">No affiliate partners yet.</p>`}
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-secondary" id="addAffiliateBtn">${ICONS.plus} Add Affiliate</button>
+      </div>
+    </div>` : ''}`;
 }
 
 function renderReports(){
@@ -4306,7 +4409,8 @@ function bindLeadsEvents(){
           lastTreatment:{name:'—', date:'—', practitioner:'—'}, nextAction:{label:'Book first visit', date:'—'}, treatments:[],
           photoConsent:null, photoSets:[], documents:[],
           capturedBy: lead.ownerId || state.currentStaffId, captureDate: todayISO(),
-          locationId: state.currentLocationId
+          locationId: state.currentLocationId,
+          referredByAffiliateId: lead.referredByAffiliateId || null
         };
         state.clients.push(newClient);
         lead.convertedClientId = newClient.id;
@@ -5223,6 +5327,83 @@ function renderPendingScreen(email){
   });
 }
 
+/* ---- Public affiliate referral landing page (?ref=<code>) ---- */
+async function renderAffiliateReferralPage(code){
+  document.getElementById('staffApp').style.display = 'none';
+  document.getElementById('clientPortalApp').style.display = 'none';
+  document.getElementById('platformAdminApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'block';
+  document.getElementById('authScreen').innerHTML = `
+    <div class="portal-center-wrap">
+      <div class="portal-login-card">
+        <div class="brand" style="text-align:center; margin-bottom:24px;"><div class="brand-mark">Aesthetic<em>Flow</em></div></div>
+        <p class="muted" style="text-align:center;">Loading…</p>
+      </div>
+    </div>`;
+
+  let affiliateName = '', clinicName = 'the clinic', valid = true;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/affiliate-referral?code=${encodeURIComponent(code)}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if(!res.ok || data.error) valid = false;
+    else { affiliateName = data.affiliateName; clinicName = data.clinicName; }
+  }catch(e){ valid = false; }
+
+  if(!valid){
+    document.getElementById('authScreen').innerHTML = `
+      <div class="portal-center-wrap">
+        <div class="portal-login-card">
+          <div class="brand" style="text-align:center; margin-bottom:24px;"><div class="brand-mark">Aesthetic<em>Flow</em></div></div>
+          <p class="empty-state" style="text-align:center;">This referral link isn't active. Please check the link and try again.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('authScreen').innerHTML = `
+    <div class="portal-center-wrap">
+      <div class="portal-login-card">
+        <div class="brand" style="text-align:center; margin-bottom:24px;">
+          <div class="brand-mark">Aesthetic<em>Flow</em></div>
+          <div class="eyebrow" style="margin-top:8px;">Referred by ${esc(affiliateName)} to ${esc(clinicName)}</div>
+        </div>
+        <p class="portal-note" style="margin-top:0;">Leave your details and ${esc(clinicName)} will be in touch to book you in.</p>
+        <div class="field-group"><label>Name</label><div class="field-line"><input id="refName" type="text" placeholder="Your full name"></div></div>
+        <div class="field-group"><label>Phone</label><div class="field-line"><input id="refPhone" type="text" placeholder="Phone number"></div></div>
+        <div class="field-group"><label>Email</label><div class="field-line"><input id="refEmail" type="email" placeholder="you@example.com"></div></div>
+        <div class="field-group"><label>What are you interested in? (optional)</label><div class="field-line"><input id="refNote" type="text" placeholder="e.g. Botox consultation"></div></div>
+        <button class="btn btn-primary" id="refSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">Submit</button>
+      </div>
+    </div>`;
+
+  document.getElementById('refSubmitBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('refName').value.trim();
+    const phone = document.getElementById('refPhone').value.trim();
+    const email = document.getElementById('refEmail').value.trim();
+    const note = document.getElementById('refNote').value.trim();
+    if(!name){ showToast('Please enter your name'); return; }
+    if(!phone && !email){ showToast('Please enter a phone number or email'); return; }
+    const btn = document.getElementById('refSubmitBtn'); btn.disabled = true;
+    try{
+      const { data, error } = await sb.functions.invoke('affiliate-referral', { body:{ code, name, phone, email, note } });
+      if(error) throw error;
+      if(data && data.error) throw new Error(data.error);
+      document.getElementById('authScreen').innerHTML = `
+        <div class="portal-center-wrap">
+          <div class="portal-login-card">
+            <div class="brand" style="text-align:center; margin-bottom:24px;"><div class="brand-mark">Aesthetic<em>Flow</em></div></div>
+            <p class="portal-note" style="text-align:center; margin-top:0;">Thanks, ${esc(name)}! ${esc(clinicName)} has received your details and will be in touch soon.</p>
+          </div>
+        </div>`;
+    }catch(e){
+      showToast(e.message || 'Could not submit your details — please try again');
+      btn.disabled = false;
+    }
+  });
+}
+
 /* ---- Staff sign-in / sign-up ---- */
 function renderStaffAuth(mode, opts){
   document.getElementById('staffApp').style.display = 'none';
@@ -5708,6 +5889,13 @@ sb.auth.onAuthStateChange((event, session)=>{
     renderPortalAuth('signin');
   });
   document.getElementById('goToPlatformAdminLink').addEventListener('click', enterPlatformAdmin);
+
+  // A shareable affiliate referral link (?ref=<code>) always short-circuits
+  // straight to the public landing form, regardless of session state -- the
+  // whole point is a stranger with no account can land here.
+  const refCode = new URLSearchParams(window.location.search).get('ref');
+  if(refCode){ renderAffiliateReferralPage(refCode); return; }
+
   const { data:{ session } } = await sb.auth.getSession();
   await handleSession(session);
 })();
