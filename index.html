@@ -5410,7 +5410,8 @@ function renderStaffAuth(mode, opts){
   document.getElementById('clientPortalApp').style.display = 'none';
   document.getElementById('authScreen').style.display = 'block';
 
-  if(mode === 'check-email'){
+  if(mode === 'check-email' || mode === 'reset-sent'){
+    const isReset = mode === 'reset-sent';
     document.getElementById('authScreen').innerHTML = `
       <div class="portal-center-wrap">
         <div class="portal-login-card">
@@ -5419,12 +5420,47 @@ function renderStaffAuth(mode, opts){
             <div class="brand-mark">Aesthetic<em>Flow</em></div>
             <div class="eyebrow" style="margin-top:8px;">${t('auth.staffSignIn')}</div>
           </div>
-          <p class="portal-note" style="margin-top:0;">Check <strong>${esc(opts.email)}</strong> to confirm your account, then come back and sign in.</p>
+          <p class="portal-note" style="margin-top:0;">${isReset ? `If an account exists for` : `Check`} <strong>${esc(opts.email)}</strong>${isReset ? `, a password reset link has been sent.` : ` to confirm your account, then come back and sign in.`}</p>
           <button class="btn btn-primary" id="backToSignIn" style="width:100%; justify-content:center; margin-top:8px;">Back to Sign In</button>
         </div>
       </div>`;
     document.getElementById('backToSignIn').addEventListener('click', ()=>renderStaffAuth('signin'));
     bindLanguageSwitcher('langSwitchStaffCheckEmail', ()=>renderStaffAuth(mode, opts));
+    return;
+  }
+
+  if(mode === 'forgot'){
+    document.getElementById('authScreen').innerHTML = `
+      <div class="portal-center-wrap">
+        <div class="portal-login-card">
+          <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchStaffForgot')}</div>
+          <div class="brand" style="text-align:center; margin-bottom:32px;">
+            <div class="brand-mark">Aesthetic<em>Flow</em></div>
+            <div class="eyebrow" style="margin-top:8px;">${t('portal.resetPasswordTitle')}</div>
+          </div>
+          <p class="portal-note" style="margin-top:0;">Enter the email you use to sign in and we'll send you a link to set a new password.</p>
+          <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="staffForgotEmail" type="email" placeholder="you@clinic.com"></div></div>
+          <button class="btn btn-primary" id="staffForgotSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${t('portal.sendResetLink')}</button>
+          <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--sage);" id="backToStaffSignInFromForgot">${t('portal.backToSignIn')}</span></div>
+        </div>
+      </div>`;
+    document.getElementById('backToStaffSignInFromForgot').addEventListener('click', ()=>renderStaffAuth('signin'));
+    bindLanguageSwitcher('langSwitchStaffForgot', ()=>renderStaffAuth(mode, opts));
+    document.getElementById('staffForgotSubmitBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('staffForgotEmail').value.trim().toLowerCase();
+      if(!email){ showToast('Enter your email'); return; }
+      const btn = document.getElementById('staffForgotSubmitBtn'); btn.disabled = true;
+      try{
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+        if(error) throw error;
+        renderStaffAuth('reset-sent', {email});
+      }catch(e){
+        // Don't reveal whether the email exists -- same message either way.
+        renderStaffAuth('reset-sent', {email});
+      }finally{
+        btn.disabled = false;
+      }
+    });
     return;
   }
 
@@ -5440,7 +5476,7 @@ function renderStaffAuth(mode, opts){
         <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="authEmail" type="email" placeholder="you@clinic.com"></div></div>
         <div class="field-group"><label>${t('auth.password')}</label><div class="field-line"><input id="authPassword" type="password" placeholder="••••••••"></div></div>
         <button class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?t('auth.signUp'):t('auth.signIn')}</button>
-        ${isSignup ? `<p class="portal-note">Joining an existing clinic? Your email must already be added by an Owner or Admin in their Settings. First from your business? Sign up anyway — you'll get the option to set up a new clinic.</p>` : ''}
+        ${isSignup ? `<p class="portal-note">Joining an existing clinic? Your email must already be added by an Owner or Admin in their Settings. First from your business? Sign up anyway — you'll get the option to set up a new clinic.</p>` : `<div class="empty-state" style="text-align:center; margin-top:12px;"><span style="cursor:pointer; color:var(--sage);" id="staffForgotLink">${t('portal.forgotPassword')}</span></div>`}
         <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="toggleAuthModeLink">${isSignup?t('auth.alreadyHaveAccount'):t('auth.newStaffSignUp')}</span></div>
         <div class="portal-divider">or</div>
         <div class="empty-state" style="text-align:center;"><span style="cursor:pointer; color:var(--sage);" id="goToPortalFromStaff">${t('auth.clientPortalLink')}</span></div>
@@ -5449,6 +5485,7 @@ function renderStaffAuth(mode, opts){
 
   document.getElementById('toggleAuthModeLink').addEventListener('click', ()=>renderStaffAuth(isSignup?'signin':'signup'));
   document.getElementById('goToPortalFromStaff').addEventListener('click', ()=>renderPortalAuth('signin'));
+  if(!isSignup) document.getElementById('staffForgotLink').addEventListener('click', ()=>renderStaffAuth('forgot'));
   bindLanguageSwitcher('langSwitchStaffAuth', ()=>renderStaffAuth(mode, opts));
   document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
