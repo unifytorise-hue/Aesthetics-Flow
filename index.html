@@ -496,6 +496,32 @@ function currentRole(){
 }
 function currentPerms(){ return ROLE_PERMISSIONS[currentRole()] || ROLE_PERMISSIONS.Receptionist; }
 
+/* ---------------- Pricing tiers ----------------
+   Solo/Team/Multi gate the two multi-tenant dimensions already in the
+   schema (staff seats, locations) plus the two features with a real
+   per-use cost (SMS via Twilio, public API access) -- everything else
+   (clients, appointments, invoices, inventory) stays unlimited on every
+   tier since that data is cheap to store. Prices are a deliberate launch
+   choice (low end of the originally-discussed range) meant to be raised
+   later for new signups once there's real usage data / case studies --
+   existing subscribers keep whatever price they signed up at, since
+   Paystack subscriptions are tied to a specific Plan they joined. */
+const TIERS = ['solo','team','multi'];
+const TIER_LIMITS = {
+  solo:  { seats:1, locations:1, sms:false, api:false },
+  team:  { seats:5, locations:2, sms:true,  api:false },
+  multi: { seats:Infinity, locations:Infinity, sms:true, api:true },
+};
+const TIER_PRICES = { solo:25, team:60, multi:150 }; // display only -- actual charge amount is whatever the linked Paystack Plan charges
+const TIER_NAMES = { solo:'Solo', team:'Team', multi:'Multi-Location' };
+// Trial clinics get full access to every tier's limits so they can properly
+// evaluate the product; limits only bite once subscription_status is 'active'
+// (or later, once a real subscription lapses into past_due/canceled).
+function currentTierLimits(){
+  if(state.clinic.subscriptionStatus === 'trialing') return { seats:Infinity, locations:Infinity, sms:true, api:true };
+  return TIER_LIMITS[state.clinic.tier] || TIER_LIMITS.solo;
+}
+
 /* ---------------- Language / i18n ----------------
    Scope is deliberately bounded for now: nav labels, the staff and client
    portal auth screens, and the client portal dashboard -- the highest-value,
@@ -1305,7 +1331,8 @@ function seedData(){
     ],
     aiChat:[
       {from:'ai', text:'Good morning. Ask me about follow-ups, revenue, your pipeline, or invoicing any time.'}
-    ]
+    ],
+    affiliates:[]
   };
 }
 
@@ -1343,7 +1370,8 @@ function mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient){
     photoConsent:c.photo_consent,
     photoSets:(photoSetsByClient[c.id]||[]).map(mapPhotoSet),
     documents:(documentsByClient[c.id]||[]).map(mapDocument),
-    authUserId:c.auth_user_id
+    authUserId:c.auth_user_id,
+    referredByAffiliateId:c.referred_by_affiliate_id||null
   };
 }
 function mapInvoice(inv, lineItemsByInvoice){
@@ -1358,7 +1386,7 @@ async function loadState(){
     const [
       clinicIdRes, clinicRowRes, clinicRes, locationsRes, staffRes, clientsRes, treatmentsRes, photoSetsRes, documentsRes,
       appointmentsRes, leadsRes, inventoryRes, invoicesRes, lineItemsRes, campaignsRes,
-      socialPostsRes, creditTxRes, aiChatRes, apiKeysRes
+      socialPostsRes, creditTxRes, aiChatRes, apiKeysRes, affiliatesRes
     ] = await Promise.all([
       sb.rpc('my_clinic_id'),
       sb.from('clinics').select('*').maybeSingle(),
@@ -1378,7 +1406,8 @@ async function loadState(){
       sb.from('social_posts').select('*'),
       sb.from('credit_transactions').select('*'),
       sb.from('ai_chat_messages').select('*').order('id', {ascending:true}),
-      sb.from('api_keys').select('*').order('created_at', {ascending:false})
+      sb.from('api_keys').select('*').order('created_at', {ascending:false}),
+      sb.from('affiliates').select('*')
     ]);
 
     const clinicId = clinicIdRes.data;
@@ -1396,6 +1425,7 @@ async function loadState(){
         practitionerName: clinicRow.practitioner_name || 'Dr Sarah',
         logoUrl: clinicRow.logo_url || '',
         plan: clinicBillingRow.plan || 'trial',
+        tier: clinicBillingRow.tier || 'solo',
         subscriptionStatus: clinicBillingRow.subscription_status || 'trialing',
         trialEndsAt: clinicBillingRow.trial_ends_at || null,
         currency: clinicRow.currency || '$',
@@ -1415,7 +1445,8 @@ async function loadState(){
       currentStaffId: clinicRow.current_staff_id || (staffRes.data[0] && staffRes.data[0].id),
       clients:(clientsRes.data||[]).map(c=>mapClient(c, treatmentsByClient, photoSetsByClient, documentsByClient)),
       appointments:(appointmentsRes.data||[]).map(a=>({ id:a.id, clientId:a.client_id, clientName:a.client_name, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, locationId:a.location_id })),
-      leads:(leadsRes.data||[]).map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, ownerId:l.owner_id, convertedClientId:l.converted_client_id })),
+      leads:(leadsRes.data||[]).map(l=>({ id:l.id, name:l.name, source:l.source, stage:l.stage, ownerId:l.owner_id, convertedClientId:l.converted_client_id, referredByAffiliateId:l.referred_by_affiliate_id||null })),
+      affiliates:(affiliatesRes.data||[]).map(a=>({ id:a.id, name:a.name, code:a.code, commissionRate:Number(a.commission_rate), contactEmail:a.contact_email||'', active:a.active })),
       inventory:(inventoryRes.data||[]).map(i=>({ id:i.id, name:i.name, stock:i.stock, expiresIn:i.expires_in, price:Number(i.price)||0 })),
       invoices:(invoicesRes.data||[]).map(inv=>mapInvoice(inv, lineItemsByInvoice)),
       nextInvoiceSeq: clinicRow.next_invoice_seq || 1,
@@ -1450,17 +1481,21 @@ async function persistStateToSupabase(s){
   await sb.from('inventory').delete().neq('id','');
   await sb.from('staff').delete().neq('id','');
   await sb.from('locations').delete().neq('id','');
+  await sb.from('affiliates').delete().neq('id','');
 
   if(s.locations.length) await sb.from('locations').insert(s.locations.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, address:l.address, phone:l.phone })));
   if(s.staff.length) await sb.from('staff').insert(s.staff.map(st=>({ id:st.id, clinic_id:s.clinicId, name:st.name, role:st.role, location_id:st.locationId, commission_rate:st.commissionRate, license_expiry:st.licenseExpiry||null, sales_target:st.salesTarget, target_bonus_percent:st.targetBonusPercent, email:st.email||null, auth_user_id:st.authUserId||null })));
   if(s.inventory.length) await sb.from('inventory').insert(s.inventory.map(i=>({ id:i.id, clinic_id:s.clinicId, name:i.name, stock:i.stock, expires_in:i.expiresIn||null, price:i.price||0 })));
+  // Affiliates must be inserted before clients/leads, which carry a
+  // referred_by_affiliate_id foreign key pointing at these rows.
+  if(s.affiliates && s.affiliates.length) await sb.from('affiliates').insert(s.affiliates.map(a=>({ id:a.id, clinic_id:s.clinicId, name:a.name, code:a.code, commission_rate:a.commissionRate, contact_email:a.contactEmail||null, active:a.active })));
   if(s.clients.length) await sb.from('clients').insert(s.clients.map(c=>({
     id:c.id, clinic_id:s.clinicId, name:c.name, phone:c.phone, email:c.email, client_since:c.clientSince, status:c.status, country:c.country||null,
     location_id:c.locationId, captured_by:c.capturedBy, capture_date:c.captureDate||null,
     skin_type:c.skinType, concerns:c.concerns||[], medical_notes:c.medicalNotes||'',
     last_treatment_name:(c.lastTreatment&&c.lastTreatment.name)||'—', last_treatment_date:(c.lastTreatment&&c.lastTreatment.date)||'—', last_treatment_practitioner:(c.lastTreatment&&c.lastTreatment.practitioner)||'—',
     next_action_label:(c.nextAction&&c.nextAction.label)||'Book first visit', next_action_date:(c.nextAction&&c.nextAction.date)||'—',
-    photo_consent:c.photoConsent||null, auth_user_id:c.authUserId||null
+    photo_consent:c.photoConsent||null, auth_user_id:c.authUserId||null, referred_by_affiliate_id:c.referredByAffiliateId||null
   })));
 
   const allTreatments = [], allPhotoSets = [], allDocuments = [];
@@ -1481,7 +1516,7 @@ async function persistStateToSupabase(s){
   if(allDocuments.length) await sb.from('documents').insert(allDocuments);
 
   if(s.appointments.length) await sb.from('appointments').insert(s.appointments.map(a=>({ id:a.id, clinic_id:s.clinicId, client_id:a.clientId||null, client_name:a.clientName, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner, location_id:a.locationId||null })));
-  if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null })));
+  if(s.leads.length) await sb.from('leads').insert(s.leads.map(l=>({ id:l.id, clinic_id:s.clinicId, name:l.name, source:l.source, stage:l.stage, owner_id:l.ownerId||null, converted_client_id:l.convertedClientId||null, referred_by_affiliate_id:l.referredByAffiliateId||null })));
 
   if(s.invoices.length) await sb.from('invoices').insert(s.invoices.map(inv=>({ id:inv.id, clinic_id:s.clinicId, invoice_number:inv.invoiceNumber, client_id:inv.clientId||null, client_name:inv.clientName, type:inv.type, status:inv.status, notes:inv.notes||'', created_date:inv.createdDate||null, due_date:inv.dueDate||null, stock_deducted:!!inv.stockDeducted })));
   const allLineItems = [];
@@ -2155,6 +2190,58 @@ function bindSalesEvents(){
       });
     });
   });
+
+  const addAffiliateBtn = document.getElementById('addAffiliateBtn');
+  if(addAffiliateBtn) addAffiliateBtn.addEventListener('click', ()=>openAffiliateModal(null));
+  document.querySelectorAll('[data-edit-affiliate]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openAffiliateModal(state.affiliates.find(a=>a.id===btn.dataset.editAffiliate)));
+  });
+  document.querySelectorAll('[data-del-affiliate]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      confirmAction('Remove this affiliate partner? Their past referrals stay on record, but their link will stop working.', async ()=>{
+        state.affiliates = state.affiliates.filter(a=>a.id!==btn.dataset.delAffiliate);
+        await saveState(); render();
+        showToast('Affiliate removed');
+      });
+    });
+  });
+  document.querySelectorAll('[data-copy-affiliate-link]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const link = `${window.location.origin}${window.location.pathname}?ref=${btn.dataset.copyAffiliateLink}`;
+      copyToClipboard(link, 'Referral link copied');
+    });
+  });
+}
+
+function openAffiliateModal(affiliate){
+  const isEdit = !!affiliate;
+  openModal(`
+    <div class="modal-title">${isEdit?'Edit Affiliate':'Add Affiliate'}</div>
+    <div class="field-group"><label>Name</label><div class="field-line"><input id="affName" type="text" value="${isEdit?esc(affiliate.name):''}" placeholder="Partner's name or business"></div></div>
+    <div class="field-group"><label>Commission Rate (%)</label><div class="field-line"><input id="affCommission" type="number" min="0" max="100" value="${isEdit?affiliate.commissionRate:10}"></div></div>
+    <div class="field-group"><label>Contact Email (optional)</label><div class="field-line"><input id="affEmail" type="email" value="${isEdit?esc(affiliate.contactEmail||''):''}" placeholder="partner@example.com"></div></div>
+    ${isEdit ? `<label class="checkbox-item" style="margin-bottom:12px;"><input type="checkbox" id="affActive" ${affiliate.active?'checked':''}> Active (link works while checked)</label>` : ''}
+    ${isEdit ? `<p class="empty-state" style="margin-top:-6px;">Referral link: ${esc(window.location.origin + window.location.pathname)}?ref=${esc(affiliate.code)}</p>` : `<p class="empty-state" style="margin-top:-6px;">A unique shareable link is generated once you save.</p>`}
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancelModal">Cancel</button>
+      <button class="btn btn-primary" id="saveAffiliateBtn">${isEdit?'Save Changes':'Add'}</button>
+    </div>`);
+  document.getElementById('saveAffiliateBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('affName').value.trim();
+    if(!name) return;
+    const commissionRate = Number(document.getElementById('affCommission').value) || 0;
+    const contactEmail = document.getElementById('affEmail').value.trim();
+    if(isEdit){
+      affiliate.name = name; affiliate.commissionRate = commissionRate; affiliate.contactEmail = contactEmail;
+      affiliate.active = document.getElementById('affActive').checked;
+    } else {
+      const code = Array.from(crypto.getRandomValues(new Uint8Array(6))).map(b=>b.toString(36)).join('').slice(0,8);
+      state.affiliates.push({ id:'aff'+Date.now(), name, code, commissionRate, contactEmail, active:true });
+    }
+    await saveState();
+    closeModal(); render();
+    showToast(isEdit ? 'Affiliate updated' : 'Affiliate added — copy their link to share it');
+  });
 }
 
 function openUpdateTargetsModal(){
@@ -2823,6 +2910,27 @@ function computeNotifications(){
   return notifs;
 }
 
+// Commission is calculated live from paid invoices, never stored in a
+// ledger -- same approach as the existing staff origination-commission
+// system (computeSalesMetrics below), and for the same reason: it's a
+// planning figure staff can see and manually pay out, not a payroll-ready
+// balance the app tracks or auto-disburses.
+function computeAffiliateMetrics(){
+  return (state.affiliates||[]).map(a=>{
+    const referredClients = state.clients.filter(c=>c.referredByAffiliateId===a.id);
+    const referredLeadsCount = state.leads.filter(l=>l.referredByAffiliateId===a.id).length;
+    let revenue = 0;
+    referredClients.forEach(c=>{
+      state.invoices.filter(inv=>inv.clientId===c.id && inv.status==='Paid').forEach(inv=>{ revenue += invoiceTotal(inv); });
+    });
+    return {
+      id:a.id, name:a.name, code:a.code, commissionRate:a.commissionRate||0, active:a.active,
+      referredLeadsCount, referredClientsCount:referredClients.length,
+      revenue, commissionOwed: revenue * (a.commissionRate||0) / 100
+    };
+  });
+}
+
 function computeSalesTargets(){
   const orgRevenue = monthlyRevenue();
   const orgTarget = state.clinic.orgSalesTarget || 0;
@@ -2863,6 +2971,7 @@ function renderSales(){
   const totalClients = state.clients.filter(c=>c.capturedBy).length;
   const pending = perms.canManageStaff ? getPendingApprovals() : [];
   const targets = computeSalesTargets();
+  const affiliateMetrics = computeAffiliateMetrics();
 
   let cumulative = 0;
   const gradientStops = metrics.filter(m=>m.allTimeRevenue>0).map((m,i)=>{
@@ -2969,7 +3078,28 @@ function renderSales(){
       </div>`;
     }).join('') : `<p class="empty-state">${t('sales.noStaffAttributed')}</p>`}
 
-    <p class="empty-state" style="margin-top:8px; line-height:1.6;">${t('sales.commissionDisclaimer')}</p>`;
+    <p class="empty-state" style="margin-top:8px; line-height:1.6;">${t('sales.commissionDisclaimer')}</p>
+
+    ${perms.canManageStaff ? `
+    <div class="card" style="margin-top:24px;">
+      <div class="card-title">Affiliate Partners</div>
+      <p class="muted" style="font-size:12.5px; margin-bottom:14px;">Give each partner their own shareable link. Anyone who submits their details through it becomes a Lead here, tagged with who referred them — commission is calculated once they become a paying client.</p>
+      ${affiliateMetrics.length ? affiliateMetrics.map(a=>`
+        <div class="detail-row" style="align-items:flex-start; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div class="detail-label" style="color:var(--bone); font-weight:500;">${esc(a.name)} <span class="muted" style="font-weight:400;">· ${a.commissionRate}% commission${a.active?'':' · inactive'}</span></div>
+            <div class="muted" style="font-size:12px; margin-top:2px;">${a.referredLeadsCount} lead${a.referredLeadsCount===1?'':'s'} referred · ${a.referredClientsCount} became client${a.referredClientsCount===1?'':'s'} · ${fmtMoney(a.commissionOwed)} commission owed</div>
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-secondary btn-sm" data-copy-affiliate-link="${esc(a.code)}">Copy Link</button>
+            <button class="icon-btn" data-edit-affiliate="${a.id}" title="Edit">${ICONS.edit}</button>
+            ${perms.canDelete ? `<button class="icon-btn danger" data-del-affiliate="${a.id}" title="Delete">${ICONS.trash}</button>` : ''}
+          </div>
+        </div>`).join('') : `<p class="empty-state">No affiliate partners yet.</p>`}
+      <div class="actions" style="margin-top:14px;">
+        <button class="btn btn-secondary" id="addAffiliateBtn">${ICONS.plus} Add Affiliate</button>
+      </div>
+    </div>` : ''}`;
 }
 
 function renderReports(){
@@ -3180,7 +3310,8 @@ function renderSettings(){
         <button class="btn btn-secondary" id="exportAllDataBtn">${ICONS.reports} Export Everything (JSON)</button>
       </div>`;
 
-  const apiKeyCard = perms.canManageStaff ? `
+  const apiAllowed = currentTierLimits().api;
+  const apiKeyCard = perms.canManageStaff ? (apiAllowed ? `
       <div class="card">
         <div class="card-title">API Access</div>
         <p class="muted" style="font-size:13px; margin-bottom:16px;">Live keys for external integrations (booking widgets, marketing tools). Each key is shown in full once, at creation — only a hash is stored after that, so lost keys can't be recovered, only replaced.</p>
@@ -3203,19 +3334,41 @@ function renderSettings(){
         <p class="muted" style="font-size:12px; margin-top:14px; line-height:1.6;">Send requests with header <code>Authorization: Bearer &lt;your key&gt;</code> to:<br>
           <code>GET ${esc(SUPABASE_URL)}/functions/v1/public-api/clients</code><br>
           <code>POST ${esc(SUPABASE_URL)}/functions/v1/public-api/appointments</code> (body: client_name, date, time, service, location_id — optional)</p>
-      </div>` : '';
+      </div>` : `
+      <div class="card">
+        <div class="card-title">API Access</div>
+        <p class="empty-state">Live API keys for external integrations are available on the Multi-Location plan. Upgrade under Billing to unlock this.</p>
+      </div>`) : '';
 
   const billingCard = perms.canManageStaff ? (()=>{
     const trialDaysLeft = state.clinic.trialEndsAt ? Math.ceil((new Date(state.clinic.trialEndsAt) - new Date()) / 86400000) : null;
     const statusLabel = { trialing:'Trial', active:'Active', past_due:'Past Due', canceled:'Canceled' }[state.clinic.subscriptionStatus] || state.clinic.subscriptionStatus;
+    const isActive = state.clinic.subscriptionStatus === 'active';
     return `
       <div class="card">
         <div class="card-title">Billing</div>
-        <div class="detail-row" style="border-top:none;"><span class="detail-label">Plan</span><span class="detail-value" style="text-transform:capitalize;">${esc(state.clinic.plan)}</span></div>
+        <div class="detail-row" style="border-top:none;"><span class="detail-label">Plan</span><span class="detail-value">${esc(TIER_NAMES[state.clinic.tier] || state.clinic.tier)}</span></div>
         <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${esc(statusLabel)}</span></div>
         ${state.clinic.subscriptionStatus==='trialing' && trialDaysLeft!==null ? `<div class="detail-row"><span class="detail-label">Trial Ends</span><span class="detail-value">${trialDaysLeft>0?`${trialDaysLeft} day${trialDaysLeft===1?'':'s'} left`:'Trial ended'}</span></div>` : ''}
-        <button class="btn btn-secondary btn-sm" id="upgradePlanBtn" style="margin-top:14px;">Upgrade Plan</button>
-        <p class="empty-state" style="margin-top:10px;">Online payments aren't live yet — this button will connect to real billing soon. Contact us in the meantime to change your plan.</p>
+        <div class="tier-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-top:18px;">
+          ${TIERS.map(tier=>{
+            const limits = TIER_LIMITS[tier];
+            const isCurrent = isActive && state.clinic.tier === tier;
+            return `
+            <div class="card" style="background:rgba(242,236,221,0.03);">
+              <div class="card-title" style="margin-bottom:2px;">${esc(TIER_NAMES[tier])}</div>
+              <div class="stat-value" style="font-size:22px; margin-bottom:10px;">${fmtMoney(TIER_PRICES[tier])}<span class="muted" style="font-size:12px; font-weight:400;">/mo</span></div>
+              <div class="muted" style="font-size:12.5px; line-height:1.9;">
+                ${limits.seats===Infinity?'Unlimited staff':`${limits.seats} staff seat${limits.seats===1?'':'s'}`}<br>
+                ${limits.locations===Infinity?'Unlimited locations':`${limits.locations} location${limits.locations===1?'':'s'}`}<br>
+                ${limits.sms?'Email + SMS campaigns':'Email campaigns only'}<br>
+                ${limits.api?'Public API access':'No API access'}
+              </div>
+              <button class="btn ${isCurrent?'btn-secondary':'btn-primary'} btn-sm" style="margin-top:14px; width:100%;" data-upgrade-tier="${tier}" ${isCurrent?'disabled':''}>${isCurrent?'Current Plan':'Upgrade'}</button>
+            </div>`;
+          }).join('')}
+        </div>
+        <p class="empty-state" style="margin-top:14px;">Prices shown are launch pricing and may rise for new signups later — existing subscribers keep the price they signed up at.</p>
       </div>`;
   })() : '';
 
@@ -4256,7 +4409,8 @@ function bindLeadsEvents(){
           lastTreatment:{name:'—', date:'—', practitioner:'—'}, nextAction:{label:'Book first visit', date:'—'}, treatments:[],
           photoConsent:null, photoSets:[], documents:[],
           capturedBy: lead.ownerId || state.currentStaffId, captureDate: todayISO(),
-          locationId: state.currentLocationId
+          locationId: state.currentLocationId,
+          referredByAffiliateId: lead.referredByAffiliateId || null
         };
         state.clients.push(newClient);
         lead.convertedClientId = newClient.id;
@@ -4511,7 +4665,14 @@ function bindSettingsEvents(){
   });
 
   const addLocationBtn = document.getElementById('addLocationBtn');
-  if(addLocationBtn) addLocationBtn.addEventListener('click', ()=>openLocationModal(null));
+  if(addLocationBtn) addLocationBtn.addEventListener('click', ()=>{
+    const limits = currentTierLimits();
+    if(state.locations.length >= limits.locations){
+      showToast(`Your ${state.clinic.tier} plan includes ${limits.locations} location${limits.locations===1?'':'s'} — upgrade under Billing to add more.`);
+      return;
+    }
+    openLocationModal(null);
+  });
   document.querySelectorAll('[data-edit-location]').forEach(btn=>{
     btn.addEventListener('click', ()=>openLocationModal(state.locations.find(l=>l.id===btn.dataset.editLocation)));
   });
@@ -4543,19 +4704,21 @@ function bindSettingsEvents(){
     });
   });
 
-  const upgradePlanBtn = document.getElementById('upgradePlanBtn');
-  if(upgradePlanBtn) upgradePlanBtn.addEventListener('click', async ()=>{
-    upgradePlanBtn.disabled = true;
-    try{
-      const { data, error } = await sb.functions.invoke('create-paystack-transaction', { body:{ kind:'subscription' } });
-      if(error) throw error;
-      if(data && data.configured && data.url){ window.location.href = data.url; return; }
-      showToast((data && data.message) || 'Online upgrades are coming soon — reach out to us to change your plan for now');
-    }catch(e){
-      showToast(e.message || 'Could not start checkout');
-    }finally{
-      upgradePlanBtn.disabled = false;
-    }
+  document.querySelectorAll('[data-upgrade-tier]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const tier = btn.dataset.upgradeTier;
+      btn.disabled = true;
+      try{
+        const { data, error } = await sb.functions.invoke('create-paystack-transaction', { body:{ kind:'subscription', tier } });
+        if(error) throw error;
+        if(data && data.configured && data.url){ window.location.href = data.url; return; }
+        showToast((data && data.message) || 'Online upgrades are coming soon — reach out to us to change your plan for now');
+      }catch(e){
+        showToast(e.message || 'Could not start checkout');
+      }finally{
+        btn.disabled = false;
+      }
+    });
   });
   const exportAllDataBtn = document.getElementById('exportAllDataBtn');
   if(exportAllDataBtn) exportAllDataBtn.addEventListener('click', ()=>{
@@ -4579,7 +4742,14 @@ function bindSettingsEvents(){
   });
 
   const addStaffBtn = document.getElementById('addStaffBtn');
-  if(addStaffBtn) addStaffBtn.addEventListener('click', ()=>openStaffModal(null));
+  if(addStaffBtn) addStaffBtn.addEventListener('click', ()=>{
+    const limits = currentTierLimits();
+    if(state.staff.length >= limits.seats){
+      showToast(`Your ${state.clinic.tier} plan includes ${limits.seats} staff seat${limits.seats===1?'':'s'} — upgrade under Billing to add more.`);
+      return;
+    }
+    openStaffModal(null);
+  });
 }
 
 function openStaffModal(staff){
@@ -4637,12 +4807,14 @@ function openCampaignModal(campaign){
 
 function renderCampaignModal(draft, isEdit, originalCampaign){
   const audienceCount = getAudienceClients(draft.audience).length;
+  const smsAllowed = currentTierLimits().sms;
+  if(!smsAllowed && draft.type==='SMS') draft.type = 'Email';
   openModal(`
     <div class="modal-title">${isEdit?'Edit Campaign':'Create Campaign'}</div>
     <div class="field-group"><label>Campaign Name</label><div class="field-line"><input id="kName" type="text" value="${esc(draft.name)}" placeholder="e.g. Summer Skin Refresh"></div></div>
     <div class="field-group"><label>Type</label><div class="field-line"><select id="kType">
       <option value="Email" ${draft.type==='Email'?'selected':''}>Email</option>
-      <option value="SMS" ${draft.type==='SMS'?'selected':''}>SMS</option>
+      <option value="SMS" ${draft.type==='SMS'?'selected':''} ${smsAllowed?'':'disabled'}>SMS${smsAllowed?'':' (upgrade to Team plan)'}</option>
     </select></div></div>
     <div class="field-group"><label>Audience</label><div class="field-line"><select id="kAudience">
       <option value="all" ${draft.audience==='all'?'selected':''}>All Clients</option>
@@ -5155,13 +5327,91 @@ function renderPendingScreen(email){
   });
 }
 
+/* ---- Public affiliate referral landing page (?ref=<code>) ---- */
+async function renderAffiliateReferralPage(code){
+  document.getElementById('staffApp').style.display = 'none';
+  document.getElementById('clientPortalApp').style.display = 'none';
+  document.getElementById('platformAdminApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'block';
+  document.getElementById('authScreen').innerHTML = `
+    <div class="portal-center-wrap">
+      <div class="portal-login-card">
+        <div class="brand" style="text-align:center; margin-bottom:24px;"><div class="brand-mark">Aesthetic<em>Flow</em></div></div>
+        <p class="muted" style="text-align:center;">Loading…</p>
+      </div>
+    </div>`;
+
+  let affiliateName = '', clinicName = 'the clinic', valid = true;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/affiliate-referral?code=${encodeURIComponent(code)}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    if(!res.ok || data.error) valid = false;
+    else { affiliateName = data.affiliateName; clinicName = data.clinicName; }
+  }catch(e){ valid = false; }
+
+  if(!valid){
+    document.getElementById('authScreen').innerHTML = `
+      <div class="portal-center-wrap">
+        <div class="portal-login-card">
+          <div class="brand" style="text-align:center; margin-bottom:24px;"><div class="brand-mark">Aesthetic<em>Flow</em></div></div>
+          <p class="empty-state" style="text-align:center;">This referral link isn't active. Please check the link and try again.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('authScreen').innerHTML = `
+    <div class="portal-center-wrap">
+      <div class="portal-login-card">
+        <div class="brand" style="text-align:center; margin-bottom:24px;">
+          <div class="brand-mark">Aesthetic<em>Flow</em></div>
+          <div class="eyebrow" style="margin-top:8px;">Referred by ${esc(affiliateName)} to ${esc(clinicName)}</div>
+        </div>
+        <p class="portal-note" style="margin-top:0;">Leave your details and ${esc(clinicName)} will be in touch to book you in.</p>
+        <div class="field-group"><label>Name</label><div class="field-line"><input id="refName" type="text" placeholder="Your full name"></div></div>
+        <div class="field-group"><label>Phone</label><div class="field-line"><input id="refPhone" type="text" placeholder="Phone number"></div></div>
+        <div class="field-group"><label>Email</label><div class="field-line"><input id="refEmail" type="email" placeholder="you@example.com"></div></div>
+        <div class="field-group"><label>What are you interested in? (optional)</label><div class="field-line"><input id="refNote" type="text" placeholder="e.g. Botox consultation"></div></div>
+        <button class="btn btn-primary" id="refSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">Submit</button>
+      </div>
+    </div>`;
+
+  document.getElementById('refSubmitBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('refName').value.trim();
+    const phone = document.getElementById('refPhone').value.trim();
+    const email = document.getElementById('refEmail').value.trim();
+    const note = document.getElementById('refNote').value.trim();
+    if(!name){ showToast('Please enter your name'); return; }
+    if(!phone && !email){ showToast('Please enter a phone number or email'); return; }
+    const btn = document.getElementById('refSubmitBtn'); btn.disabled = true;
+    try{
+      const { data, error } = await sb.functions.invoke('affiliate-referral', { body:{ code, name, phone, email, note } });
+      if(error) throw error;
+      if(data && data.error) throw new Error(data.error);
+      document.getElementById('authScreen').innerHTML = `
+        <div class="portal-center-wrap">
+          <div class="portal-login-card">
+            <div class="brand" style="text-align:center; margin-bottom:24px;"><div class="brand-mark">Aesthetic<em>Flow</em></div></div>
+            <p class="portal-note" style="text-align:center; margin-top:0;">Thanks, ${esc(name)}! ${esc(clinicName)} has received your details and will be in touch soon.</p>
+          </div>
+        </div>`;
+    }catch(e){
+      showToast(e.message || 'Could not submit your details — please try again');
+      btn.disabled = false;
+    }
+  });
+}
+
 /* ---- Staff sign-in / sign-up ---- */
 function renderStaffAuth(mode, opts){
   document.getElementById('staffApp').style.display = 'none';
   document.getElementById('clientPortalApp').style.display = 'none';
   document.getElementById('authScreen').style.display = 'block';
 
-  if(mode === 'check-email'){
+  if(mode === 'check-email' || mode === 'reset-sent'){
+    const isReset = mode === 'reset-sent';
     document.getElementById('authScreen').innerHTML = `
       <div class="portal-center-wrap">
         <div class="portal-login-card">
@@ -5170,12 +5420,47 @@ function renderStaffAuth(mode, opts){
             <div class="brand-mark">Aesthetic<em>Flow</em></div>
             <div class="eyebrow" style="margin-top:8px;">${t('auth.staffSignIn')}</div>
           </div>
-          <p class="portal-note" style="margin-top:0;">Check <strong>${esc(opts.email)}</strong> to confirm your account, then come back and sign in.</p>
+          <p class="portal-note" style="margin-top:0;">${isReset ? `If an account exists for` : `Check`} <strong>${esc(opts.email)}</strong>${isReset ? `, a password reset link has been sent.` : ` to confirm your account, then come back and sign in.`}</p>
           <button class="btn btn-primary" id="backToSignIn" style="width:100%; justify-content:center; margin-top:8px;">Back to Sign In</button>
         </div>
       </div>`;
     document.getElementById('backToSignIn').addEventListener('click', ()=>renderStaffAuth('signin'));
     bindLanguageSwitcher('langSwitchStaffCheckEmail', ()=>renderStaffAuth(mode, opts));
+    return;
+  }
+
+  if(mode === 'forgot'){
+    document.getElementById('authScreen').innerHTML = `
+      <div class="portal-center-wrap">
+        <div class="portal-login-card">
+          <div style="text-align:right; margin-bottom:12px;">${languageSwitcherHtml('langSwitchStaffForgot')}</div>
+          <div class="brand" style="text-align:center; margin-bottom:32px;">
+            <div class="brand-mark">Aesthetic<em>Flow</em></div>
+            <div class="eyebrow" style="margin-top:8px;">${t('portal.resetPasswordTitle')}</div>
+          </div>
+          <p class="portal-note" style="margin-top:0;">Enter the email you use to sign in and we'll send you a link to set a new password.</p>
+          <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="staffForgotEmail" type="email" placeholder="you@clinic.com"></div></div>
+          <button class="btn btn-primary" id="staffForgotSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${t('portal.sendResetLink')}</button>
+          <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--sage);" id="backToStaffSignInFromForgot">${t('portal.backToSignIn')}</span></div>
+        </div>
+      </div>`;
+    document.getElementById('backToStaffSignInFromForgot').addEventListener('click', ()=>renderStaffAuth('signin'));
+    bindLanguageSwitcher('langSwitchStaffForgot', ()=>renderStaffAuth(mode, opts));
+    document.getElementById('staffForgotSubmitBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('staffForgotEmail').value.trim().toLowerCase();
+      if(!email){ showToast('Enter your email'); return; }
+      const btn = document.getElementById('staffForgotSubmitBtn'); btn.disabled = true;
+      try{
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+        if(error) throw error;
+        renderStaffAuth('reset-sent', {email});
+      }catch(e){
+        // Don't reveal whether the email exists -- same message either way.
+        renderStaffAuth('reset-sent', {email});
+      }finally{
+        btn.disabled = false;
+      }
+    });
     return;
   }
 
@@ -5191,7 +5476,7 @@ function renderStaffAuth(mode, opts){
         <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="authEmail" type="email" placeholder="you@clinic.com"></div></div>
         <div class="field-group"><label>${t('auth.password')}</label><div class="field-line"><input id="authPassword" type="password" placeholder="••••••••"></div></div>
         <button class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?t('auth.signUp'):t('auth.signIn')}</button>
-        ${isSignup ? `<p class="portal-note">Joining an existing clinic? Your email must already be added by an Owner or Admin in their Settings. First from your business? Sign up anyway — you'll get the option to set up a new clinic.</p>` : ''}
+        ${isSignup ? `<p class="portal-note">Joining an existing clinic? Your email must already be added by an Owner or Admin in their Settings. First from your business? Sign up anyway — you'll get the option to set up a new clinic.</p>` : `<div class="empty-state" style="text-align:center; margin-top:12px;"><span style="cursor:pointer; color:var(--sage);" id="staffForgotLink">${t('portal.forgotPassword')}</span></div>`}
         <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="toggleAuthModeLink">${isSignup?t('auth.alreadyHaveAccount'):t('auth.newStaffSignUp')}</span></div>
         <div class="portal-divider">or</div>
         <div class="empty-state" style="text-align:center;"><span style="cursor:pointer; color:var(--sage);" id="goToPortalFromStaff">${t('auth.clientPortalLink')}</span></div>
@@ -5200,6 +5485,7 @@ function renderStaffAuth(mode, opts){
 
   document.getElementById('toggleAuthModeLink').addEventListener('click', ()=>renderStaffAuth(isSignup?'signin':'signup'));
   document.getElementById('goToPortalFromStaff').addEventListener('click', ()=>renderPortalAuth('signin'));
+  if(!isSignup) document.getElementById('staffForgotLink').addEventListener('click', ()=>renderStaffAuth('forgot'));
   bindLanguageSwitcher('langSwitchStaffAuth', ()=>renderStaffAuth(mode, opts));
   document.getElementById('authSubmitBtn').addEventListener('click', async ()=>{
     const email = document.getElementById('authEmail').value.trim().toLowerCase();
@@ -5560,6 +5846,7 @@ async function renderPlatformAdminDashboard(){
             <th style="text-align:left;">Staff</th>
             <th style="text-align:left;">Clients</th>
             <th style="text-align:left;">Plan</th>
+            <th style="text-align:left;">Tier</th>
             <th style="text-align:left;">Status</th>
             <th></th>
           </tr></thead>
@@ -5573,6 +5860,11 @@ async function renderPlatformAdminDashboard(){
                 <td data-label="Plan">
                   <select data-plan-select="${c.id}">
                     ${PLAN_OPTIONS.map(p=>`<option value="${p}" ${c.plan===p?'selected':''}>${p}</option>`).join('')}
+                  </select>
+                </td>
+                <td data-label="Tier">
+                  <select data-tier-select="${c.id}">
+                    ${TIERS.map(t=>`<option value="${t}" ${(c.tier||'solo')===t?'selected':''}>${TIER_NAMES[t]}</option>`).join('')}
                   </select>
                 </td>
                 <td data-label="Status">
@@ -5593,9 +5885,10 @@ async function renderPlatformAdminDashboard(){
       const clinicId = btn.dataset.saveClinic;
       const plan = document.querySelector(`[data-plan-select="${clinicId}"]`).value;
       const status = document.querySelector(`[data-status-select="${clinicId}"]`).value;
+      const tier = document.querySelector(`[data-tier-select="${clinicId}"]`).value;
       btn.disabled = true;
       try{
-        const { error } = await sb.rpc('admin_set_clinic_plan', { p_clinic_id: clinicId, p_plan: plan, p_status: status });
+        const { error } = await sb.rpc('admin_set_clinic_plan', { p_clinic_id: clinicId, p_plan: plan, p_status: status, p_tier: tier });
         if(error) throw error;
         showToast('Clinic updated');
       }catch(e){
@@ -5633,6 +5926,13 @@ sb.auth.onAuthStateChange((event, session)=>{
     renderPortalAuth('signin');
   });
   document.getElementById('goToPlatformAdminLink').addEventListener('click', enterPlatformAdmin);
+
+  // A shareable affiliate referral link (?ref=<code>) always short-circuits
+  // straight to the public landing form, regardless of session state -- the
+  // whole point is a stranger with no account can land here.
+  const refCode = new URLSearchParams(window.location.search).get('ref');
+  if(refCode){ renderAffiliateReferralPage(refCode); return; }
+
   const { data:{ session } } = await sb.auth.getSession();
   await handleSession(session);
 })();
