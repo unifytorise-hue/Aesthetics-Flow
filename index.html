@@ -401,7 +401,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
       <div style="display:flex; align-items:center; gap:7px;">
-        <img src="logo.jpg" alt="" style="height:26px; width:26px; object-fit:cover; border-radius:6px; flex-shrink:0;">
+        <img src="logo.jpg" alt="" id="mobileLogoImg" style="height:26px; width:26px; object-fit:cover; border-radius:6px; flex-shrink:0;">
         <div class="brand-mark" id="mobileBrandMark" style="font-size:16px;">Dominion<em> AI</em></div>
       </div>
     </div>
@@ -410,7 +410,7 @@
     <aside class="sidebar" id="sidebar">
       <div style="display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <img src="logo.jpg" alt="" style="height:32px; width:32px; object-fit:cover; border-radius:7px; flex-shrink:0;">
+          <img src="logo.jpg" alt="" id="sidebarLogoImg" style="height:32px; width:32px; object-fit:cover; border-radius:7px; flex-shrink:0;">
           <div class="brand-mark" id="sidebarBrandMark">Dominion<em> AI</em></div>
         </div>
         <button id="notifBellBtn" style="position:relative; background:none; border:none; color:var(--bone); cursor:pointer; padding:4px;">
@@ -1556,6 +1556,14 @@ async function saveState(){
 function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 function esc(str){ const d=document.createElement('div'); d.textContent=String(str==null?'':str); return d.innerHTML; }
+
+// White-labeling: a clinic's own logo (Settings > Logo URL) replaces the
+// platform's own Dominion AI mark everywhere the clinic itself is already
+// known (sidebar, mobile topbar, client portal) -- the CRM is built by and
+// belongs to Dominion AI, but individual clinics can present their own
+// brand to their own staff/clients. Pre-login screens (staff/portal sign-in)
+// don't know which clinic yet, so they always show the Dominion AI mark.
+function brandLogoSrc(url){ return (url && url.trim()) ? url.trim() : 'logo.jpg'; }
 
 function showToast(msg){
   const c = document.getElementById('toastContainer');
@@ -4625,6 +4633,8 @@ function bindSettingsEvents(){
       await saveState();
       document.getElementById('sidebarBrandMark').textContent = state.clinic.name;
       document.getElementById('mobileBrandMark').textContent = state.clinic.name;
+      document.getElementById('sidebarLogoImg').src = brandLogoSrc(state.clinic.logoUrl);
+      document.getElementById('mobileLogoImg').src = brandLogoSrc(state.clinic.logoUrl);
       showToast('Settings saved');
     });
   }
@@ -5260,6 +5270,8 @@ async function enterStaffApp(session){
   document.getElementById('goToPlatformAdminLink').style.display = state.isPlatformAdmin ? 'block' : 'none';
   document.getElementById('sidebarBrandMark').textContent = state.clinic.name || 'Dominion AI';
   document.getElementById('mobileBrandMark').textContent = state.clinic.name || 'Dominion AI';
+  document.getElementById('sidebarLogoImg').src = brandLogoSrc(state.clinic.logoUrl);
+  document.getElementById('mobileLogoImg').src = brandLogoSrc(state.clinic.logoUrl);
   render();
   handleBillingRedirectReturn(session);
 }
@@ -5537,7 +5549,8 @@ async function loadClientPortalData(clientId){
     invoices: (invoicesRes.data||[]).map(inv=>mapInvoice(inv, {[inv.id]: inv.invoice_line_items||[]})),
     appointments: (apptRes.data||[]).map(a=>({ id:a.id, date:a.date, time:a.time, service:a.service, practitioner:a.practitioner })),
     photoSets: (photoSetsRes.data||[]).map(mapPhotoSet),
-    clinicName: branding.name || 'Dominion AI'
+    clinicName: branding.name || 'Dominion AI',
+    clinicLogoUrl: branding.logo_url || ''
   };
 }
 
@@ -5717,9 +5730,12 @@ function renderPortalDashboard(){
   document.getElementById('clientPortalApp').innerHTML = `
     <div class="portal-wrap">
       <div class="portal-header">
-        <div>
-          <div class="eyebrow" style="margin-bottom:4px;">${esc(portalData.clinicName)}</div>
-          <div class="page-title">${t('portal.welcome')}, ${esc(c.name.split(' ')[0])}</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <img src="${esc(brandLogoSrc(portalData.clinicLogoUrl))}" alt="" style="height:40px; width:40px; object-fit:cover; border-radius:8px; flex-shrink:0;">
+          <div>
+            <div class="eyebrow" style="margin-bottom:4px;">${esc(portalData.clinicName)}</div>
+            <div class="page-title">${t('portal.welcome')}, ${esc(c.name.split(' ')[0])}</div>
+          </div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           ${languageSwitcherHtml('langSwitchPortalDash')}
