@@ -486,21 +486,21 @@ const NAV_ITEMS = [
   {id:'ai', label:'AI Assistant', icon:'ai'},
 ];
 
-const ROLE_ORDER = ['Owner','Admin','Doctor','Therapist','Receptionist'];
+const ROLE_ORDER = ['Owner','Admin','Site Engineer','Field Technician','Sales Rep'];
 const ROLE_PERMISSIONS = {
   Owner:        { nav:['dashboard','clients','calendar','leads','inventory','invoices','campaigns','sales','teamchat','reports','settings','ai'], canDelete:true,  canEditMedical:true,  canManageStaff:true  },
   Admin:        { nav:['dashboard','clients','calendar','leads','inventory','invoices','campaigns','sales','teamchat','reports','settings','ai'], canDelete:true,  canEditMedical:true,  canManageStaff:true  },
-  Doctor:       { nav:['dashboard','clients','calendar','campaigns','sales','teamchat','reports','settings','ai'],                        canDelete:false, canEditMedical:true,  canManageStaff:false },
-  Therapist:    { nav:['dashboard','clients','calendar','campaigns','sales','teamchat','settings','ai'],                                  canDelete:false, canEditMedical:true,  canManageStaff:false },
-  Receptionist: { nav:['dashboard','clients','calendar','leads','invoices','campaigns','sales','teamchat','settings','ai'],               canDelete:false, canEditMedical:false, canManageStaff:false },
+  'Site Engineer':    { nav:['dashboard','clients','calendar','campaigns','sales','teamchat','reports','settings','ai'],                   canDelete:false, canEditMedical:true,  canManageStaff:false },
+  'Field Technician':  { nav:['dashboard','clients','calendar','campaigns','sales','teamchat','settings','ai'],                            canDelete:false, canEditMedical:true,  canManageStaff:false },
+  'Sales Rep':  { nav:['dashboard','clients','calendar','leads','invoices','campaigns','sales','teamchat','settings','ai'],                canDelete:false, canEditMedical:false, canManageStaff:false },
 };
 function currentRole(){
   const staff = state.staff && state.staff.find(s=>s.id===state.currentStaffId);
   // Fail closed to the lowest-privilege role when currentStaffId doesn't
   // resolve to a real staff row, not open to Owner.
-  return (staff && staff.role) || 'Receptionist';
+  return (staff && staff.role) || 'Sales Rep';
 }
-function currentPerms(){ return ROLE_PERMISSIONS[currentRole()] || ROLE_PERMISSIONS.Receptionist; }
+function currentPerms(){ return ROLE_PERMISSIONS[currentRole()] || ROLE_PERMISSIONS['Sales Rep']; }
 
 /* ---------------- Pricing tiers ----------------
    Solo/Team/Multi gate the two multi-tenant dimensions already in the
@@ -576,30 +576,30 @@ const TRANSLATIONS = {
     'clients.colName':'Name', 'clients.colLastVisit':'Last Visit', 'clients.colStatus':'Status',
     'clients.statusVip':'VIP', 'clients.statusActive':'Active', 'clients.statusNew':'New',
     'clients.edit':'Edit', 'clients.delete':'Delete', 'clients.notFound':'Client not found.',
-    'clients.tabOverview':'Overview', 'clients.tabAssessment':'Skin Assessment', 'clients.tabTreatments':'Treatments',
+    'clients.tabOverview':'Overview', 'clients.tabAssessment':'Site Assessment', 'clients.tabTreatments':'Projects',
     'clients.tabPhotos':'Photos', 'clients.tabDocuments':'Documents', 'clients.tabPayments':'Payments',
-    'clients.lastTreatment':'Last Treatment', 'clients.date':'Date', 'clients.practitioner':'Practitioner',
-    'clients.nextAction':'Next Action', 'clients.bookAppointment':'Book Appointment', 'clients.addTreatment':'Add Treatment',
+    'clients.lastTreatment':'Last Project', 'clients.date':'Date', 'clients.practitioner':'Engineer',
+    'clients.nextAction':'Next Action', 'clients.bookAppointment':'Book Site Visit', 'clients.addTreatment':'Add Project',
     'clients.draftInvoice':'Draft Invoice', 'clients.briefMe':'Brief Me',
-    'clients.skinType':'Skin Type', 'clients.concerns':'Concerns', 'clients.medicalNotes':'Medical Notes',
-    'clients.medicalNotesPlaceholder':'Allergies, medications, prior procedures...', 'clients.uploadPhotos':'Upload Photos',
-    'clients.before':'Before', 'clients.after':'After', 'clients.saveConsultation':'Save Consultation',
-    'clients.photoConsentTitle':'Clinical Photography Consent',
-    'clients.photoConsentIntro':"Before any before/after photos can be stored for {name}, they need to consent to clinical photography. This is separate from general treatment consent — photography has its own legal basis in most jurisdictions.",
-    'clients.consentClinical':"I have obtained {name}'s consent to take clinical photos for treatment documentation",
+    'clients.skinType':'Site Type', 'clients.concerns':'Energy Goals', 'clients.medicalNotes':'Site Notes',
+    'clients.medicalNotesPlaceholder':'Grid connection details, access restrictions, prior assessments...', 'clients.uploadPhotos':'Upload Photos',
+    'clients.before':'Before', 'clients.after':'After', 'clients.saveConsultation':'Save Assessment',
+    'clients.photoConsentTitle':'Site Photography Consent',
+    'clients.photoConsentIntro':"Before any before/after photos can be stored for {name}, they need to consent to site photography. This is separate from general project sign-off — photography has its own legal basis in most jurisdictions.",
+    'clients.consentClinical':"I have obtained {name}'s consent to take site photos for project documentation",
     'clients.consentMarketing':'Client has also separately agreed these photos may be used for marketing (optional)',
-    'clients.saveConsent':'Save Consent', 'clients.staffOnlyConsent':'Only clinical staff can record photography consent.',
+    'clients.saveConsent':'Save Consent', 'clients.staffOnlyConsent':'Only project staff can record photography consent.',
     'clients.beforeAfter':'Before & After', 'clients.consentOnFile':'Photography consent on file',
     'clients.marketingApproved':' · marketing use approved', 'clients.noBeforePhoto':'No before photo', 'clients.noAfterPhoto':'No after photo',
     'clients.noPhotosYet':'No photos yet.', 'clients.addPhotos':'Add Before/After Photos',
-    'clients.treatmentHistory':'Treatment History', 'clients.batch':'Batch', 'clients.noTreatments':'No treatment history recorded yet.',
+    'clients.treatmentHistory':'Project History', 'clients.batch':'Serial / Batch', 'clients.noTreatments':'No project history recorded yet.',
     'clients.invoicesQuotes':'Invoices & Quotes', 'clients.item':'item', 'clients.items':'items', 'clients.noInvoices':'No invoices or quotes yet.',
     'clients.newInvoice':'New Invoice', 'clients.documents':'Documents', 'clients.file':'file', 'clients.uploaded':'uploaded',
     'clients.tooLarge':'too large to store — kept as a reference only', 'clients.noDocuments':'No documents yet.', 'clients.uploadDocument':'Upload Document',
     'clients.phone':'Phone', 'clients.email':'Email', 'clients.clientSince':'Client Since', 'clients.editClient':'Edit client', 'clients.deleteClient':'Delete client',
-    'skinType.Normal':'Normal', 'skinType.Oily':'Oily', 'skinType.Dry':'Dry', 'skinType.Combination':'Combination', 'skinType.Sensitive':'Sensitive',
-    'concern.Wrinkles':'Wrinkles', 'concern.Pigmentation':'Pigmentation', 'concern.Acne':'Acne', 'concern.Volume Loss':'Volume Loss',
-    'cal.title':'Calendar', 'cal.practitioner':'Practitioner', 'cal.all':'All', 'cal.today':'Today', 'cal.noAppointments':'No appointments', 'cal.newAppointment':'New Appointment',
+    'skinType.Normal':'Residential', 'skinType.Oily':'Commercial', 'skinType.Dry':'Industrial', 'skinType.Combination':'Agricultural', 'skinType.Sensitive':'Utility-Scale',
+    'concern.Wrinkles':'Load Shedding', 'concern.Pigmentation':'High Energy Costs', 'concern.Acne':'Carbon Footprint', 'concern.Volume Loss':'Backup Power',
+    'cal.title':'Calendar', 'cal.practitioner':'Engineer', 'cal.all':'All', 'cal.today':'Today', 'cal.noAppointments':'No appointments', 'cal.newAppointment':'New Appointment',
     'leads.title':'Sales Pipeline', 'leads.inPipeline':'{n} In Pipeline', 'leads.convertedToClient':'Converted to client', 'leads.move':'Move →', 'leads.empty':'Empty', 'leads.addLead':'Add Lead',
     'leadStage.New Leads':'New Leads', 'leadStage.Consultation':'Consultation', 'leadStage.Quote Sent':'Quote Sent', 'leadStage.Booked':'Booked', 'leadStage.Completed':'Completed',
     'inv.title':'Inventory', 'inv.products':'{n} Products', 'inv.expiresAlert':'{name} expires in {days} days', 'inv.colProduct':'Product', 'inv.colStock':'Stock', 'inv.colPrice':'Price', 'inv.noProducts':'No products yet.', 'inv.addProduct':'Add Product',
@@ -674,30 +674,30 @@ const TRANSLATIONS = {
     'clients.colName':'Nombre', 'clients.colLastVisit':'Última Visita', 'clients.colStatus':'Estado',
     'clients.statusVip':'VIP', 'clients.statusActive':'Activo', 'clients.statusNew':'Nuevo',
     'clients.edit':'Editar', 'clients.delete':'Eliminar', 'clients.notFound':'Cliente no encontrado.',
-    'clients.tabOverview':'Resumen', 'clients.tabAssessment':'Evaluación de Piel', 'clients.tabTreatments':'Tratamientos',
+    'clients.tabOverview':'Resumen', 'clients.tabAssessment':'Evaluación del Sitio', 'clients.tabTreatments':'Proyectos',
     'clients.tabPhotos':'Fotos', 'clients.tabDocuments':'Documentos', 'clients.tabPayments':'Pagos',
-    'clients.lastTreatment':'Último Tratamiento', 'clients.date':'Fecha', 'clients.practitioner':'Profesional',
-    'clients.nextAction':'Próxima Acción', 'clients.bookAppointment':'Reservar Cita', 'clients.addTreatment':'Añadir Tratamiento',
+    'clients.lastTreatment':'Último Proyecto', 'clients.date':'Fecha', 'clients.practitioner':'Ingeniero',
+    'clients.nextAction':'Próxima Acción', 'clients.bookAppointment':'Reservar Visita al Sitio', 'clients.addTreatment':'Añadir Proyecto',
     'clients.draftInvoice':'Redactar Factura', 'clients.briefMe':'Resumen Rápido',
-    'clients.skinType':'Tipo de Piel', 'clients.concerns':'Preocupaciones', 'clients.medicalNotes':'Notas Médicas',
-    'clients.medicalNotesPlaceholder':'Alergias, medicamentos, procedimientos previos...', 'clients.uploadPhotos':'Subir Fotos',
-    'clients.before':'Antes', 'clients.after':'Después', 'clients.saveConsultation':'Guardar Consulta',
-    'clients.photoConsentTitle':'Consentimiento de Fotografía Clínica',
-    'clients.photoConsentIntro':'Antes de poder guardar fotos de antes/después de {name}, debe dar su consentimiento para la fotografía clínica. Esto es independiente del consentimiento general de tratamiento — la fotografía tiene su propia base legal en la mayoría de jurisdicciones.',
-    'clients.consentClinical':'He obtenido el consentimiento de {name} para tomar fotos clínicas con fines de documentación del tratamiento',
+    'clients.skinType':'Tipo de Sitio', 'clients.concerns':'Objetivos Energéticos', 'clients.medicalNotes':'Notas del Sitio',
+    'clients.medicalNotesPlaceholder':'Detalles de conexión a la red, restricciones de acceso, evaluaciones previas...', 'clients.uploadPhotos':'Subir Fotos',
+    'clients.before':'Antes', 'clients.after':'Después', 'clients.saveConsultation':'Guardar Evaluación',
+    'clients.photoConsentTitle':'Consentimiento de Fotografía del Sitio',
+    'clients.photoConsentIntro':'Antes de poder guardar fotos de antes/después de {name}, debe dar su consentimiento para la fotografía del sitio. Esto es independiente de la aprobación general del proyecto — la fotografía tiene su propia base legal en la mayoría de jurisdicciones.',
+    'clients.consentClinical':'He obtenido el consentimiento de {name} para tomar fotos del sitio con fines de documentación del proyecto',
     'clients.consentMarketing':'El cliente también ha aceptado por separado que estas fotos se usen con fines de marketing (opcional)',
-    'clients.saveConsent':'Guardar Consentimiento', 'clients.staffOnlyConsent':'Solo el personal clínico puede registrar el consentimiento de fotografía.',
+    'clients.saveConsent':'Guardar Consentimiento', 'clients.staffOnlyConsent':'Solo el personal del proyecto puede registrar el consentimiento de fotografía.',
     'clients.beforeAfter':'Antes y Después', 'clients.consentOnFile':'Consentimiento de fotografía registrado',
     'clients.marketingApproved':' · uso de marketing aprobado', 'clients.noBeforePhoto':'Sin foto de antes', 'clients.noAfterPhoto':'Sin foto de después',
     'clients.noPhotosYet':'Aún no hay fotos.', 'clients.addPhotos':'Añadir Fotos de Antes/Después',
-    'clients.treatmentHistory':'Historial de Tratamientos', 'clients.batch':'Lote', 'clients.noTreatments':'Aún no hay historial de tratamientos.',
+    'clients.treatmentHistory':'Historial de Proyectos', 'clients.batch':'Serie / Lote', 'clients.noTreatments':'Aún no hay historial de proyectos.',
     'clients.invoicesQuotes':'Facturas y Presupuestos', 'clients.item':'artículo', 'clients.items':'artículos', 'clients.noInvoices':'Aún no hay facturas ni presupuestos.',
     'clients.newInvoice':'Nueva Factura', 'clients.documents':'Documentos', 'clients.file':'archivo', 'clients.uploaded':'subido',
     'clients.tooLarge':'demasiado grande para almacenar — se guarda solo como referencia', 'clients.noDocuments':'Aún no hay documentos.', 'clients.uploadDocument':'Subir Documento',
     'clients.phone':'Teléfono', 'clients.email':'Correo', 'clients.clientSince':'Cliente Desde', 'clients.editClient':'Editar cliente', 'clients.deleteClient':'Eliminar cliente',
-    'skinType.Normal':'Normal', 'skinType.Oily':'Grasa', 'skinType.Dry':'Seca', 'skinType.Combination':'Mixta', 'skinType.Sensitive':'Sensible',
-    'concern.Wrinkles':'Arrugas', 'concern.Pigmentation':'Pigmentación', 'concern.Acne':'Acné', 'concern.Volume Loss':'Pérdida de Volumen',
-    'cal.title':'Calendario', 'cal.practitioner':'Profesional', 'cal.all':'Todos', 'cal.today':'Hoy', 'cal.noAppointments':'Sin citas', 'cal.newAppointment':'Nueva Cita',
+    'skinType.Normal':'Residencial', 'skinType.Oily':'Comercial', 'skinType.Dry':'Industrial', 'skinType.Combination':'Agrícola', 'skinType.Sensitive':'Escala de Red',
+    'concern.Wrinkles':'Cortes de Energía', 'concern.Pigmentation':'Altos Costos Energéticos', 'concern.Acne':'Huella de Carbono', 'concern.Volume Loss':'Energía de Respaldo',
+    'cal.title':'Calendario', 'cal.practitioner':'Ingeniero', 'cal.all':'Todos', 'cal.today':'Hoy', 'cal.noAppointments':'Sin citas', 'cal.newAppointment':'Nueva Cita',
     'leads.title':'Embudo de Ventas', 'leads.inPipeline':'{n} en el Embudo', 'leads.convertedToClient':'Convertido en cliente', 'leads.move':'Mover →', 'leads.empty':'Vacío', 'leads.addLead':'Añadir Cliente Potencial',
     'leadStage.New Leads':'Nuevos Clientes Potenciales', 'leadStage.Consultation':'Consulta', 'leadStage.Quote Sent':'Presupuesto Enviado', 'leadStage.Booked':'Reservado', 'leadStage.Completed':'Completado',
     'inv.title':'Inventario', 'inv.products':'{n} Productos', 'inv.expiresAlert':'{name} caduca en {days} días', 'inv.colProduct':'Producto', 'inv.colStock':'Stock', 'inv.colPrice':'Precio', 'inv.noProducts':'Aún no hay productos.', 'inv.addProduct':'Añadir Producto',
@@ -772,30 +772,30 @@ const TRANSLATIONS = {
     'clients.colName':'Nom', 'clients.colLastVisit':'Dernière Visite', 'clients.colStatus':'Statut',
     'clients.statusVip':'VIP', 'clients.statusActive':'Actif', 'clients.statusNew':'Nouveau',
     'clients.edit':'Modifier', 'clients.delete':'Supprimer', 'clients.notFound':'Client introuvable.',
-    'clients.tabOverview':'Aperçu', 'clients.tabAssessment':'Évaluation de la Peau', 'clients.tabTreatments':'Traitements',
+    'clients.tabOverview':'Aperçu', 'clients.tabAssessment':'Évaluation du Site', 'clients.tabTreatments':'Projets',
     'clients.tabPhotos':'Photos', 'clients.tabDocuments':'Documents', 'clients.tabPayments':'Paiements',
-    'clients.lastTreatment':'Dernier Traitement', 'clients.date':'Date', 'clients.practitioner':'Praticien',
-    'clients.nextAction':'Prochaine Action', 'clients.bookAppointment':'Réserver un Rendez-vous', 'clients.addTreatment':'Ajouter un Traitement',
+    'clients.lastTreatment':'Dernier Projet', 'clients.date':'Date', 'clients.practitioner':'Ingénieur',
+    'clients.nextAction':'Prochaine Action', 'clients.bookAppointment':'Réserver une Visite de Site', 'clients.addTreatment':'Ajouter un Projet',
     'clients.draftInvoice':'Rédiger une Facture', 'clients.briefMe':'Résumé Rapide',
-    'clients.skinType':'Type de Peau', 'clients.concerns':'Préoccupations', 'clients.medicalNotes':'Notes Médicales',
-    'clients.medicalNotesPlaceholder':'Allergies, médicaments, procédures antérieures...', 'clients.uploadPhotos':'Téléverser des Photos',
-    'clients.before':'Avant', 'clients.after':'Après', 'clients.saveConsultation':'Enregistrer la Consultation',
-    'clients.photoConsentTitle':'Consentement de Photographie Clinique',
-    'clients.photoConsentIntro':"Avant que des photos avant/après puissent être conservées pour {name}, un consentement à la photographie clinique est requis. Ceci est distinct du consentement général au traitement — la photographie a sa propre base légale dans la plupart des juridictions.",
-    'clients.consentClinical':"J'ai obtenu le consentement de {name} pour prendre des photos cliniques à des fins de documentation du traitement",
+    'clients.skinType':'Type de Site', 'clients.concerns':'Objectifs Énergétiques', 'clients.medicalNotes':'Notes du Site',
+    'clients.medicalNotesPlaceholder':'Détails de raccordement au réseau, restrictions d\'accès, évaluations antérieures...', 'clients.uploadPhotos':'Téléverser des Photos',
+    'clients.before':'Avant', 'clients.after':'Après', 'clients.saveConsultation':'Enregistrer l\'Évaluation',
+    'clients.photoConsentTitle':'Consentement de Photographie du Site',
+    'clients.photoConsentIntro':"Avant que des photos avant/après puissent être conservées pour {name}, un consentement à la photographie du site est requis. Ceci est distinct de l'approbation générale du projet — la photographie a sa propre base légale dans la plupart des juridictions.",
+    'clients.consentClinical':"J'ai obtenu le consentement de {name} pour prendre des photos du site à des fins de documentation du projet",
     'clients.consentMarketing':'Le client a également accepté séparément que ces photos soient utilisées à des fins marketing (facultatif)',
-    'clients.saveConsent':'Enregistrer le Consentement', 'clients.staffOnlyConsent':'Seul le personnel clinique peut enregistrer le consentement de photographie.',
+    'clients.saveConsent':'Enregistrer le Consentement', 'clients.staffOnlyConsent':'Seul le personnel de projet peut enregistrer le consentement de photographie.',
     'clients.beforeAfter':'Avant/Après', 'clients.consentOnFile':'Consentement de photographie enregistré',
     'clients.marketingApproved':' · usage marketing approuvé', 'clients.noBeforePhoto':'Pas de photo avant', 'clients.noAfterPhoto':'Pas de photo après',
     'clients.noPhotosYet':'Aucune photo pour le moment.', 'clients.addPhotos':'Ajouter des Photos Avant/Après',
-    'clients.treatmentHistory':'Historique des Traitements', 'clients.batch':'Lot', 'clients.noTreatments':'Aucun historique de traitement pour le moment.',
+    'clients.treatmentHistory':'Historique des Projets', 'clients.batch':'Série / Lot', 'clients.noTreatments':'Aucun historique de projet pour le moment.',
     'clients.invoicesQuotes':'Factures et Devis', 'clients.item':'article', 'clients.items':'articles', 'clients.noInvoices':'Aucune facture ni devis pour le moment.',
     'clients.newInvoice':'Nouvelle Facture', 'clients.documents':'Documents', 'clients.file':'fichier', 'clients.uploaded':'téléversé le',
     'clients.tooLarge':'trop volumineux pour être stocké — conservé à titre de référence uniquement', 'clients.noDocuments':'Aucun document pour le moment.', 'clients.uploadDocument':'Téléverser un Document',
     'clients.phone':'Téléphone', 'clients.email':'E-mail', 'clients.clientSince':'Client Depuis', 'clients.editClient':'Modifier le client', 'clients.deleteClient':'Supprimer le client',
-    'skinType.Normal':'Normale', 'skinType.Oily':'Grasse', 'skinType.Dry':'Sèche', 'skinType.Combination':'Mixte', 'skinType.Sensitive':'Sensible',
-    'concern.Wrinkles':'Rides', 'concern.Pigmentation':'Pigmentation', 'concern.Acne':'Acné', 'concern.Volume Loss':'Perte de Volume',
-    'cal.title':'Calendrier', 'cal.practitioner':'Praticien', 'cal.all':'Tous', 'cal.today':"Aujourd'hui", 'cal.noAppointments':'Aucun rendez-vous', 'cal.newAppointment':'Nouveau Rendez-vous',
+    'skinType.Normal':'Résidentiel', 'skinType.Oily':'Commercial', 'skinType.Dry':'Industriel', 'skinType.Combination':'Agricole', 'skinType.Sensitive':'Échelle Réseau',
+    'concern.Wrinkles':'Délestage', 'concern.Pigmentation':'Coûts Énergétiques Élevés', 'concern.Acne':'Empreinte Carbone', 'concern.Volume Loss':'Alimentation de Secours',
+    'cal.title':'Calendrier', 'cal.practitioner':'Ingénieur', 'cal.all':'Tous', 'cal.today':"Aujourd'hui", 'cal.noAppointments':'Aucun rendez-vous', 'cal.newAppointment':'Nouveau Rendez-vous',
     'leads.title':'Pipeline des Ventes', 'leads.inPipeline':'{n} dans le Pipeline', 'leads.convertedToClient':'Converti en client', 'leads.move':'Déplacer →', 'leads.empty':'Vide', 'leads.addLead':'Ajouter un Prospect',
     'leadStage.New Leads':'Nouveaux Prospects', 'leadStage.Consultation':'Consultation', 'leadStage.Quote Sent':'Devis Envoyé', 'leadStage.Booked':'Réservé', 'leadStage.Completed':'Terminé',
     'inv.title':'Inventaire', 'inv.products':'{n} Produits', 'inv.expiresAlert':'{name} expire dans {days} jours', 'inv.colProduct':'Produit', 'inv.colStock':'Stock', 'inv.colPrice':'Prix', 'inv.noProducts':'Aucun produit pour le moment.', 'inv.addProduct':'Ajouter un Produit',
@@ -870,30 +870,30 @@ const TRANSLATIONS = {
     'clients.colName':'Nome', 'clients.colLastVisit':'Última Visita', 'clients.colStatus':'Estado',
     'clients.statusVip':'VIP', 'clients.statusActive':'Ativo', 'clients.statusNew':'Novo',
     'clients.edit':'Editar', 'clients.delete':'Eliminar', 'clients.notFound':'Cliente não encontrado.',
-    'clients.tabOverview':'Resumo', 'clients.tabAssessment':'Avaliação de Pele', 'clients.tabTreatments':'Tratamentos',
+    'clients.tabOverview':'Resumo', 'clients.tabAssessment':'Avaliação do Local', 'clients.tabTreatments':'Projetos',
     'clients.tabPhotos':'Fotos', 'clients.tabDocuments':'Documentos', 'clients.tabPayments':'Pagamentos',
-    'clients.lastTreatment':'Último Tratamento', 'clients.date':'Data', 'clients.practitioner':'Profissional',
-    'clients.nextAction':'Próxima Ação', 'clients.bookAppointment':'Marcar Consulta', 'clients.addTreatment':'Adicionar Tratamento',
+    'clients.lastTreatment':'Último Projeto', 'clients.date':'Data', 'clients.practitioner':'Engenheiro',
+    'clients.nextAction':'Próxima Ação', 'clients.bookAppointment':'Marcar Visita ao Local', 'clients.addTreatment':'Adicionar Projeto',
     'clients.draftInvoice':'Rascunhar Fatura', 'clients.briefMe':'Resumo Rápido',
-    'clients.skinType':'Tipo de Pele', 'clients.concerns':'Preocupações', 'clients.medicalNotes':'Notas Médicas',
-    'clients.medicalNotesPlaceholder':'Alergias, medicamentos, procedimentos anteriores...', 'clients.uploadPhotos':'Carregar Fotos',
-    'clients.before':'Antes', 'clients.after':'Depois', 'clients.saveConsultation':'Guardar Consulta',
-    'clients.photoConsentTitle':'Consentimento de Fotografia Clínica',
-    'clients.photoConsentIntro':'Antes de guardar fotos de antes/depois para {name}, é necessário o consentimento para fotografia clínica. Isto é separado do consentimento geral de tratamento — a fotografia tem a sua própria base legal na maioria das jurisdições.',
-    'clients.consentClinical':'Obtive o consentimento de {name} para tirar fotos clínicas para fins de documentação do tratamento',
+    'clients.skinType':'Tipo de Local', 'clients.concerns':'Objetivos Energéticos', 'clients.medicalNotes':'Notas do Local',
+    'clients.medicalNotesPlaceholder':'Detalhes de ligação à rede, restrições de acesso, avaliações anteriores...', 'clients.uploadPhotos':'Carregar Fotos',
+    'clients.before':'Antes', 'clients.after':'Depois', 'clients.saveConsultation':'Guardar Avaliação',
+    'clients.photoConsentTitle':'Consentimento de Fotografia do Local',
+    'clients.photoConsentIntro':'Antes de guardar fotos de antes/depois para {name}, é necessário o consentimento para fotografia do local. Isto é separado da aprovação geral do projeto — a fotografia tem a sua própria base legal na maioria das jurisdições.',
+    'clients.consentClinical':'Obtive o consentimento de {name} para tirar fotos do local para fins de documentação do projeto',
     'clients.consentMarketing':'O cliente também concordou separadamente que estas fotos possam ser usadas para marketing (opcional)',
-    'clients.saveConsent':'Guardar Consentimento', 'clients.staffOnlyConsent':'Apenas a equipa clínica pode registar o consentimento de fotografia.',
+    'clients.saveConsent':'Guardar Consentimento', 'clients.staffOnlyConsent':'Apenas a equipa do projeto pode registar o consentimento de fotografia.',
     'clients.beforeAfter':'Antes e Depois', 'clients.consentOnFile':'Consentimento de fotografia registado',
     'clients.marketingApproved':' · uso de marketing aprovado', 'clients.noBeforePhoto':'Sem foto de antes', 'clients.noAfterPhoto':'Sem foto de depois',
     'clients.noPhotosYet':'Ainda sem fotos.', 'clients.addPhotos':'Adicionar Fotos de Antes/Depois',
-    'clients.treatmentHistory':'Histórico de Tratamentos', 'clients.batch':'Lote', 'clients.noTreatments':'Ainda sem histórico de tratamentos.',
+    'clients.treatmentHistory':'Histórico de Projetos', 'clients.batch':'Série / Lote', 'clients.noTreatments':'Ainda sem histórico de projetos.',
     'clients.invoicesQuotes':'Faturas e Orçamentos', 'clients.item':'item', 'clients.items':'itens', 'clients.noInvoices':'Ainda sem faturas ou orçamentos.',
     'clients.newInvoice':'Nova Fatura', 'clients.documents':'Documentos', 'clients.file':'ficheiro', 'clients.uploaded':'carregado em',
     'clients.tooLarge':'demasiado grande para armazenar — mantido apenas como referência', 'clients.noDocuments':'Ainda sem documentos.', 'clients.uploadDocument':'Carregar Documento',
     'clients.phone':'Telefone', 'clients.email':'E-mail', 'clients.clientSince':'Cliente Desde', 'clients.editClient':'Editar cliente', 'clients.deleteClient':'Eliminar cliente',
-    'skinType.Normal':'Normal', 'skinType.Oily':'Oleosa', 'skinType.Dry':'Seca', 'skinType.Combination':'Mista', 'skinType.Sensitive':'Sensível',
-    'concern.Wrinkles':'Rugas', 'concern.Pigmentation':'Pigmentação', 'concern.Acne':'Acne', 'concern.Volume Loss':'Perda de Volume',
-    'cal.title':'Calendário', 'cal.practitioner':'Profissional', 'cal.all':'Todos', 'cal.today':'Hoje', 'cal.noAppointments':'Sem consultas', 'cal.newAppointment':'Nova Consulta',
+    'skinType.Normal':'Residencial', 'skinType.Oily':'Comercial', 'skinType.Dry':'Industrial', 'skinType.Combination':'Agrícola', 'skinType.Sensitive':'Escala de Rede',
+    'concern.Wrinkles':'Cortes de Energia', 'concern.Pigmentation':'Custos Energéticos Elevados', 'concern.Acne':'Pegada de Carbono', 'concern.Volume Loss':'Energia de Reserva',
+    'cal.title':'Calendário', 'cal.practitioner':'Engenheiro', 'cal.all':'Todos', 'cal.today':'Hoje', 'cal.noAppointments':'Sem consultas', 'cal.newAppointment':'Nova Consulta',
     'leads.title':'Funil de Vendas', 'leads.inPipeline':'{n} no Funil', 'leads.convertedToClient':'Convertido em cliente', 'leads.move':'Mover →', 'leads.empty':'Vazio', 'leads.addLead':'Adicionar Contacto',
     'leadStage.New Leads':'Novos Contactos', 'leadStage.Consultation':'Consulta', 'leadStage.Quote Sent':'Orçamento Enviado', 'leadStage.Booked':'Marcado', 'leadStage.Completed':'Concluído',
     'inv.title':'Inventário', 'inv.products':'{n} Produtos', 'inv.expiresAlert':'{name} expira em {days} dias', 'inv.colProduct':'Produto', 'inv.colStock':'Stock', 'inv.colPrice':'Preço', 'inv.noProducts':'Ainda sem produtos.', 'inv.addProduct':'Adicionar Produto',
@@ -968,30 +968,30 @@ const TRANSLATIONS = {
     'clients.colName':'الاسم', 'clients.colLastVisit':'آخر زيارة', 'clients.colStatus':'الحالة',
     'clients.statusVip':'VIP', 'clients.statusActive':'نشط', 'clients.statusNew':'جديد',
     'clients.edit':'تعديل', 'clients.delete':'حذف', 'clients.notFound':'العميل غير موجود.',
-    'clients.tabOverview':'نظرة عامة', 'clients.tabAssessment':'تقييم البشرة', 'clients.tabTreatments':'العلاجات',
+    'clients.tabOverview':'نظرة عامة', 'clients.tabAssessment':'تقييم الموقع', 'clients.tabTreatments':'المشاريع',
     'clients.tabPhotos':'الصور', 'clients.tabDocuments':'المستندات', 'clients.tabPayments':'المدفوعات',
-    'clients.lastTreatment':'آخر علاج', 'clients.date':'التاريخ', 'clients.practitioner':'الممارس',
-    'clients.nextAction':'الإجراء التالي', 'clients.bookAppointment':'حجز موعد', 'clients.addTreatment':'إضافة علاج',
+    'clients.lastTreatment':'آخر مشروع', 'clients.date':'التاريخ', 'clients.practitioner':'المهندس',
+    'clients.nextAction':'الإجراء التالي', 'clients.bookAppointment':'حجز زيارة موقع', 'clients.addTreatment':'إضافة مشروع',
     'clients.draftInvoice':'إعداد فاتورة', 'clients.briefMe':'ملخص سريع',
-    'clients.skinType':'نوع البشرة', 'clients.concerns':'المخاوف', 'clients.medicalNotes':'ملاحظات طبية',
-    'clients.medicalNotesPlaceholder':'الحساسية، الأدوية، الإجراءات السابقة...', 'clients.uploadPhotos':'رفع الصور',
-    'clients.before':'قبل', 'clients.after':'بعد', 'clients.saveConsultation':'حفظ الاستشارة',
-    'clients.photoConsentTitle':'موافقة التصوير السريري',
-    'clients.photoConsentIntro':'قبل تخزين أي صور قبل/بعد لـ {name}، يجب الحصول على موافقتهم على التصوير السريري. هذا منفصل عن موافقة العلاج العامة — للتصوير أساسه القانوني الخاص في معظم الولايات القضائية.',
-    'clients.consentClinical':'لقد حصلت على موافقة {name} لالتقاط صور سريرية لأغراض توثيق العلاج',
+    'clients.skinType':'نوع الموقع', 'clients.concerns':'الأهداف الطاقية', 'clients.medicalNotes':'ملاحظات الموقع',
+    'clients.medicalNotesPlaceholder':'تفاصيل التوصيل بالشبكة، قيود الوصول، التقييمات السابقة...', 'clients.uploadPhotos':'رفع الصور',
+    'clients.before':'قبل', 'clients.after':'بعد', 'clients.saveConsultation':'حفظ التقييم',
+    'clients.photoConsentTitle':'موافقة تصوير الموقع',
+    'clients.photoConsentIntro':'قبل تخزين أي صور قبل/بعد لـ {name}، يجب الحصول على موافقتهم على تصوير الموقع. هذا منفصل عن الموافقة العامة على المشروع — للتصوير أساسه القانوني الخاص في معظم الولايات القضائية.',
+    'clients.consentClinical':'لقد حصلت على موافقة {name} لالتقاط صور الموقع لأغراض توثيق المشروع',
     'clients.consentMarketing':'وافق العميل أيضاً بشكل منفصل على استخدام هذه الصور لأغراض التسويق (اختياري)',
-    'clients.saveConsent':'حفظ الموافقة', 'clients.staffOnlyConsent':'يمكن فقط للطاقم السريري تسجيل موافقة التصوير.',
+    'clients.saveConsent':'حفظ الموافقة', 'clients.staffOnlyConsent':'يمكن فقط لطاقم المشروع تسجيل موافقة التصوير.',
     'clients.beforeAfter':'قبل وبعد', 'clients.consentOnFile':'موافقة التصوير مسجلة',
     'clients.marketingApproved':' · تمت الموافقة على الاستخدام التسويقي', 'clients.noBeforePhoto':'لا توجد صورة قبل', 'clients.noAfterPhoto':'لا توجد صورة بعد',
     'clients.noPhotosYet':'لا توجد صور بعد.', 'clients.addPhotos':'إضافة صور قبل/بعد',
-    'clients.treatmentHistory':'سجل العلاجات', 'clients.batch':'الدفعة', 'clients.noTreatments':'لا يوجد سجل علاجات بعد.',
+    'clients.treatmentHistory':'سجل المشاريع', 'clients.batch':'الرقم التسلسلي / الدفعة', 'clients.noTreatments':'لا يوجد سجل مشاريع بعد.',
     'clients.invoicesQuotes':'الفواتير والعروض', 'clients.item':'عنصر', 'clients.items':'عناصر', 'clients.noInvoices':'لا توجد فواتير أو عروض بعد.',
     'clients.newInvoice':'فاتورة جديدة', 'clients.documents':'المستندات', 'clients.file':'ملف', 'clients.uploaded':'تم الرفع في',
     'clients.tooLarge':'كبير جداً للتخزين — تم الاحتفاظ به كمرجع فقط', 'clients.noDocuments':'لا توجد مستندات بعد.', 'clients.uploadDocument':'رفع مستند',
     'clients.phone':'الهاتف', 'clients.email':'البريد الإلكتروني', 'clients.clientSince':'عميل منذ', 'clients.editClient':'تعديل العميل', 'clients.deleteClient':'حذف العميل',
-    'skinType.Normal':'عادية', 'skinType.Oily':'دهنية', 'skinType.Dry':'جافة', 'skinType.Combination':'مختلطة', 'skinType.Sensitive':'حساسة',
-    'concern.Wrinkles':'التجاعيد', 'concern.Pigmentation':'التصبغ', 'concern.Acne':'حب الشباب', 'concern.Volume Loss':'فقدان الحجم',
-    'cal.title':'التقويم', 'cal.practitioner':'الممارس', 'cal.all':'الكل', 'cal.today':'اليوم', 'cal.noAppointments':'لا توجد مواعيد', 'cal.newAppointment':'موعد جديد',
+    'skinType.Normal':'سكني', 'skinType.Oily':'تجاري', 'skinType.Dry':'صناعي', 'skinType.Combination':'زراعي', 'skinType.Sensitive':'نطاق الشبكة',
+    'concern.Wrinkles':'انقطاع التيار', 'concern.Pigmentation':'ارتفاع تكاليف الطاقة', 'concern.Acne':'البصمة الكربونية', 'concern.Volume Loss':'الطاقة الاحتياطية',
+    'cal.title':'التقويم', 'cal.practitioner':'المهندس', 'cal.all':'الكل', 'cal.today':'اليوم', 'cal.noAppointments':'لا توجد مواعيد', 'cal.newAppointment':'موعد جديد',
     'leads.title':'مسار المبيعات', 'leads.inPipeline':'{n} في المسار', 'leads.convertedToClient':'تم التحويل إلى عميل', 'leads.move':'نقل ←', 'leads.empty':'فارغ', 'leads.addLead':'إضافة عميل محتمل',
     'leadStage.New Leads':'عملاء محتملون جدد', 'leadStage.Consultation':'استشارة', 'leadStage.Quote Sent':'تم إرسال عرض السعر', 'leadStage.Booked':'محجوز', 'leadStage.Completed':'مكتمل',
     'inv.title':'المخزون', 'inv.products':'{n} منتج', 'inv.expiresAlert':'{name} تنتهي صلاحيته خلال {days} يوم', 'inv.colProduct':'المنتج', 'inv.colStock':'المخزون', 'inv.colPrice':'السعر', 'inv.noProducts':'لا توجد منتجات بعد.', 'inv.addProduct':'إضافة منتج',
@@ -1262,7 +1262,7 @@ function fmtMoney(n){
 
 function seedData(){
   return {
-    clinic:{ name:'Dominion AI Clinic', practitionerName:'Dr Sarah', currency:'$', originationCommissionRate:8, depreciationPeriodYears:2, orgSalesTarget:8000, orgBonusPercent:5 },
+    clinic:{ name:'Dominion AI Clinic', practitionerName:'Sarah Dlamini', currency:'$', originationCommissionRate:8, depreciationPeriodYears:2, orgSalesTarget:8000, orgBonusPercent:5 },
     contentCredits:20,
     creditTransactions:[
       {id:'ct1', type:'grant', amount:20, reason:'Trial credits', date:todayISO()}
@@ -1275,45 +1275,45 @@ function seedData(){
     ],
     currentLocationId:'loc1',
     staff:[
-      {id:'s1', name:'Dr Sarah', role:'Owner', locationId:null, commissionRate:0, licenseExpiry:isoOffset(200), salesTarget:0, targetBonusPercent:0, email:'', authUserId:null},
-      {id:'s2', name:'Dr James', role:'Doctor', locationId:'loc1', commissionRate:20, licenseExpiry:isoOffset(25), salesTarget:3000, targetBonusPercent:10, email:'', authUserId:null},
-      {id:'s3', name:'Amy Ndlovu', role:'Receptionist', locationId:'loc1', commissionRate:0, licenseExpiry:null, salesTarget:2500, targetBonusPercent:15, email:'', authUserId:null},
-      {id:'s4', name:'Dr Naledi', role:'Doctor', locationId:'loc2', commissionRate:20, licenseExpiry:isoOffset(400), salesTarget:3000, targetBonusPercent:10, email:'', authUserId:null},
+      {id:'s1', name:'Sarah Dlamini', role:'Owner', locationId:null, commissionRate:0, licenseExpiry:isoOffset(200), salesTarget:0, targetBonusPercent:0, email:'', authUserId:null},
+      {id:'s2', name:'James Okafor', role:'Site Engineer', locationId:'loc1', commissionRate:20, licenseExpiry:isoOffset(25), salesTarget:3000, targetBonusPercent:10, email:'', authUserId:null},
+      {id:'s3', name:'Amy Ndlovu', role:'Sales Rep', locationId:'loc1', commissionRate:0, licenseExpiry:null, salesTarget:2500, targetBonusPercent:15, email:'', authUserId:null},
+      {id:'s4', name:'Naledi Mokoena', role:'Site Engineer', locationId:'loc2', commissionRate:20, licenseExpiry:isoOffset(400), salesTarget:3000, targetBonusPercent:10, email:'', authUserId:null},
     ],
     currentStaffId:'s1',
     clients:[
       {id:'c1', name:'Maria Smith', phone:'+00 000 000 1111', email:'maria@email.com', clientSince:2025, status:'vip', locationId:'loc1', capturedBy:'s3', captureDate:isoOffset(-240),
-        skinType:'Combination', concerns:['Wrinkles','Volume Loss'], medicalNotes:'No known allergies.',
-        lastTreatment:{name:'Lip Filler', date:isoOffset(-2), practitioner:'Dr James'},
+        skinType:'Combination', concerns:['Wrinkles','Volume Loss'], medicalNotes:'No known site access restrictions.',
+        lastTreatment:{name:'10kW Rooftop Installation', date:isoOffset(-2), practitioner:'James Okafor'},
         nextAction:{label:'Follow-up due', date:isoOffset(12)},
-        treatments:[{name:'Lip Filler', date:isoOffset(-2), area:['Frown Lines'], product:'Juvederm', batch:'JV-2291', notes:'No complications.', price:3200, practitioner:'Dr James', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-2)}],
+        treatments:[{name:'10kW Rooftop Installation', date:isoOffset(-2), area:['Roof - North Face'], product:'JinkoSolar Tiger Neo 580W', batch:'JK-2291', notes:'No complications.', price:3200, practitioner:'James Okafor', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-2)}],
         photoConsent:{consented:true, marketingConsent:false, consentDate:isoOffset(-2)},
         photoSets:[], documents:[], authUserId:null},
       {id:'c2', name:'Jane Brown', phone:'+00 000 000 2222', email:'jane@email.com', clientSince:2024, status:'active', locationId:'loc1', capturedBy:'s2', captureDate:isoOffset(-30),
         skinType:'Oily', concerns:['Acne'], medicalNotes:'',
-        lastTreatment:{name:'Chemical Peel', date:isoOffset(-8), practitioner:'Dr James'},
+        lastTreatment:{name:'Inverter Upgrade', date:isoOffset(-8), practitioner:'James Okafor'},
         nextAction:{label:'Review', date:isoOffset(20)},
-        treatments:[{name:'Chemical Peel', date:isoOffset(-8), area:[], product:'Salicylic 20%', batch:'CP-1042', notes:'', price:1450, practitioner:'Dr James', soldBy:'s2', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-8)}],
+        treatments:[{name:'Inverter Upgrade', date:isoOffset(-8), area:[], product:'Huawei SUN2000 20kTL', batch:'HW-1042', notes:'', price:1450, practitioner:'James Okafor', soldBy:'s2', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-8)}],
         photoConsent:null,
         photoSets:[], documents:[], authUserId:null},
       {id:'c3', name:'Lisa White', phone:'+00 000 000 3333', email:'lisa@email.com', clientSince:2026, status:'new', locationId:'loc2', capturedBy:'s3', captureDate:isoOffset(-1),
         skinType:'Dry', concerns:['Pigmentation'], medicalNotes:'',
-        lastTreatment:{name:'Consultation', date:isoOffset(-1), practitioner:'Dr Sarah'},
-        nextAction:{label:'First treatment', date:isoOffset(5)},
+        lastTreatment:{name:'Site Assessment', date:isoOffset(-1), practitioner:'Sarah Dlamini'},
+        nextAction:{label:'First installation', date:isoOffset(5)},
         treatments:[
-          {name:'Botox', date:isoOffset(-1), area:['Forehead'], product:'Botox 100U', batch:'BX-3391', notes:'Upsold during consultation follow-up.', price:2800, practitioner:'Dr Naledi', soldBy:'s3', isNewProcedure:true, verified:false, verifiedBy:null, verifiedDate:null},
-          {name:'Consultation', date:isoOffset(-1), area:[], product:'', batch:'', notes:'Initial skin assessment.', price:0, practitioner:'Dr Sarah', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-1)}
+          {name:'20kW Ground-Mount Installation', date:isoOffset(-1), area:['Ground Mount - East Field'], product:'Solar Panel Array', batch:'BX-3391', notes:'Upsold during site assessment follow-up.', price:2800, practitioner:'Naledi Mokoena', soldBy:'s3', isNewProcedure:true, verified:false, verifiedBy:null, verifiedDate:null},
+          {name:'Site Assessment', date:isoOffset(-1), area:[], product:'', batch:'', notes:'Initial site assessment.', price:0, practitioner:'Sarah Dlamini', soldBy:'s3', isNewProcedure:true, verified:true, verifiedBy:'s1', verifiedDate:isoOffset(-1)}
         ],
         photoConsent:null,
         photoSets:[], documents:[], authUserId:null},
     ],
     appointments:[
-      {id:'a1', clientId:'c1', clientName:'Maria Smith', date:todayISO(), time:'09:00', service:'Botox Review', practitioner:'Dr James', locationId:'loc1'},
-      {id:'a2', clientId:null, clientName:'Jessica Brown', date:todayISO(), time:'11:00', service:'Consultation', practitioner:'Dr Sarah', locationId:'loc1'},
-      {id:'a3', clientId:null, clientName:'Amy Green', date:todayISO(), time:'14:00', service:'Laser Treatment', practitioner:'Dr James', locationId:'loc1'},
-      {id:'a4', clientId:'c3', clientName:'Lisa White', date:isoOffset(1), time:'09:30', service:'First Treatment', practitioner:'Dr Naledi', locationId:'loc2'},
-      {id:'a5', clientId:'c2', clientName:'Jane Brown', date:isoOffset(1), time:'11:30', service:'Peel Review', practitioner:'Dr James', locationId:'loc1'},
-      {id:'a6', clientId:null, clientName:'Sarah Khan', date:isoOffset(2), time:'15:00', service:'Laser', practitioner:'Dr Naledi', locationId:'loc2'},
+      {id:'a1', clientId:'c1', clientName:'Maria Smith', date:todayISO(), time:'09:00', service:'Installation Review', practitioner:'James Okafor', locationId:'loc1'},
+      {id:'a2', clientId:null, clientName:'Jessica Brown', date:todayISO(), time:'11:00', service:'Site Assessment', practitioner:'Sarah Dlamini', locationId:'loc1'},
+      {id:'a3', clientId:null, clientName:'Amy Green', date:todayISO(), time:'14:00', service:'Panel Installation', practitioner:'James Okafor', locationId:'loc1'},
+      {id:'a4', clientId:'c3', clientName:'Lisa White', date:isoOffset(1), time:'09:30', service:'First Installation', practitioner:'Naledi Mokoena', locationId:'loc2'},
+      {id:'a5', clientId:'c2', clientName:'Jane Brown', date:isoOffset(1), time:'11:30', service:'Maintenance Check', practitioner:'James Okafor', locationId:'loc1'},
+      {id:'a6', clientId:null, clientName:'Sarah Khan', date:isoOffset(2), time:'15:00', service:'Commissioning', practitioner:'Naledi Mokoena', locationId:'loc2'},
     ],
     leads:[
       {id:'l1', name:'Maria', source:'Instagram', stage:'New Leads', ownerId:'s3'},
@@ -1323,17 +1323,17 @@ function seedData(){
       {id:'l5', name:'Sarah', source:'Repeat Client', stage:'Completed', ownerId:'s1'},
     ],
     inventory:[
-      {id:'i1', name:'Botox 100 Units', stock:12, expiresIn:null, price:2800},
-      {id:'i2', name:'Filler X', stock:5, expiresIn:30, price:3200},
-      {id:'i3', name:'Serum Pro', stock:34, expiresIn:null, price:650},
+      {id:'i1', name:'JinkoSolar Tiger Neo 580W Panel', stock:120, expiresIn:null, price:2800},
+      {id:'i2', name:'Huawei SUN2000 Inverter', stock:15, expiresIn:null, price:3200},
+      {id:'i3', name:'BYD Battery Box Premium HVS', stock:8, expiresIn:null, price:650},
     ],
     invoices:[
-      {id:'inv1', invoiceNumber:'INV-0001', clientId:'c1', clientName:'Maria Smith', type:'Invoice', status:'Paid', lineItems:[{id:'li1', description:'Lip Filler', productId:'i2', quantity:1, unitPrice:3200}], notes:'', createdDate:isoOffset(-2), dueDate:isoOffset(5), stockDeducted:true},
+      {id:'inv1', invoiceNumber:'INV-0001', clientId:'c1', clientName:'Maria Smith', type:'Invoice', status:'Paid', lineItems:[{id:'li1', description:'Inverter Installation', productId:'i2', quantity:1, unitPrice:3200}], notes:'', createdDate:isoOffset(-2), dueDate:isoOffset(5), stockDeducted:true},
     ],
     nextInvoiceSeq:2,
     campaigns:[
-      {id:'k1', name:'Birthday Campaign', type:'Email', subject:'Happy Birthday from Dominion AI Clinic!', body:'Hi there,\n\nWe wanted to wish you a very happy birthday! As a thank you for being a valued client, enjoy 10% off any treatment booked this month.\n\nWarmly,\nThe Team', audience:'all', clients:3, status:'ACTIVE'},
-      {id:'k2', name:'Treatment Reminder', type:'SMS', subject:'', body:"Hi! It's been a while since your last visit — we'd love to see you again. Reply to book your next appointment.", audience:'atrisk', clients:0, status:'DRAFT'},
+      {id:'k1', name:'Load Shedding Campaign', type:'Email', subject:'Beat Load Shedding with Dominion AI Clinic!', body:'Hi there,\n\nTired of load shedding disrupting your day? As a thank you for being a valued client, enjoy 10% off any new installation booked this month.\n\nWarmly,\nThe Team', audience:'all', clients:3, status:'ACTIVE'},
+      {id:'k2', name:'Maintenance Reminder', type:'SMS', subject:'', body:"Hi! It's been a while since your last maintenance check — we'd love to keep your system running at peak output. Reply to book your next visit.", audience:'atrisk', clients:0, status:'DRAFT'},
     ],
     aiChat:[
       {from:'ai', text:'Good morning. Ask me about follow-ups, revenue, your pipeline, or invoicing any time.'}
@@ -1428,7 +1428,7 @@ async function loadState(){
       clinicId,
       clinic:{
         name: clinicRow.name || 'Dominion AI Clinic',
-        practitionerName: clinicRow.practitioner_name || 'Dr Sarah',
+        practitionerName: clinicRow.practitioner_name || 'Sarah Dlamini',
         logoUrl: clinicRow.logo_url || '',
         plan: clinicBillingRow.plan || 'trial',
         tier: clinicBillingRow.tier || 'solo',
@@ -2800,7 +2800,7 @@ function computeSalesMetrics(){
 function computeStaffPerformance(){
   const now = new Date();
   return state.staff
-    .filter(s => ['Doctor','Nurse','Therapist'].includes(s.role))
+    .filter(s => ['Site Engineer','Field Technician'].includes(s.role))
     .map(s=>{
       let treatmentCount = 0;
       let revenue = 0;
@@ -3229,10 +3229,10 @@ function renderSettings(){
 
   const clinicProfileCard = perms.canManageStaff ? `
       <div class="card">
-        <div class="card-title">Clinic Profile</div>
-        <div class="field-group"><label>Clinic Name</label><div class="field-line"><input id="setClinicName" type="text" value="${esc(state.clinic.name)}"></div></div>
+        <div class="card-title">Company Profile</div>
+        <div class="field-group"><label>Company Name</label><div class="field-line"><input id="setClinicName" type="text" value="${esc(state.clinic.name)}"></div></div>
         <div class="field-group"><label>Logo URL (optional)</label><div class="field-line"><input id="setLogoUrl" type="text" placeholder="https://…" value="${esc(state.clinic.logoUrl||'')}"></div></div>
-        <div class="field-group"><label>Practitioner Display Name</label><div class="field-line"><input id="setPractitioner" type="text" value="${esc(state.clinic.practitionerName)}"></div></div>
+        <div class="field-group"><label>Primary Contact Name</label><div class="field-line"><input id="setPractitioner" type="text" value="${esc(state.clinic.practitionerName)}"></div></div>
         <div class="field-group"><label>Currency</label><div class="field-line"><select id="setCurrency">
           ${CURRENCIES.map(c=>`<option value="${esc(c.symbol)}" ${state.clinic.currency===c.symbol?'selected':''}>${c.code} — ${esc(c.symbol)} ${c.name}</option>`).join('')}
         </select></div></div>
@@ -3241,9 +3241,9 @@ function renderSettings(){
         <button class="btn btn-primary" id="saveSettingsBtn">${t('common.save')} Changes</button>
       </div>` : `
       <div class="card">
-        <div class="card-title">Clinic Profile</div>
-        <div class="detail-row" style="border-top:none;"><span class="detail-label">Clinic Name</span><span class="detail-value">${esc(state.clinic.name)}</span></div>
-        <div class="detail-row"><span class="detail-label">Practitioner</span><span class="detail-value">${esc(state.clinic.practitionerName)}</span></div>
+        <div class="card-title">Company Profile</div>
+        <div class="detail-row" style="border-top:none;"><span class="detail-label">Company Name</span><span class="detail-value">${esc(state.clinic.name)}</span></div>
+        <div class="detail-row"><span class="detail-label">Primary Contact</span><span class="detail-value">${esc(state.clinic.practitionerName)}</span></div>
         <div class="detail-row"><span class="detail-label">Currency</span><span class="detail-value">${esc(state.clinic.currency)}</span></div>
         <div class="detail-row"><span class="detail-label">Country</span><span class="detail-value">${esc(state.clinic.country||'—')}</span></div>
         <p class="empty-state" style="margin-top:14px;">Only Owners and Admins can edit clinic settings.</p>
@@ -3704,7 +3704,7 @@ function bindClientDetailEvents(){
   if(saveConsentBtn) saveConsentBtn.addEventListener('click', async ()=>{
     const c = state.clients.find(x=>x.id===activeClientId);
     const consented = document.getElementById('consentClinical').checked;
-    if(!consented){ showToast('The clinical photography checkbox must be checked to proceed'); return; }
+    if(!consented){ showToast('The site photography checkbox must be checked to proceed'); return; }
     c.photoConsent = {
       consented,
       marketingConsent: document.getElementById('consentMarketing').checked,
@@ -3996,7 +3996,7 @@ function renderSocialPostModal(){
         })()}
       </div>`}
 
-    <div class="field-group"><label>Treatment / Service (used for AI generation)</label><div class="field-line"><input id="spContext" type="text" value="${esc(d.treatmentContext)}" placeholder="e.g. Lip filler, Laser hair removal"></div></div>
+    <div class="field-group"><label>Project / Service (used for AI generation)</label><div class="field-line"><input id="spContext" type="text" value="${esc(d.treatmentContext)}" placeholder="e.g. Rooftop solar installation, Battery storage upgrade"></div></div>
 
     <div class="field-group">
       <label>Caption</label>
@@ -4006,7 +4006,7 @@ function renderSocialPostModal(){
       </button>
     </div>
 
-    <div class="field-group"><label>Hashtags</label><div class="field-line"><input id="spHashtags" type="text" value="${esc(d.hashtags)}" placeholder="#aesthetics #skincare ..."></div></div>
+    <div class="field-group"><label>Hashtags</label><div class="field-line"><input id="spHashtags" type="text" value="${esc(d.hashtags)}" placeholder="#solar #renewableenergy ..."></div></div>
 
     <div class="field-group">
       <label>Send / Push To</label>
@@ -4167,13 +4167,13 @@ async function generateContentIdeas(){
   const lastMonth = bookingCountForMonthOffset(1);
   const atRisk = getAtRiskClients();
 
-  const prompt = `You are helping ${state.clinic.name}, a medical aesthetics clinic, plan social media content. Here is their real data:
+  const prompt = `You are helping ${state.clinic.name}, a renewable energy company, plan social media content. Here is their real data:
 
 Top treatments by volume: ${topTreatments.length ? topTreatments.join(', ') : 'not enough data yet'}
 Bookings this month vs last month: ${thisMonth} vs ${lastMonth}
 Clients currently at risk of lapsing: ${atRisk.length}
 
-Suggest exactly 5 specific, concrete social media content ideas for this clinic based on this real data (e.g. if a treatment is popular, suggest content about it; if bookings dipped, suggest a re-engagement angle; if clients are at risk, suggest retention content). Each idea should be one line, specific enough to act on immediately, and should not include markdown formatting or numbering — just plain sentences, one per line, and nothing else.`;
+Suggest exactly 5 specific, concrete social media content ideas for this company based on this real data (e.g. if a treatment is popular, suggest content about it; if bookings dipped, suggest a re-engagement angle; if clients are at risk, suggest retention content). Each idea should be one line, specific enough to act on immediately, and should not include markdown formatting or numbering — just plain sentences, one per line, and nothing else.`;
 
   const text = await callAnthropicAPI([{ role: "user", content: prompt }], { max_tokens: 400 });
   return text.split('\n').map(l=>l.replace(/^[-\d.)\s]+/, '').trim()).filter(Boolean);
@@ -4181,7 +4181,7 @@ Suggest exactly 5 specific, concrete social media content ideas for this clinic 
 
 async function generateSocialCaption(contentType, treatmentContext, platforms){
   const platformNote = platforms.length ? ` Intended for: ${platforms.join(', ')}.` : '';
-  const prompt = `Write a short social media caption for a ${contentType} promoting "${treatmentContext}" for ${state.clinic.name}, a medical aesthetics clinic.${platformNote} Keep it warm, professional, and compliant with typical medical-advertising norms (no exaggerated claims, no "guaranteed results" language). Then on a new line, give 6-10 relevant hashtags separated by spaces. Format your response as exactly two lines: the caption, then the hashtags line starting with #.`;
+  const prompt = `Write a short social media caption for a ${contentType} promoting "${treatmentContext}" for ${state.clinic.name}, a renewable energy company.${platformNote} Keep it warm, professional, and compliant with typical advertising norms (no exaggerated claims, no "guaranteed results" language). Then on a new line, give 6-10 relevant hashtags separated by spaces. Format your response as exactly two lines: the caption, then the hashtags line starting with #.`;
 
   const text = await callAnthropicAPI([{ role: "user", content: prompt }], { max_tokens: 300 });
   const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
@@ -4197,8 +4197,8 @@ async function generateSocialCaption(contentType, treatmentContext, platforms){
 
 function openTreatmentEntryModal(){
   const c = state.clients.find(x=>x.id===activeClientId);
-  const treatmentTypes = ['Botox','Dermal Filler','Skin Peel','Laser Treatment','Chemical Peel','Consultation'];
-  const areas = ['Forehead','Frown Lines','Crow Feet'];
+  const treatmentTypes = ['Rooftop Solar Installation','Ground-Mount Installation','Inverter Upgrade','Battery Storage Installation','Maintenance Check','Site Assessment'];
+  const areas = ['Roof - North Face','Roof - South Face','Ground Mount - East Field'];
   const practitioners = state.staff.filter(s=>s.locationId===state.currentLocationId || s.locationId===null).map(s=>s.name);
   renderTreatmentEntryModal(c, treatmentTypes, areas, practitioners, treatmentTypes[0]);
 }
@@ -4219,7 +4219,7 @@ function renderTreatmentEntryModal(c, treatmentTypes, areas, practitioners, sele
         ${areas.map(a=>`<label class="checkbox-item"><input type="checkbox" data-area="${a}"> ${a}</label>`).join('')}
       </div>
     </div>
-    <div class="field-group"><label>Practitioner</label><div class="field-line"><select id="txPractitioner">
+    <div class="field-group"><label>Engineer</label><div class="field-line"><select id="txPractitioner">
       ${practitioners.map(p=>`<option>${p}</option>`).join('')}
     </select></div></div>
     ${isNewProcedure ? `
@@ -4291,7 +4291,7 @@ function promptFollowUpBooking(client, practitioner){
     </div>`);
   document.getElementById('cancelModal').addEventListener('click', ()=>promptReviewRequest(client));
   document.getElementById('confirmBookFollowUp').addEventListener('click', async ()=>{
-    const chosenPractitioner = practitioner || 'Dr James';
+    const chosenPractitioner = practitioner || 'James Okafor';
     if(findConflictingAppointment(client.nextAction.date, '10:00', chosenPractitioner)){
       showToast(`${chosenPractitioner} already has an appointment at 10:00 on ${fmtDate(client.nextAction.date)} — book manually from the calendar with a different time`);
       closeModal();
@@ -4372,8 +4372,8 @@ function bindCalendarEvents(){
       <div class="field-group"><label>Client Name</label><div class="field-line"><input id="apClient" type="text" placeholder="Client name"></div></div>
       <div class="field-group"><label>Date</label><div class="field-line"><input id="apDate" type="date" value="${todayISO()}"></div></div>
       <div class="field-group"><label>Time</label><div class="field-line"><input id="apTime" type="time"></div></div>
-      <div class="field-group"><label>Service</label><div class="field-line"><input id="apService" type="text" placeholder="e.g. Botox Review"></div></div>
-      <div class="field-group"><label>Practitioner</label><div class="field-line"><select id="apPractitioner">
+      <div class="field-group"><label>Service</label><div class="field-line"><input id="apService" type="text" placeholder="e.g. Site Visit"></div></div>
+      <div class="field-group"><label>Engineer</label><div class="field-line"><select id="apPractitioner">
         ${locationStaff.map(s=>`<option>${esc(s.name)}</option>`).join('')}
       </select></div></div>
       <div class="modal-actions">
@@ -4978,7 +4978,7 @@ function openCampaignSendModal(campaign){
 async function generateCampaignCopy(campaignName, type, audience){
   const audienceLabel = { all:'all clients', vip:'VIP clients', atrisk:'clients at risk of lapsing', new:'new clients' }[audience] || 'clients';
   const lengthNote = type==='SMS' ? 'Keep it under 300 characters, no subject line needed.' : 'Keep it to 3-4 short paragraphs with a clear call to action.';
-  const prompt = `Write ${type} marketing copy for a campaign called "${campaignName}" at ${state.clinic.name}, a medical aesthetics clinic. The audience is ${audienceLabel}. ${lengthNote} Be warm and professional, avoid exaggerated claims or "guaranteed results" language (medical advertising norms). ${type==='Email' ? 'Respond as exactly two parts: first line is the subject, then a blank line, then the email body.' : 'Respond with just the SMS body text, nothing else.'}`;
+  const prompt = `Write ${type} marketing copy for a campaign called "${campaignName}" at ${state.clinic.name}, a renewable energy company. The audience is ${audienceLabel}. ${lengthNote} Be warm and professional, avoid exaggerated claims or "guaranteed results" language. ${type==='Email' ? 'Respond as exactly two parts: first line is the subject, then a blank line, then the email body.' : 'Respond with just the SMS body text, nothing else.'}`;
 
   const text = await callAnthropicAPI([{ role: "user", content: prompt }], { max_tokens: 500 });
   if(type==='SMS') return { subject:'', body:text };
@@ -5087,10 +5087,10 @@ function buildAIContext(){
   });
   const clientNames = state.clients.map(c=>c.name).join(', ');
   const clientProfiles = state.clients.map(c=>
-    `${c.name}: ${c.status}, skin type ${c.skinType||'unknown'}, concerns: ${c.concerns.length?c.concerns.join('/'):'none noted'}, ${c.treatments.length} treatment(s) on file, last treatment "${c.lastTreatment.name}" on ${fmtDate(c.lastTreatment.date)}`
+    `${c.name}: ${c.status}, site type ${c.skinType||'unknown'}, energy goals: ${c.concerns.length?c.concerns.join('/'):'none noted'}, ${c.treatments.length} project(s) on file, last project "${c.lastTreatment.name}" on ${fmtDate(c.lastTreatment.date)}`
   ).join('\n');
 
-  return `You are the AI Assistant embedded in ${state.clinic.name}, a CRM for an aesthetics/medical clinic run by ${state.clinic.practitionerName}. You help with follow-ups, revenue insight, lead pipeline, inventory, invoicing/quoting, and marketing campaigns. Be concise, warm, and clinic-appropriate — this is a professional medical aesthetics setting.
+  return `You are the AI Assistant embedded in ${state.clinic.name}, a CRM for a renewable energy company run by ${state.clinic.practitionerName}. You help with follow-ups, revenue insight, lead pipeline, inventory, invoicing/quoting, and marketing campaigns. Be concise, warm, and professional — this is a renewable energy/solar installation business.
 
 Current clinic data:
 Revenue this month: ${fmtMoney(monthlyRevenue())}
@@ -5117,7 +5117,7 @@ ${outstandingInvoices.length ? outstandingInvoices.join('\n') : 'None outstandin
 At-risk clients (overdue for follow-up or no visit in 90+ days):
 ${atRisk.length ? atRisk.join('\n') : 'None currently flagged.'}
 
-Locations: you are currently viewing ${currentLocation ? currentLocation.name : 'an unknown location'}. Clinic has ${state.locations.length} location(s):
+Locations: you are currently viewing ${currentLocation ? currentLocation.name : 'an unknown location'}. Company has ${state.locations.length} location(s):
 ${locationBreakdown.join('\n')}
 
 When it's natural and helpful, you may end your reply by asking if the person wants you to create a marketing campaign — but only when genuinely relevant. If asked to draft an invoice or quote for a specific client, confirm the client's name clearly in your reply (using their exact name as listed above) so the app can offer a button to open the invoice builder pre-filled for that client — do not attempt to state prices or line items yourself, since you don't have treatment pricing; just confirm who it's for and that you can open the builder. Keep replies short.`;
@@ -5302,9 +5302,9 @@ function renderPendingScreen(email){
         <p class="portal-note">If a clinic already invited you, ask an Owner or Admin to add this exact email in their Settings, then retry.</p>
         <button class="btn btn-primary" id="retryClaimBtn" style="width:100%; justify-content:center; margin-top:8px;">Retry</button>
         <div class="portal-divider">or</div>
-        <div class="field-group"><label>New Clinic Name</label><div class="field-line"><input id="newClinicName" type="text" placeholder="e.g. Bright Skin Clinic"></div></div>
-        <button class="btn btn-secondary" id="createClinicBtn" style="width:100%; justify-content:center;">Set Up a New Clinic</button>
-        <p class="portal-note">Creates a brand-new clinic with you as Owner — use this if you're the first person from your business signing up.</p>
+        <div class="field-group"><label>New Company Name</label><div class="field-line"><input id="newClinicName" type="text" placeholder="e.g. Red Rocket Energy"></div></div>
+        <button class="btn btn-secondary" id="createClinicBtn" style="width:100%; justify-content:center;">Set Up a New Company</button>
+        <p class="portal-note">Creates a brand-new company with you as Owner — use this if you're the first person from your business signing up.</p>
         <button class="btn btn-secondary" id="pendingSignOutBtn" style="width:100%; justify-content:center; margin-top:10px;">Sign Out</button>
       </div>
     </div>`;
@@ -5347,7 +5347,7 @@ async function renderAffiliateReferralPage(code){
       </div>
     </div>`;
 
-  let affiliateName = '', clinicName = 'the clinic', valid = true;
+  let affiliateName = '', clinicName = 'the company', valid = true;
   try{
     const res = await fetch(`${SUPABASE_URL}/functions/v1/affiliate-referral?code=${encodeURIComponent(code)}`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
@@ -5379,7 +5379,7 @@ async function renderAffiliateReferralPage(code){
         <div class="field-group"><label>Name</label><div class="field-line"><input id="refName" type="text" placeholder="Your full name"></div></div>
         <div class="field-group"><label>Phone</label><div class="field-line"><input id="refPhone" type="text" placeholder="Phone number"></div></div>
         <div class="field-group"><label>Email</label><div class="field-line"><input id="refEmail" type="email" placeholder="you@example.com"></div></div>
-        <div class="field-group"><label>What are you interested in? (optional)</label><div class="field-line"><input id="refNote" type="text" placeholder="e.g. Botox consultation"></div></div>
+        <div class="field-group"><label>What are you interested in? (optional)</label><div class="field-line"><input id="refNote" type="text" placeholder="e.g. Rooftop solar installation"></div></div>
         <button class="btn btn-primary" id="refSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">Submit</button>
       </div>
     </div>`;
@@ -5621,7 +5621,7 @@ function renderPortalAuth(mode, opts){
         <div class="field-group"><label>${t('auth.email')}</label><div class="field-line"><input id="portalAuthEmail" type="email" placeholder="you@email.com"></div></div>
         <div class="field-group"><label>${t('auth.password')}</label><div class="field-line"><input id="portalAuthPassword" type="password" placeholder="••••••••"></div></div>
         <button class="btn btn-primary" id="portalAuthSubmitBtn" style="width:100%; justify-content:center; margin-top:8px;">${isSignup?t('auth.signUp'):t('auth.signIn')}</button>
-        ${isSignup ? `<p class="portal-note">Use the email your clinic has on file for you.</p>` : `<div class="empty-state" style="text-align:center; margin-top:12px;"><span style="cursor:pointer; color:var(--sage);" id="portalForgotLink">${t('portal.forgotPassword')}</span></div>`}
+        ${isSignup ? `<p class="portal-note">Use the email your company has on file for you.</p>` : `<div class="empty-state" style="text-align:center; margin-top:12px;"><span style="cursor:pointer; color:var(--sage);" id="portalForgotLink">${t('portal.forgotPassword')}</span></div>`}
         <div class="empty-state" style="text-align:center; margin-top:20px;"><span style="cursor:pointer; color:var(--rose-gold);" id="togglePortalAuthMode">${isSignup?t('auth.alreadyHaveAccount'):t('portal.firstTimeSignUp')}</span></div>
         <div class="empty-state" style="text-align:center; margin-top:10px;"><span style="cursor:pointer; color:var(--sage);" id="backToStaffLink">${t('portal.backToStaffSignIn')}</span></div>
       </div>
@@ -5656,7 +5656,7 @@ function renderPortalAuth(mode, opts){
       const { data:{ session } } = await sb.auth.getSession();
       await handleSession(session);
     }catch(e){
-      showToast(e.message || 'Incorrect email or password — contact your clinic');
+      showToast(e.message || 'Incorrect email or password — contact your company');
     }finally{
       btn.disabled = false;
     }
