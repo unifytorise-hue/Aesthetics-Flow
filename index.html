@@ -1430,6 +1430,7 @@ async function loadState(){
         name: clinicRow.name || 'Dominion AI Clinic',
         practitionerName: clinicRow.practitioner_name || 'Sarah Dlamini',
         logoUrl: clinicRow.logo_url || '',
+        companySize: clinicRow.company_size || '',
         plan: clinicBillingRow.plan || 'trial',
         tier: clinicBillingRow.tier || 'solo',
         subscriptionStatus: clinicBillingRow.subscription_status || 'trialing',
@@ -1535,7 +1536,7 @@ async function persistStateToSupabase(s){
   if(s.aiChat.length) await sb.from('ai_chat_messages').insert(s.aiChat.map(m=>({ clinic_id:s.clinicId, from_role:m.from, text:m.text, suggest_campaign:!!m.suggestCampaign, suggest_invoice_for:m.suggestInvoiceFor||null, suggest_invoice_type:m.suggestInvoiceType||null })));
 
   await sb.from('clinic_settings').upsert({
-    clinic_id:s.clinicId, name:s.clinic.name, practitioner_name:s.clinic.practitionerName, logo_url:s.clinic.logoUrl||null, currency:s.clinic.currency,
+    clinic_id:s.clinicId, name:s.clinic.name, practitioner_name:s.clinic.practitionerName, logo_url:s.clinic.logoUrl||null, company_size:s.clinic.companySize||null, currency:s.clinic.currency,
     country:s.clinic.country||null,
     origination_commission_rate:s.clinic.originationCommissionRate, depreciation_period_years:s.clinic.depreciationPeriodYears,
     org_sales_target:s.clinic.orgSalesTarget, org_bonus_percent:s.clinic.orgBonusPercent,
@@ -3241,6 +3242,7 @@ function renderSettings(){
         <div class="field-group"><label>Company Name</label><div class="field-line"><input id="setClinicName" type="text" value="${esc(state.clinic.name)}"></div></div>
         <div class="field-group"><label>Logo URL (optional)</label><div class="field-line"><input id="setLogoUrl" type="text" placeholder="https://…" value="${esc(state.clinic.logoUrl||'')}"></div></div>
         <div class="field-group"><label>Primary Contact Name</label><div class="field-line"><input id="setPractitioner" type="text" value="${esc(state.clinic.practitionerName)}"></div></div>
+        <div class="field-group"><label>Company Size (optional)</label><div class="field-line"><input id="setCompanySize" type="text" placeholder="e.g. 120 employees" value="${esc(state.clinic.companySize||'')}"></div></div>
         <div class="field-group"><label>Currency</label><div class="field-line"><select id="setCurrency">
           ${CURRENCIES.map(c=>`<option value="${esc(c.symbol)}" ${state.clinic.currency===c.symbol?'selected':''}>${c.code} — ${esc(c.symbol)} ${c.name}</option>`).join('')}
         </select></div></div>
@@ -3252,6 +3254,7 @@ function renderSettings(){
         <div class="card-title">Company Profile</div>
         <div class="detail-row" style="border-top:none;"><span class="detail-label">Company Name</span><span class="detail-value">${esc(state.clinic.name)}</span></div>
         <div class="detail-row"><span class="detail-label">Primary Contact</span><span class="detail-value">${esc(state.clinic.practitionerName)}</span></div>
+        ${state.clinic.companySize ? `<div class="detail-row"><span class="detail-label">Company Size</span><span class="detail-value">${esc(state.clinic.companySize)}</span></div>` : ''}
         <div class="detail-row"><span class="detail-label">Currency</span><span class="detail-value">${esc(state.clinic.currency)}</span></div>
         <div class="detail-row"><span class="detail-label">Country</span><span class="detail-value">${esc(state.clinic.country||'—')}</span></div>
         <p class="empty-state" style="margin-top:14px;">Only Owners and Admins can edit clinic settings.</p>
@@ -3259,7 +3262,7 @@ function renderSettings(){
 
   const staffCard = perms.canManageStaff ? `
       <div class="card">
-        <div class="card-title">Staff</div>
+        <div class="card-title">Staff${state.clinic.companySize ? ` <span class="muted" style="font-weight:400; font-size:12px;">(${state.staff.length} shown of ${esc(state.clinic.companySize)} total)</span>` : ''}</div>
         <div class="roles-list" id="staffList">
           ${state.staff.map(s=>{
             const loc = state.locations.find(l=>l.id===s.locationId);
@@ -4628,6 +4631,7 @@ function bindSettingsEvents(){
       state.clinic.name = document.getElementById('setClinicName').value.trim() || state.clinic.name;
       state.clinic.logoUrl = document.getElementById('setLogoUrl').value.trim();
       state.clinic.practitionerName = document.getElementById('setPractitioner').value.trim() || state.clinic.practitionerName;
+      state.clinic.companySize = document.getElementById('setCompanySize').value.trim();
       state.clinic.currency = document.getElementById('setCurrency').value;
       state.clinic.country = countrySelectValue('setCountry');
       await saveState();
