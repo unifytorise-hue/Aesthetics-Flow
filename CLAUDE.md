@@ -1,8 +1,11 @@
-# AestheticFlow CRM
+# Dominion AI CRM
 
 Single-file app (`index.html`) backed by Supabase (project `zatgwmdinqzrwxxdmxoe`). Multi-tenant SaaS: each clinic is a row in `clinics`, isolated via RLS (`clinic_id` + `is_staff()`/`my_clinic_id()`). Platform admin dashboard exists (`platform_admins` table, `is_platform_admin()`).
 
-Live site deploys from GitHub Pages off `claude/aestheticflow-crm-design-6y67rr` (mirrors `claude/aestheticflow-phase-2-auth-ltya60`, which both get pushed together).
+Live site deploys from GitHub Pages off `claude/aestheticflow-crm-design-6y67rr` (mirrors `claude/aestheticflow-phase-2-auth-ltya60`, which both get pushed together). Repo name, branch names, and the GitHub Pages URL path all still say `Aesthetics-Flow`/`aestheticflow` — only the in-app/product branding was renamed (2026-10-15, see below); renaming the repo/branches/URL itself wasn't done since it's a much more disruptive, separate decision (breaks the live URL, any saved links, local clones).
+
+- **Product rebrand (2026-10-15)**: renamed from "AestheticFlow" to "Dominion AI" everywhere it's user-visible — page `<title>`, every sidebar/auth/portal brand mark, the `billing.canceled` string in all 5 languages, demo/fallback clinic name, backup-download filename. Also added a real logo image (`logo.jpg`, repo root, referenced by relative path so it works on GitHub Pages) in place of the old text-only "Aesthetic*Flow*" wordmark — large (110px) and centered on auth/portal screens, small (26-32px) rounded-square icon next to the clinic name in the sidebar/mobile topbar. **Known discrepancy, flagged to the user, not yet resolved**: the logo image's own baked-in text reads "DOMINIAN AI" (not "Dominion") — likely a typo from whatever generated the image. All the *text* renaming in this pass used "Dominion" (what the user actually typed), so there's currently a visible mismatch between the logo graphic and the surrounding text brand name. Needs the user to confirm which spelling is correct; if "Dominion" wins, the logo image itself needs to be regenerated/fixed (not something fixable by editing HTML/CSS, since the text is rendered into the image's pixels).
+- `sidebarBrandMark`/`mobileBrandMark` are **not** pure logo marks — they're real text elements whose `.textContent` gets overwritten with the logged-in clinic's own name (`enterStaffApp()` and the Settings-save handler both do this). The rebrand kept them as separate text nodes sitting next to the new logo `<img>` rather than replacing them outright, specifically so that per-clinic name swap keeps working — verified via an E2E check that logging in still shows the clinic's real name (not "Dominion AI") in the sidebar.
 
 ## Edge functions (all deployed and live, all gated on missing secrets)
 
